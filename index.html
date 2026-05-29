@@ -1147,18 +1147,25 @@ function cleanupRender(svgUrl){
 }
 
 /* ── WebM / MP4 Renderer ──
-   Strategy: VP8 codec + restart MediaRecorder every 1s to force I-frames (keyframes)
-   This makes the output fully seekable at 1-second granularity.
-   All segments collected → concat → ysFixWebmDuration patches container metadata.
+   ROOT CAUSE OF "2s then restart" BUG:
+   Restarting MediaRecorder every second writes multiple WebM cluster headers into
+   one blob. Most desktop players (VLC, Windows Media Player, QuickTime) interpret
+   each new cluster header as a new stream → they "restart" at the second boundary.
+
+   FIX: Use ONE single MediaRecorder for the entire duration.
+   Seekability is achieved by calling requestVideoKeyFrame() on the video track every
+   second — this inserts an I-frame without breaking the container stream.
+   ysFixWebmDuration patches the duration metadata so the seekbar shows full length.
 */
 function doWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt){
-  const KF_INT  = 1000; // ms per segment (= seekable keyframe interval)
-  const FLUSH   = 900;  // extra ms to flush encoder after last frame
+  const FLUSH_MS = 1200; // grace period for encoder to flush after last frame
 
+  // Pick best supported codec — VP8 preferred (better keyframe behaviour than VP9)
   function mkRecorder(stream){
     const tries=[
-      {mimeType:'video/webm;codecs=vp8',videoBitsPerSecond:bitrate},
-      {mimeType:'video/webm',videoBitsPerSecond:bitrate},
+      {mimeType:'video/webm;codecs=vp8', videoBitsPerSecond:bitrate},
+      {mimeType:'video/webm;codecs=vp9', videoBitsPerSecond:bitrate},
+      {mimeType:'video/webm',            videoBitsPerSecond:bitrate},
       {videoBitsPerSecond:bitrate}
     ];
     for(const o of tries){
@@ -1175,66 +1182,95 @@ function doWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt){
   const startWall = performance.now();
   let drawing     = true;
   let rafId       = null;
-  let segNum      = 0;
-  const totalSegs = Math.ceil(EXACT_MS/KF_INT);
 
-  function done(){
+  // ── Single recorder for entire duration ──
+  const rec = mkRecorder(stream);
+  rec.ondataavailable = e => { if(e.data && e.data.size > 0) allChunks.push(e.data); };
+
+  rec.onstop = () => {
     if(renderAbort){ cleanupRender(svgUrl); setStatus('Render cancelled'); return; }
-    document.getElementById('rStage').textContent='Patching WebM metadata…';
-    const raw = new Blob(allChunks,{type:'video/webm'});
-    ysFixWebmDuration(raw,EXACT_MS,fixed=>{
-      const name=`SVGStudio-${(EXACT_MS/1000).toFixed(1)}s-${H}p.${fmt==='mp4'?'mp4':'webm'}`;
-      const mime=fmt==='mp4'?'video/mp4':'video/webm';
-      finishDL(fixed,mime,name,svgUrl);
+    document.getElementById('rStage').textContent = 'Patching duration metadata…';
+    const raw = new Blob(allChunks, {type:'video/webm'});
+    ysFixWebmDuration(raw, EXACT_MS, fixed => {
+      const name = `SVGStudio-${(EXACT_MS/1000).toFixed(1)}s-${H}p.${fmt==='mp4'?'mp4':'webm'}`;
+      const mime = fmt==='mp4' ? 'video/mp4' : 'video/webm';
+      finishDL(fixed, mime, name, svgUrl);
     });
+  };
+
+  // Collect data frequently so progress blob is built up smoothly
+  rec.start(200);
+
+  // ── Request a video keyframe (I-frame) every second for seekability ──
+  // This works without restarting the recorder, so the container stays intact.
+  const kfInterval = setInterval(() => {
+    if(!drawing){ clearInterval(kfInterval); return; }
+    try{
+      const vt = stream.getVideoTracks()[0];
+      if(vt && typeof vt.requestVideoKeyFrame === 'function'){
+        vt.requestVideoKeyFrame();
+      }
+    }catch(e){}
+  }, 1000);
+
+  // ── Stop the recorder exactly when drawing finishes ──
+  // We wait FLUSH_MS extra after the last drawn frame so the encoder
+  // can flush its internal buffer before we call stop().
+  let stopScheduled = false;
+  function scheduleStop(){
+    if(stopScheduled) return;
+    stopScheduled = true;
+    clearInterval(kfInterval);
+    setTimeout(() => {
+      try{ rec.stop(); } catch(e){}
+    }, FLUSH_MS);
   }
 
-  function runSeg(){
-    if(renderAbort){ done(); return; }
-    segNum++;
-    const isLast = segNum>=totalSegs;
-    const seg    = mkRecorder(stream);
-
-    seg.ondataavailable=e=>{ if(e.data&&e.data.size>0) allChunks.push(e.data); };
-    seg.onstop=()=>{ isLast?done():runSeg(); };
-    seg.start(100);
-
-    const elapsed = performance.now()-startWall;
-    const remain  = EXACT_MS-elapsed;
-    const dur     = isLast ? Math.max(0,remain)+FLUSH : KF_INT;
-    setTimeout(()=>{ try{seg.stop();}catch(e){} }, Math.max(50,dur));
-  }
-
+  // ── Draw loop ──
   function loop(now){
-    if(!drawing)return;
-    if(renderAbort){ drawing=false; cancelAnimationFrame(rafId); return; }
-    const elapsed=now-startWall;
+    if(!drawing) return;
+    if(renderAbort){
+      drawing = false;
+      cancelAnimationFrame(rafId);
+      clearInterval(kfInterval);
+      try{ rec.stop(); }catch(e){}
+      return;
+    }
 
-    if(elapsed>=EXACT_MS){ drawing=false; cancelAnimationFrame(rafId); return; }
+    const elapsed = now - startWall;
 
-    const pct=Math.min(elapsed/EXACT_MS*100,100);
-    progFill.style.width=pct+'%';
-    document.getElementById('rElapsed').textContent=(elapsed/1000).toFixed(1)+'s elapsed';
-    document.getElementById('rRemain').textContent=Math.max(0,(EXACT_MS-elapsed)/1000).toFixed(1)+'s remaining';
-    document.getElementById('rPct').textContent=Math.round(pct)+'%';
-    document.getElementById('rStage').textContent=
-      `Segment ${Math.min(segNum,totalSegs)}/${totalSegs} · Frame ${Math.round(elapsed/1000*fps)}`;
+    if(elapsed >= EXACT_MS){
+      drawing = false;
+      cancelAnimationFrame(rafId);
+      scheduleStop();
+      return;
+    }
 
-    const bg=document.getElementById('bgHex').value||'#020617';
-    ctx.fillStyle=bg;
-    ctx.fillRect(0,0,W,H);
-    ctx.drawImage(img,0,0,W,H);
-    // Keep encoder alive on static SVGs
-    ctx.fillStyle=`rgba(0,0,0,${Math.random()*0.02})`;
-    ctx.fillRect(0,0,1,1);
+    // Update progress UI
+    const pct = Math.min(elapsed / EXACT_MS * 100, 100);
+    progFill.style.width = pct + '%';
+    document.getElementById('rElapsed').textContent  = (elapsed/1000).toFixed(1) + 's elapsed';
+    document.getElementById('rRemain').textContent   = Math.max(0,(EXACT_MS-elapsed)/1000).toFixed(1) + 's remaining';
+    document.getElementById('rPct').textContent      = Math.round(pct) + '%';
+    document.getElementById('rStage').textContent    =
+      `Recording · Frame ${Math.round(elapsed/1000*fps)} / ${Math.round(EXACT_MS/1000*fps)}`;
 
-    curTime=(elapsed/1000)%(parseFloat(document.getElementById('inDur').value)||6);
+    // Draw current frame onto the offscreen canvas
+    const bg = document.getElementById('bgHex').value || '#020617';
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 0, 0, W, H);
+    // Sub-pixel noise keeps captureStream() from dropping frames on static SVGs
+    ctx.fillStyle = `rgba(0,0,0,${0.008 + Math.random()*0.008})`;
+    ctx.fillRect(0, 0, 2, 2);
+
+    // Sync timeline playhead
+    curTime = (elapsed/1000) % (parseFloat(document.getElementById('inDur').value)||6);
     updatePH();
 
-    rafId=requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
 
-  runSeg();
   requestAnimationFrame(loop);
 }
 
