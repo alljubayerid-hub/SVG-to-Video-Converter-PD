@@ -354,10 +354,8 @@
 </head>
 <body class="relative">
 
-<!-- Particles -->
 <div id="particles"></div>
 
-<!-- HEADER -->
 <header class="relative z-10 glass border-b border-purple-900/30 sticky top-0">
   <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
@@ -381,7 +379,6 @@
   </div>
 </header>
 
-<!-- HERO BANNER -->
 <div class="relative z-10 text-center py-10 px-6">
   <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-sm mb-6 text-purple-300">
     <i class="fa-solid fa-wand-magic-sparkles text-yellow-400"></i>
@@ -394,13 +391,10 @@
   <p class="text-purple-300 max-w-xl mx-auto text-base">Upload your animated SVG or paste SVG code. Preview, configure settings, and export as WebM video — all powered by Canvas & MediaRecorder API.</p>
 </div>
 
-<!-- MAIN LAYOUT -->
 <main class="relative z-10 max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-  <!-- LEFT PANEL: Input & Settings -->
   <div class="xl:col-span-1 flex flex-col gap-5">
 
-    <!-- Input Method Tabs -->
     <div class="glass rounded-2xl p-5">
       <p class="section-title"><i class="fa-solid fa-file-import mr-2"></i>Input Source</p>
       <div class="flex gap-6 border-b border-purple-900/30 mb-5">
@@ -415,7 +409,6 @@
         </button>
       </div>
 
-      <!-- Upload Tab -->
       <div id="tab-upload">
         <div id="dropZone" class="drop-zone rounded-xl p-8 text-center cursor-pointer" onclick="document.getElementById('fileInput').click()">
           <div id="dropIconArea">
@@ -440,7 +433,6 @@
         </button>
       </div>
 
-      <!-- Code Tab -->
       <div id="tab-code" class="hidden">
         <textarea id="svgCodeEditor" class="w-full h-56 p-3" placeholder="Paste your SVG code here...&#10;&#10;Example:&#10;&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 200 200&quot;&gt;&#10;  &lt;circle cx=&quot;100&quot; cy=&quot;100&quot; r=&quot;40&quot; fill=&quot;#6c63ff&quot;&gt;&#10;    &lt;animate attributeName=&quot;r&quot; from=&quot;40&quot; to=&quot;80&quot; dur=&quot;2s&quot; repeatCount=&quot;indefinite&quot;/&gt;&#10;  &lt;/circle&gt;&#10;&lt;/svg&gt;"></textarea>
         <button onclick="loadSVGFromCode()" class="w-full mt-3 grad-btn rounded-xl py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2">
@@ -448,7 +440,6 @@
         </button>
       </div>
 
-      <!-- Template Tab -->
       <div id="tab-template" class="hidden">
         <div class="grid grid-cols-2 gap-3">
           <div class="template-card glass-light rounded-xl p-3" onclick="loadTemplate('spinner')">
@@ -541,12 +532,10 @@
       </div>
     </div>
 
-    <!-- Export Settings -->
     <div class="glass rounded-2xl p-5">
       <p class="section-title"><i class="fa-solid fa-sliders mr-2"></i>Export Settings</p>
 
       <div class="space-y-4">
-        <!-- Resolution -->
         <div>
           <label class="text-xs text-gray-400 font-medium block mb-2">Resolution</label>
           <div class="grid grid-cols-3 gap-2">
@@ -566,7 +555,6 @@
           </div>
         </div>
 
-        <!-- Duration -->
         <div>
           <div class="flex justify-between mb-2">
             <label class="text-xs text-gray-400 font-medium">Duration</label>
@@ -578,7 +566,6 @@
           </div>
         </div>
 
-        <!-- FPS -->
         <div>
           <div class="flex justify-between mb-2">
             <label class="text-xs text-gray-400 font-medium">Frame Rate</label>
@@ -590,7 +577,6 @@
           </div>
         </div>
 
-        <!-- Quality -->
         <div>
           <div class="flex justify-between mb-2">
             <label class="text-xs text-gray-400 font-medium">Quality / Bitrate</label>
@@ -602,7 +588,6 @@
           </div>
         </div>
 
-        <!-- Background Color -->
         <div class="flex items-center justify-between">
           <label class="text-xs text-gray-400 font-medium">Background</label>
           <div class="flex items-center gap-3">
@@ -615,7 +600,6 @@
           </div>
         </div>
 
-        <!-- Format -->
         <div class="flex items-center justify-between">
           <label class="text-xs text-gray-400 font-medium">Output Format</label>
           <select id="formatSelect" onchange="updateFormatInfo()">
@@ -627,7 +611,6 @@
       </div>
     </div>
 
-    <!-- Stats Cards -->
     <div class="glass rounded-2xl p-5">
       <p class="section-title"><i class="fa-solid fa-chart-bar mr-2"></i>Estimated Output</p>
       <div class="grid grid-cols-3 gap-2">
@@ -648,10 +631,8 @@
 
   </div>
 
-  <!-- CENTER + RIGHT: Preview & Output -->
   <div class="xl:col-span-2 flex flex-col gap-5">
 
-    <!-- Preview Panel -->
     <div class="glass rounded-2xl p-5">
       <div class="flex items-center justify-between mb-4">
         <p class="section-title mb-0"><i class="fa-solid fa-eye mr-2"></i>Live Preview</p>
@@ -665,7 +646,6 @@
         </div>
       </div>
 
-      <!-- SVG Preview Container -->
       <div id="svgPreviewWrap" class="relative rounded-xl overflow-hidden bg-black/40 border border-purple-900/30 flex items-center justify-center" style="min-height:320px;">
         <div id="previewPlaceholder" class="text-center">
           <div class="flex justify-center gap-1 mb-4">
@@ -684,7 +664,6 @@
         <div id="svgLiveDisplay" class="w-full h-full hidden flex items-center justify-center p-4"></div>
       </div>
 
-      <!-- Timeline -->
       <div class="mt-4">
         <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
           <span>Timeline</span>
@@ -701,7 +680,6 @@
         </div>
       </div>
 
-      <!-- Convert Button -->
       <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button id="convertBtn" onclick="startConversion()" disabled
           class="grad-btn rounded-xl py-4 text-white font-bold flex items-center justify-center gap-3 text-base disabled:opacity-40 disabled:cursor-not-allowed shadow-lg relative z-10">
@@ -716,7 +694,6 @@
       </div>
     </div>
 
-    <!-- Conversion Progress -->
     <div id="conversionPanel" class="glass rounded-2xl p-5 hidden">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
@@ -753,7 +730,6 @@
       </div>
     </div>
 
-    <!-- Output Video Panel -->
     <div id="outputPanel" class="glass rounded-2xl p-5 hidden">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
@@ -765,12 +741,10 @@
         <span class="badge bg-green-900/60 text-green-300 border border-green-700/50">SUCCESS</span>
       </div>
 
-      <!-- Video Player -->
       <div class="relative rounded-xl overflow-hidden bg-black mb-4">
         <video id="outputVideo" controls loop class="w-full" style="max-height:400px;"></video>
       </div>
 
-      <!-- Video Metadata -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div class="stat-card">
           <p class="text-sm font-bold text-purple-300" id="outDuration">--</p>
@@ -790,7 +764,6 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
       <div class="grid grid-cols-2 gap-3">
         <button id="downloadBtn" onclick="downloadVideo()" class="btn-success grad-btn rounded-xl py-3 text-white font-bold flex items-center justify-center gap-2">
           <i class="fa-solid fa-download"></i>Download Video
@@ -805,7 +778,6 @@
       </button>
     </div>
 
-    <!-- Info / Features Panel -->
     <div id="featuresPanel" class="glass rounded-2xl p-5">
       <p class="section-title"><i class="fa-solid fa-info-circle mr-2"></i>How It Works</p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -846,10 +818,8 @@
   </div>
 </main>
 
-<!-- Hidden canvas for rendering -->
 <canvas id="hiddenCanvas"></canvas>
 
-<!-- Toast Notification -->
 <div class="toast glass" id="toast">
   <i id="toastIcon" class="fa-solid fa-circle-check text-green-400 text-xl"></i>
   <div>
@@ -1338,63 +1308,78 @@ async function startConversion() {
     finishConversion(videoURL, videoBlob, w, h, dur, fps);
   };
 
-  // Setup SVG image for drawing
+  // 1. Create a single image element and hide it in the DOM 
+  // This forces the browser engine to keep the SVG's internal animation ticking
   const imgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+  const img = new Image();
+  img.style.position = 'absolute';
+  img.style.opacity = '0.01';
+  img.style.pointerEvents = 'none';
+  img.style.zIndex = '-9999';
+  document.body.appendChild(img);
 
   const totalFrames = dur * fps;
-  const frameDuration = 1000 / fps;
-  let frameIndex = 0;
   recordingActive = true;
-  startTime = Date.now();
 
-  elapsedInterval = setInterval(updateElapsed, 500);
+  // 2. Wait for the image to load ONCE, then start the recording loop
+  img.onload = () => {
+    startTime = Date.now();
+    elapsedInterval = setInterval(updateElapsed, 500);
+    
+    mediaRecorder.start();
 
-  mediaRecorder.start(100); // collect data every 100ms
+    updateConvStatus('Rendering frames...', 0, 0, totalFrames);
 
-  updateConvStatus('Rendering frames...', 0, 0, totalFrames);
+    function renderFrame() {
+      // Handle cancellations
+      if (!recordingActive || conversionCancelled) {
+        clearInterval(elapsedInterval);
+        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        if (img.parentNode) img.parentNode.removeChild(img); // Cleanup DOM
+        return;
+      }
 
-  function renderFrame() {
-    if (!recordingActive || conversionCancelled) {
-      clearInterval(elapsedInterval);
-      if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-      return;
-    }
+      const elapsed = Date.now() - startTime;
+      const currentFrame = Math.floor((elapsed / 1000) * fps);
 
-    if (frameIndex >= totalFrames) {
-      clearInterval(elapsedInterval);
-      mediaRecorder.stop();
-      return;
-    }
+      // Handle completion
+      if (elapsed >= (dur * 1000)) {
+        clearInterval(elapsedInterval);
+        mediaRecorder.stop();
+        if (img.parentNode) img.parentNode.removeChild(img); // Cleanup DOM
+        return;
+      }
 
-    // Draw background
-    if (state.bg === 'transparent') {
-      ctx.clearRect(0, 0, w, h);
-    } else {
-      ctx.fillStyle = state.bg;
-      ctx.fillRect(0, 0, w, h);
-    }
+      // Draw background
+      if (state.bg === 'transparent') {
+        ctx.clearRect(0, 0, w, h);
+      } else {
+        ctx.fillStyle = state.bg;
+        ctx.fillRect(0, 0, w, h);
+      }
 
-    // Draw SVG frame
-    const img = new Image();
-    img.onload = () => {
+      // 3. Draw the currently animating image instance to the canvas
       ctx.drawImage(img, 0, 0, w, h);
-      frameIndex++;
-      const pct = Math.round((frameIndex / totalFrames) * 100);
-      updateConvStatus('Rendering frames...', pct, frameIndex, totalFrames);
-      setTimeout(renderFrame, frameDuration);
-    };
-    img.onerror = () => {
-      // Fallback: just advance frame
-      frameIndex++;
-      const pct = Math.round((frameIndex / totalFrames) * 100);
-      updateConvStatus('Rendering...', pct, frameIndex, totalFrames);
-      setTimeout(renderFrame, frameDuration);
-    };
-    img.src = imgUrl;
-  }
 
-  // Small delay before starting
-  setTimeout(renderFrame, 200);
+      // Update UI Progress
+      const pct = Math.min(100, Math.round((elapsed / (dur * 1000)) * 100));
+      updateConvStatus('Rendering frames...', pct, Math.min(currentFrame, totalFrames), totalFrames);
+
+      // Loop using requestAnimationFrame for smooth capture synced with the browser
+      requestAnimationFrame(renderFrame);
+    }
+
+    // Start drawing loop
+    requestAnimationFrame(renderFrame);
+  };
+
+  img.onerror = () => {
+    showToast('error', 'Render Error', 'Could not render the SVG to canvas.');
+    resetConversionUI();
+    if (img.parentNode) img.parentNode.removeChild(img);
+  };
+
+  img.src = imgUrl;
 }
 
 function updateConvStatus(msg, pct, frames, total) {
