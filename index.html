@@ -6,6 +6,7 @@
   <title>SVG → Video Converter | Advanced Studio</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://unpkg.com/fix-webm-duration"></script>
   <style>
     :root {
       --primary: #6c63ff;
@@ -368,7 +369,7 @@
       </div>
     </div>
     <div class="flex items-center gap-3">
-      <span class="badge bg-purple-900/60 text-purple-300 border border-purple-700/50">v2.0 Pro</span>
+      <span class="badge bg-purple-900/60 text-purple-300 border border-purple-700/50">v2.1 Pro</span>
       <span class="badge bg-green-900/60 text-green-300 border border-green-700/50">
         <i class="fa-solid fa-circle text-green-400 mr-1" style="font-size:6px"></i>READY
       </span>
@@ -714,6 +715,10 @@
         <div class="text-sm font-bold text-purple-300" id="convPercent">0%</div>
       </div>
 
+      <p class="text-xs text-yellow-400 mt-2 text-center bg-yellow-900/20 py-2 rounded-lg border border-yellow-700/30">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Do not minimize or switch tabs during conversion to prevent dropped frames.
+      </p>
+
       <div class="grid grid-cols-3 gap-3 mt-4">
         <div class="stat-card">
           <p class="text-sm font-bold text-white" id="convFrameCount">0</p>
@@ -803,16 +808,6 @@
           <p class="text-xs text-gray-500">Canvas renders each frame; MediaRecorder captures & packages as WebM video.</p>
         </div>
       </div>
-
-      <div class="mt-4 glass-light rounded-xl p-4 border-l-4 border-yellow-500/60">
-        <div class="flex gap-3">
-          <i class="fa-solid fa-lightbulb text-yellow-400 mt-0.5"></i>
-          <div>
-            <p class="text-xs font-bold text-yellow-300 mb-1">Supported Animation Types</p>
-            <p class="text-xs text-gray-400">SMIL animations (&lt;animate&gt;, &lt;animateTransform&gt;, &lt;animateMotion&gt;), CSS animations &amp; transitions, keyframe animations, and SVG path morphing.</p>
-          </div>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -838,11 +833,9 @@ let videoBlob = null;
 let videoURL = null;
 let mediaRecorder = null;
 let recordingActive = false;
-let rafId = null;
 let startTime = null;
 let elapsedInterval = null;
 let timelineRAF = null;
-let previewSvgEl = null;
 
 const state = {
   width: 1280,
@@ -880,7 +873,7 @@ const qualityLabels   = ['Low', 'Medium', 'High', 'Very High', 'Ultra'];
 })();
 
 // ============================================================
-// TABS
+// TABS & UI 
 // ============================================================
 function switchTab(tab) {
   ['upload','code','template'].forEach(t => {
@@ -893,15 +886,8 @@ function switchTab(tab) {
   });
 }
 
-// ============================================================
-// FILE HANDLING
-// ============================================================
 const dropZone = document.getElementById('dropZone');
-
-dropZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  dropZone.classList.add('drag-over');
-});
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
@@ -914,15 +900,12 @@ dropZone.addEventListener('drop', e => {
   }
 });
 
-function handleFileInput(input) {
-  if (input.files[0]) processFile(input.files[0]);
-}
+function handleFileInput(input) { if (input.files[0]) processFile(input.files[0]); }
 
 function processFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     svgContent = e.target.result;
-    svgDataURL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
     showFileInfo(file.name, file.size);
     renderSVGPreview(svgContent);
     enableButtons();
@@ -945,177 +928,42 @@ function formatBytes(b) {
   return (b/1048576).toFixed(1) + ' MB';
 }
 
-// ============================================================
-// TEMPLATE LOADING
-// ============================================================
 const templates = {
-  spinner: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-    <rect width="200" height="200" fill="#0a0a1a"/>
-    <circle cx="100" cy="100" r="60" fill="none" stroke="#1a1a35" stroke-width="12"/>
-    <circle cx="100" cy="100" r="60" fill="none" stroke="url(#sg)" stroke-width="12" stroke-dasharray="200 180" stroke-linecap="round">
-      <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="1.2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="100" cy="100" r="35" fill="none" stroke="#6c63ff" stroke-width="6" stroke-dasharray="80 140" stroke-linecap="round">
-      <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="0.8s" repeatCount="indefinite"/>
-    </circle>
-    <defs>
-      <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#6c63ff"/>
-        <stop offset="100%" stop-color="#00e5ff"/>
-      </linearGradient>
-    </defs>
-  </svg>`,
-
-  pulse: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-    <rect width="200" height="200" fill="#0a0a1a"/>
-    <circle cx="100" cy="100" r="10" fill="#f50057" opacity="0.2">
-      <animate attributeName="r" values="10;80;10" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="100" cy="100" r="10" fill="#f50057" opacity="0.3">
-      <animate attributeName="r" values="10;55;10" dur="2s" begin="0.3s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" begin="0.3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="100" cy="100" r="25" fill="#f50057">
-      <animate attributeName="r" values="22;28;22" dur="1s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="100" cy="100" r="14" fill="white" opacity="0.9"/>
-  </svg>`,
-
-  morph: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-    <rect width="200" height="200" fill="#0a0a1a"/>
-    <rect x="65" y="65" width="70" height="70" fill="none" stroke="#00e5ff" stroke-width="3" rx="8">
-      <animate attributeName="rx" values="8;35;8" dur="3s" repeatCount="indefinite"/>
-      <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="6s" repeatCount="indefinite"/>
-    </rect>
-    <rect x="50" y="50" width="100" height="100" fill="url(#mg)" opacity="0.7" rx="10">
-      <animate attributeName="rx" values="10;50;10" dur="3s" repeatCount="indefinite"/>
-      <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="4s" repeatCount="indefinite"/>
-    </rect>
-    <defs>
-      <linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#6c63ff" stop-opacity="0.8"/>
-        <stop offset="100%" stop-color="#00e5ff" stop-opacity="0.5"/>
-        <animate attributeName="x2" values="100%;0%;100%" dur="4s" repeatCount="indefinite"/>
-      </linearGradient>
-    </defs>
-  </svg>`,
-
-  wave: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-    <rect width="200" height="200" fill="#0a0a1a"/>
-    <g transform="translate(0, 100)">
-      <rect x="20" y="-15" width="16" height="30" fill="#6c63ff" rx="8">
-        <animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0s"/>
-        <animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0s"/>
-      </rect>
-      <rect x="44" y="-15" width="16" height="30" fill="#8b5cf6" rx="8">
-        <animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.15s"/>
-        <animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.15s"/>
-      </rect>
-      <rect x="68" y="-15" width="16" height="30" fill="#00e5ff" rx="8">
-        <animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.3s"/>
-        <animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.3s"/>
-      </rect>
-      <rect x="92" y="-15" width="16" height="30" fill="#00b8d4" rx="8">
-        <animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.45s"/>
-        <animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.45s"/>
-      </rect>
-      <rect x="116" y="-15" width="16" height="30" fill="#8b5cf6" rx="8">
-        <animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.6s"/>
-        <animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.6s"/>
-      </rect>
-      <rect x="140" y="-15" width="16" height="30" fill="#6c63ff" rx="8">
-        <animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.75s"/>
-        <animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.75s"/>
-      </rect>
-      <rect x="164" y="-15" width="16" height="30" fill="#a78bfa" rx="8">
-        <animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.9s"/>
-        <animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.9s"/>
-      </rect>
-    </g>
-  </svg>`,
-
-  orbit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-    <rect width="200" height="200" fill="#0a0a1a"/>
-    <circle cx="100" cy="100" r="50" fill="none" stroke="rgba(108,99,255,0.15)" stroke-width="1" stroke-dasharray="4 4"/>
-    <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0,229,255,0.15)" stroke-width="1" stroke-dasharray="4 4"/>
-    <circle cx="100" cy="100" r="18" fill="#f50057" opacity="0.9">
-      <animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="100" cy="100" r="8" fill="white"/>
-    <g>
-      <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="3s" repeatCount="indefinite"/>
-      <circle cx="150" cy="100" r="10" fill="#6c63ff"/>
-    </g>
-    <g>
-      <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="1.8s" repeatCount="indefinite"/>
-      <circle cx="130" cy="100" r="7" fill="#00e5ff"/>
-    </g>
-    <g>
-      <animateTransform attributeName="transform" type="rotate" from="120 100 100" to="480 100 100" dur="5s" repeatCount="indefinite"/>
-      <circle cx="150" cy="100" r="5" fill="#f50057" opacity="0.7"/>
-    </g>
-  </svg>`,
-
-  dna: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-    <rect width="200" height="200" fill="#0a0a1a"/>
-    <path fill="none" stroke="#6c63ff" stroke-width="3" stroke-linecap="round">
-      <animate attributeName="d" dur="3s" repeatCount="indefinite"
-        values="M60 20 C80 60,120 60,140 100 C120 140,80 140,60 180;
-                M60 20 C40 60,160 60,140 100 C160 140,40 140,60 180;
-                M60 20 C80 60,120 60,140 100 C120 140,80 140,60 180"/>
-    </path>
-    <path fill="none" stroke="#00e5ff" stroke-width="3" stroke-linecap="round">
-      <animate attributeName="d" dur="3s" repeatCount="indefinite"
-        values="M140 20 C120 60,80 60,60 100 C80 140,120 140,140 180;
-                M140 20 C160 60,40 60,60 100 C40 140,160 140,140 180;
-                M140 20 C120 60,80 60,60 100 C80 140,120 140,140 180"/>
-    </path>
-    <g>
-      <line x1="65" y1="60" x2="135" y2="60" stroke="rgba(108,99,255,0.5)" stroke-width="2"/>
-      <line x1="60" y1="100" x2="140" y2="100" stroke="rgba(0,229,255,0.5)" stroke-width="2"/>
-      <line x1="65" y1="140" x2="135" y2="140" stroke="rgba(108,99,255,0.5)" stroke-width="2"/>
-    </g>
-  </svg>`
+  spinner: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><circle cx="100" cy="100" r="60" fill="none" stroke="#1a1a35" stroke-width="12"/><circle cx="100" cy="100" r="60" fill="none" stroke="url(#sg)" stroke-width="12" stroke-dasharray="200 180" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="1.2s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="35" fill="none" stroke="#6c63ff" stroke-width="6" stroke-dasharray="80 140" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="0.8s" repeatCount="indefinite"/></circle><defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#00e5ff"/></linearGradient></defs></svg>`,
+  pulse: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><circle cx="100" cy="100" r="10" fill="#f50057" opacity="0.2"><animate attributeName="r" values="10;80;10" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="10" fill="#f50057" opacity="0.3"><animate attributeName="r" values="10;55;10" dur="2s" begin="0.3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="2s" begin="0.3s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="25" fill="#f50057"><animate attributeName="r" values="22;28;22" dur="1s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="14" fill="white" opacity="0.9"/></svg>`,
+  morph: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><rect x="65" y="65" width="70" height="70" fill="none" stroke="#00e5ff" stroke-width="3" rx="8"><animate attributeName="rx" values="8;35;8" dur="3s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="6s" repeatCount="indefinite"/></rect><rect x="50" y="50" width="100" height="100" fill="url(#mg)" opacity="0.7" rx="10"><animate attributeName="rx" values="10;50;10" dur="3s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="4s" repeatCount="indefinite"/></rect><defs><linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6c63ff" stop-opacity="0.8"/><stop offset="100%" stop-color="#00e5ff" stop-opacity="0.5"/><animate attributeName="x2" values="100%;0%;100%" dur="4s" repeatCount="indefinite"/></linearGradient></defs></svg>`,
+  wave: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><g transform="translate(0, 100)"><rect x="20" y="-15" width="16" height="30" fill="#6c63ff" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0s"/></rect><rect x="44" y="-15" width="16" height="30" fill="#8b5cf6" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.15s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.15s"/></rect><rect x="68" y="-15" width="16" height="30" fill="#00e5ff" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.3s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.3s"/></rect><rect x="92" y="-15" width="16" height="30" fill="#00b8d4" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.45s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.45s"/></rect><rect x="116" y="-15" width="16" height="30" fill="#8b5cf6" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.6s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.6s"/></rect><rect x="140" y="-15" width="16" height="30" fill="#6c63ff" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.75s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.75s"/></rect><rect x="164" y="-15" width="16" height="30" fill="#a78bfa" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.9s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.9s"/></rect></g></svg>`,
+  orbit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><circle cx="100" cy="100" r="50" fill="none" stroke="rgba(108,99,255,0.15)" stroke-width="1" stroke-dasharray="4 4"/><circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0,229,255,0.15)" stroke-width="1" stroke-dasharray="4 4"/><circle cx="100" cy="100" r="18" fill="#f50057" opacity="0.9"><animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="8" fill="white"/><g><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="3s" repeatCount="indefinite"/><circle cx="150" cy="100" r="10" fill="#6c63ff"/></g><g><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="1.8s" repeatCount="indefinite"/><circle cx="130" cy="100" r="7" fill="#00e5ff"/></g><g><animateTransform attributeName="transform" type="rotate" from="120 100 100" to="480 100 100" dur="5s" repeatCount="indefinite"/><circle cx="150" cy="100" r="5" fill="#f50057" opacity="0.7"/></g></svg>`,
+  dna: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><path fill="none" stroke="#6c63ff" stroke-width="3" stroke-linecap="round"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M60 20 C80 60,120 60,140 100 C120 140,80 140,60 180; M60 20 C40 60,160 60,140 100 C160 140,40 140,60 180; M60 20 C80 60,120 60,140 100 C120 140,80 140,60 180"/></path><path fill="none" stroke="#00e5ff" stroke-width="3" stroke-linecap="round"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M140 20 C120 60,80 60,60 100 C80 140,120 140,140 180; M140 20 C160 60,40 60,60 100 C40 140,160 140,140 180; M140 20 C120 60,80 60,60 100 C80 140,120 140,140 180"/></path><g><line x1="65" y1="60" x2="135" y2="60" stroke="rgba(108,99,255,0.5)" stroke-width="2"/><line x1="60" y1="100" x2="140" y2="100" stroke="rgba(0,229,255,0.5)" stroke-width="2"/><line x1="65" y1="140" x2="135" y2="140" stroke="rgba(108,99,255,0.5)" stroke-width="2"/></g></svg>`
 };
 
 function loadTemplate(name) {
   document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
   svgContent = templates[name];
-  svgDataURL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
   renderSVGPreview(svgContent);
   enableButtons();
   showToast('success', 'Template Loaded!', `"${name}" animation template applied.`);
 }
 
-// ============================================================
-// SVG CODE LOADING
-// ============================================================
 function loadSVGFromCode() {
   const code = document.getElementById('svgCodeEditor').value.trim();
   if (!code) { showToast('error', 'Empty Input', 'Please paste SVG code first.'); return; }
   if (!code.includes('<svg')) { showToast('error', 'Invalid SVG', 'Code must contain a valid SVG element.'); return; }
   svgContent = code;
-  svgDataURL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
   renderSVGPreview(svgContent);
   enableButtons();
   showToast('success', 'SVG Code Loaded!', 'Your SVG code is ready for conversion.');
 }
 
-// ============================================================
-// PREVIEW
-// ============================================================
 function renderSVGPreview(svg) {
   const display = document.getElementById('svgLiveDisplay');
   const placeholder = document.getElementById('previewPlaceholder');
 
-  // Parse SVG to get dimensions
   const parser = new DOMParser();
   const doc = parser.parseFromString(svg, 'image/svg+xml');
   const svgEl = doc.documentElement;
 
-  // Clone and inject
   display.innerHTML = '';
   const cloned = svgEl.cloneNode(true);
   cloned.style.maxWidth = '100%';
@@ -1127,11 +975,9 @@ function renderSVGPreview(svg) {
   display.classList.remove('hidden');
   display.classList.add('flex');
 
-  // Update status
   const vb = svgEl.getAttribute('viewBox') || `0 0 ${svgEl.getAttribute('width')||200} ${svgEl.getAttribute('height')||200}`;
   document.getElementById('previewStatus').innerHTML = `<i class="fa-solid fa-circle text-green-400" style="font-size:8px"></i><span class="text-green-400">Live · ${vb}</span>`;
 
-  // Update timeline
   const dur = parseInt(document.getElementById('durationSlider').value);
   document.getElementById('timelineEnd').textContent = dur + 's';
   document.getElementById('timelineMid').textContent = (dur/2).toFixed(1) + 's';
@@ -1168,7 +1014,6 @@ function startLivePreview() {
 
 function resetPreview() {
   svgContent = '';
-  svgDataURL = '';
   document.getElementById('svgLiveDisplay').classList.add('hidden');
   document.getElementById('previewPlaceholder').classList.remove('hidden');
   document.getElementById('previewStatus').innerHTML = `<i class="fa-regular fa-circle-dot"></i>No SVG loaded`;
@@ -1184,9 +1029,6 @@ function resetPreview() {
   disableButtons();
 }
 
-// ============================================================
-// SETTINGS
-// ============================================================
 function setResolution(w, h, label) {
   state.width = w;
   state.height = h;
@@ -1225,9 +1067,7 @@ function setBg(color) {
   });
 }
 
-function updateFormatInfo() {
-  state.format = document.getElementById('formatSelect').value;
-}
+function updateFormatInfo() { state.format = document.getElementById('formatSelect').value; }
 
 function updateStats() {
   const dur = parseInt(document.getElementById('durationSlider').value);
@@ -1238,15 +1078,10 @@ function updateStats() {
   document.getElementById('statFrames').textContent = frames;
   document.getElementById('statSize').textContent = '~' + sizeMB + 'MB';
   document.getElementById('statTime').textContent = dur + '.0s';
-
-  // Update timeline mid/end
   document.getElementById('timelineEnd').textContent = dur + 's';
   document.getElementById('timelineMid').textContent = (dur/2).toFixed(1) + 's';
 }
 
-// ============================================================
-// ENABLE / DISABLE
-// ============================================================
 function enableButtons() {
   document.getElementById('convertBtn').disabled = false;
   document.getElementById('previewBtn').disabled = false;
@@ -1257,7 +1092,7 @@ function disableButtons() {
 }
 
 // ============================================================
-// CONVERSION ENGINE
+// CONVERSION ENGINE (FIXED)
 // ============================================================
 let conversionCancelled = false;
 
@@ -1265,92 +1100,122 @@ async function startConversion() {
   if (!svgContent) { showToast('error', 'No SVG', 'Please load an SVG first.'); return; }
 
   conversionCancelled = false;
-  const dur    = parseInt(document.getElementById('durationSlider').value);
-  const fps    = parseInt(document.getElementById('fpsSlider').value);
-  const w      = parseInt(document.getElementById('customWidth').value)  || 1280;
-  const h      = parseInt(document.getElementById('customHeight').value) || 720;
+  const dur     = parseInt(document.getElementById('durationSlider').value);
+  const fps     = parseInt(document.getElementById('fpsSlider').value);
+  const w       = parseInt(document.getElementById('customWidth').value)  || 1280;
+  const h       = parseInt(document.getElementById('customHeight').value) || 720;
   const bitrate = qualityBitrates[state.quality - 1];
   const format  = document.getElementById('formatSelect').value;
 
-  // Show conversion panel
   document.getElementById('conversionPanel').classList.remove('hidden');
   document.getElementById('outputPanel').classList.add('hidden');
   document.getElementById('featuresPanel').classList.add('hidden');
   document.getElementById('convertBtn').disabled = true;
 
-  // Setup canvas
   const canvas = document.getElementById('hiddenCanvas');
   canvas.width  = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
 
-  // Determine best supported mime
   let mimeType = format;
   if (!MediaRecorder.isTypeSupported(mimeType)) {
     if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
     else if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
-    else { showToast('error', 'Unsupported', 'MediaRecorder API not supported in this browser.'); return; }
+    else { showToast('error', 'Unsupported', 'MediaRecorder not supported.'); return; }
   }
 
   const chunks = [];
-  const stream = canvas.captureStream(fps);
-  mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
-
-  mediaRecorder.ondataavailable = e => {
-    if (e.data && e.data.size > 0) chunks.push(e.data);
-  };
-
-  mediaRecorder.onstop = () => {
-    if (conversionCancelled) { resetConversionUI(); return; }
-    videoBlob = new Blob(chunks, { type: 'video/webm' });
-    if (videoURL) URL.revokeObjectURL(videoURL);
-    videoURL = URL.createObjectURL(videoBlob);
-    finishConversion(videoURL, videoBlob, w, h, dur, fps);
-  };
-
-  // 1. Create a single image element and hide it in the DOM 
-  // This forces the browser engine to keep the SVG's internal animation ticking
+  
+  // FIX 1: Place the SVG heavily visible in the render tree but hidden behind other elements.
+  // This prevents Chrome/Firefox from turning off the internal animation clock.
   const imgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
   const img = new Image();
-  img.style.position = 'absolute';
-  img.style.opacity = '0.01';
-  img.style.pointerEvents = 'none';
-  img.style.zIndex = '-9999';
+  img.style.position = 'fixed';
+  img.style.top = '0';
+  img.style.left = '0';
+  img.style.width = '100px'; 
+  img.style.height = '100px';
+  img.style.opacity = '1';       // MUST be 1 so the browser renders it
+  img.style.zIndex = '-9999';    // Hide it behind the app UI
   document.body.appendChild(img);
 
   const totalFrames = dur * fps;
   recordingActive = true;
 
-  // 2. Wait for the image to load ONCE, then start the recording loop
   img.onload = () => {
+    
+    // FIX 2: Draw an initial frame before initializing the canvas stream
+    // to ensure the stream tracks are valid before recording starts.
+    if (state.bg === 'transparent') {
+      ctx.clearRect(0, 0, w, h);
+    } else {
+      ctx.fillStyle = state.bg;
+      ctx.fillRect(0, 0, w, h);
+    }
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const stream = canvas.captureStream(fps);
+    mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
+
+    mediaRecorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      if (conversionCancelled) { resetConversionUI(); return; }
+      
+      const rawBlob = new Blob(chunks, { type: mimeType });
+      
+      // FIX 3: Desktop video players get confused by "live stream" WebM files 
+      // because they lack a duration header. We patch the file so it downloads flawlessly.
+      if (mimeType.includes('webm') && window.ysFixWebmDuration) {
+        ysFixWebmDuration(rawBlob, dur * 1000, function(fixedBlob) {
+          if (videoURL) URL.revokeObjectURL(videoURL);
+          videoBlob = fixedBlob;
+          videoURL = URL.createObjectURL(fixedBlob);
+          finishConversion(videoURL, fixedBlob, w, h, dur, fps);
+        });
+      } else {
+        // Fallback
+        if (videoURL) URL.revokeObjectURL(videoURL);
+        videoBlob = rawBlob;
+        videoURL = URL.createObjectURL(rawBlob);
+        finishConversion(videoURL, rawBlob, w, h, dur, fps);
+      }
+    };
+
     startTime = Date.now();
     elapsedInterval = setInterval(updateElapsed, 500);
     
-    mediaRecorder.start();
+    // Start with a timeslice to force chunk flushing
+    mediaRecorder.start(250);
 
     updateConvStatus('Rendering frames...', 0, 0, totalFrames);
 
     function renderFrame() {
-      // Handle cancellations
       if (!recordingActive || conversionCancelled) {
         clearInterval(elapsedInterval);
         if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        if (img.parentNode) img.parentNode.removeChild(img); // Cleanup DOM
+        if (img.parentNode) img.parentNode.removeChild(img);
         return;
       }
 
       const elapsed = Date.now() - startTime;
       const currentFrame = Math.floor((elapsed / 1000) * fps);
 
-      // Handle completion
       if (elapsed >= (dur * 1000)) {
         clearInterval(elapsedInterval);
-        mediaRecorder.stop();
-        if (img.parentNode) img.parentNode.removeChild(img); // Cleanup DOM
+        
+        // Let the final frames flush into the recorder gracefully
+        mediaRecorder.requestData(); 
+        setTimeout(() => {
+          if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+          if (img.parentNode) img.parentNode.removeChild(img);
+        }, 100);
         return;
       }
 
-      // Draw background
+      // Draw Background
       if (state.bg === 'transparent') {
         ctx.clearRect(0, 0, w, h);
       } else {
@@ -1358,18 +1223,16 @@ async function startConversion() {
         ctx.fillRect(0, 0, w, h);
       }
 
-      // 3. Draw the currently animating image instance to the canvas
+      // Draw active SVG image
       ctx.drawImage(img, 0, 0, w, h);
 
-      // Update UI Progress
+      // UI
       const pct = Math.min(100, Math.round((elapsed / (dur * 1000)) * 100));
       updateConvStatus('Rendering frames...', pct, Math.min(currentFrame, totalFrames), totalFrames);
 
-      // Loop using requestAnimationFrame for smooth capture synced with the browser
       requestAnimationFrame(renderFrame);
     }
 
-    // Start drawing loop
     requestAnimationFrame(renderFrame);
   };
 
@@ -1387,7 +1250,6 @@ function updateConvStatus(msg, pct, frames, total) {
   document.getElementById('convPercent').textContent = pct + '%';
   document.getElementById('convStatus').textContent = msg;
   document.getElementById('convFrameCount').textContent = frames + ' / ' + total;
-  // ETA
   if (frames > 0 && startTime) {
     const elapsed = (Date.now() - startTime) / 1000;
     const fps_actual = frames / elapsed;
@@ -1432,14 +1294,9 @@ function finishConversion(url, blob, w, h, dur, fps) {
   document.getElementById('outFPS').textContent = fps + ' fps';
 
   showToast('success', 'Video Ready! 🎉', `Exported ${formatBytes(blob.size)} WebM video.`);
-
-  // Auto scroll to output
   setTimeout(() => document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
 }
 
-// ============================================================
-// DOWNLOAD & SHARE
-// ============================================================
 function downloadVideo() {
   if (!videoBlob) return;
   const a = document.createElement('a');
@@ -1465,9 +1322,6 @@ function convertAnother() {
   resetPreview();
 }
 
-// ============================================================
-// TOAST
-// ============================================================
 function showToast(type, title, msg) {
   const toast = document.getElementById('toast');
   const icon  = document.getElementById('toastIcon');
@@ -1486,13 +1340,9 @@ function showToast(type, title, msg) {
   toast._timeout = setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
-// ============================================================
-// INIT
-// ============================================================
 updateStats();
 updateQualityLabel(4);
 
-// Keyboard shortcut
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'Enter' && svgContent) startConversion();
 });
