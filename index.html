@@ -997,7 +997,17 @@
         }
 
         #renderCanvas { display: none; }
-        #hiddenEngineBox { position: fixed; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; opacity: 0.01; pointer-events: none; }
+
+        /* Live render engine: must be visible + sized so CSS animations tick.
+           Positioned way off-screen (left: -9999px) so it never shows to user. */
+        #hiddenEngineBox {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
@@ -1345,7 +1355,21 @@
             updateLineNums();
         });
 
-        /* ── Main Render Engine (original logic preserved) ── */
+        /* ════════════════════════════════════════════════════
+           RENDER ENGINE — Animation-Preserving DOM Capture
+           
+           ROOT CAUSE OF FROZEN VIDEO:
+           Drawing an SVG via <img> src=blobURL freezes all CSS
+           animations — the browser treats it as a static bitmap.
+           
+           FIX: Place a live <svg> directly in the DOM inside a
+           visible (but off-screen) container so its animations
+           keep ticking. Each frame, serialize that live DOM node
+           to a data-URL via foreignObject, draw it onto the canvas,
+           and let MediaRecorder capture the canvas stream.
+           This way every CSS keyframe runs in real-time.
+        ════════════════════════════════════════════════════ */
+
         convertBtn.addEventListener('click', () => {
             let activeSvg = previewArea.querySelector('svg');
             if (!activeSvg) {
@@ -1356,41 +1380,66 @@
             const selectedSeconds   = parseInt(durationSelect.value);
             const EXACT_DURATION_MS = selectedSeconds * 1000;
 
-            const fps        = parseInt(document.getElementById('videoFps').value);
-            const resSplit   = document.getElementById('videoResolution').value.split('x');
+            const fps          = parseInt(document.getElementById('videoFps').value);
+            const resSplit     = document.getElementById('videoResolution').value.split('x');
             const targetWidth  = parseInt(resSplit[0]);
             const targetHeight = parseInt(resSplit[1]);
+
+            // Derive the SVG's own coordinate space (for viewBox)
+            let vbW = targetWidth, vbH = targetHeight;
+            const vb = activeSvg.getAttribute('viewBox');
+            if (vb) {
+                const parts = vb.trim().split(/[\s,]+/);
+                if (parts.length === 4) { vbW = parseFloat(parts[2]); vbH = parseFloat(parts[3]); }
+            } else {
+                const aw = activeSvg.getAttribute('width');
+                const ah = activeSvg.getAttribute('height');
+                if (aw) vbW = parseFloat(aw);
+                if (ah) vbH = parseFloat(ah);
+            }
 
             convertBtn.disabled = true;
             renderOverlay.style.display = 'flex';
             progressFill.style.width = '0%';
             renderTimer.innerHTML = `0.0s <span class="render-timer-unit">/ ${selectedSeconds}s</span>`;
-            renderStatus.innerText = "Converting Video…";
-            renderStatusChip.textContent = "UPSCALING";
+            renderStatus.innerText = "Preparing live render engine…";
+            renderStatusChip.textContent = "WARMING UP";
             downloadArea.innerHTML = "";
 
             canvas.width  = targetWidth;
             canvas.height = targetHeight;
 
-            let cloneSvg = activeSvg.cloneNode(true);
-            if (!cloneSvg.getAttribute('viewBox')) {
-                const origW = cloneSvg.getAttribute('width')  || targetWidth;
-                const origH = cloneSvg.getAttribute('height') || targetHeight;
-                cloneSvg.setAttribute('viewBox', `0 0 ${parseInt(origW)} ${parseInt(origH)}`);
+            // ── Step 1: Clone the SVG and inject it LIVE into the DOM ──
+            // We need the real, visible, animating SVG node.
+            // It must be in the document so CSS animations run.
+            const liveSvg = activeSvg.cloneNode(true);
+            liveSvg.setAttribute('width',  targetWidth  + 'px');
+            liveSvg.setAttribute('height', targetHeight + 'px');
+            if (!liveSvg.getAttribute('viewBox')) {
+                liveSvg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
             }
-            cloneSvg.setAttribute('width',  targetWidth  + 'px');
-            cloneSvg.setAttribute('height', targetHeight + 'px');
+            liveSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
-            const rawSvgText = new XMLSerializer().serializeToString(cloneSvg);
-            const svgBlob    = new Blob([rawSvgText], { type: 'image/svg+xml;charset=utf-8' });
-            const svgUrl     = URL.createObjectURL(svgBlob);
+            // Size the hidden engine box to exactly targetWidth × targetHeight
+            // so the SVG renders at full resolution with animations active
+            hiddenEngineBox.style.width  = targetWidth  + 'px';
+            hiddenEngineBox.style.height = targetHeight + 'px';
+            hiddenEngineBox.innerHTML = '';
+            hiddenEngineBox.appendChild(liveSvg);
 
-            const liveImageEl = document.createElement('img');
-            liveImageEl.style.width  = targetWidth  + 'px';
-            liveImageEl.style.height = targetHeight + 'px';
-            hiddenEngineBox.appendChild(liveImageEl);
+            // ── Step 2: Give the browser 3 frames to start the animations ──
+            let warmupFrames = 0;
+            function waitForWarmup() {
+                warmupFrames++;
+                if (warmupFrames < 4) {
+                    requestAnimationFrame(waitForWarmup);
+                    return;
+                }
+                startRecording();
+            }
+            requestAnimationFrame(waitForWarmup);
 
-            liveImageEl.onload = () => {
+            function startRecording() {
                 renderStatus.innerText = `Recording ${selectedSeconds}s at ${targetHeight}p…`;
                 renderStatusChip.textContent = "RECORDING";
 
@@ -1401,10 +1450,12 @@
                 if (targetWidth >= 2560) targetBitrate = 20000000;
                 if (targetWidth >= 3840) targetBitrate = 35000000;
 
-                const mediaOptions = { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: targetBitrate };
                 let mediaRecorder;
                 try {
-                    mediaRecorder = new MediaRecorder(stream, mediaOptions);
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'video/webm; codecs=vp9',
+                        videoBitsPerSecond: targetBitrate
+                    });
                 } catch(e) {
                     mediaRecorder = new MediaRecorder(stream, { videoBitsPerSecond: targetBitrate });
                 }
@@ -1417,18 +1468,17 @@
                     renderStatus.innerText = "Applying metadata fixes…";
                     renderStatusChip.textContent = "FIXING";
                     hiddenEngineBox.innerHTML = '';
-                    URL.revokeObjectURL(svgUrl);
+                    hiddenEngineBox.style.width  = '';
+                    hiddenEngineBox.style.height = '';
 
                     const brokenBlob = new Blob(recordedChunks, { type: 'video/webm' });
 
                     ysFixWebmDuration(brokenBlob, EXACT_DURATION_MS, function(fixedBlob) {
-                        const videoUrl = URL.createObjectURL(fixedBlob);
-
+                        const videoUrl   = URL.createObjectURL(fixedBlob);
                         renderOverlay.style.display = 'none';
                         convertBtn.disabled = false;
 
-                        const filename = `SVG-Studio-${selectedSeconds}sec-${targetHeight}p.webm`;
-
+                        const filename   = `SVG-Studio-${selectedSeconds}sec-${targetHeight}p.webm`;
                         const fileSizeMB = (fixedBlob.size / 1024 / 1024).toFixed(1);
 
                         downloadArea.innerHTML = `
@@ -1466,35 +1516,42 @@
                     mediaRecorder.stop();
                 }, EXACT_DURATION_MS);
 
+                // ── Step 3: Each frame — serialize live DOM SVG → image → canvas ──
+                // We use the foreignObject trick: wrap the current live SVG HTML
+                // in a foreignObject inside a temporary SVG, encode as data URL,
+                // draw onto canvas. Because the SOURCE is the live DOM node
+                // (not a frozen blob URL img), each serialization captures the
+                // current animation state at that exact moment in time.
                 function renderLoop(currentTime) {
                     if (!isRecording) return;
 
-                    const elapsed = currentTime - startTime;
-                    const pct = Math.min((elapsed / EXACT_DURATION_MS) * 100, 100);
-                    progressFill.style.width = pct + '%';
-
+                    const elapsed    = currentTime - startTime;
+                    const pct        = Math.min((elapsed / EXACT_DURATION_MS) * 100, 100);
                     const elapsedSec = Math.min(elapsed / 1000, selectedSeconds).toFixed(1);
+
+                    progressFill.style.width = pct + '%';
                     renderTimer.innerHTML = `${elapsedSec}s <span class="render-timer-unit">/ ${selectedSeconds}s</span>`;
 
-                    ctx.fillStyle = '#020617';
-                    ctx.fillRect(0, 0, targetWidth, targetHeight);
-                    ctx.drawImage(liveImageEl, 0, 0, targetWidth, targetHeight);
-                    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.05})`;
-                    ctx.fillRect(0, 0, 1, 1);
+                    // Serialize the *live* SVG node (captures current animation state)
+                    const svgStr  = new XMLSerializer().serializeToString(liveSvg);
+                    const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+
+                    const img = new Image();
+                    img.onload = () => {
+                        ctx.fillStyle = '#020617';
+                        ctx.fillRect(0, 0, targetWidth, targetHeight);
+                        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                        // Force-dirty a single pixel so Chrome doesn't drop identical frames
+                        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.02})`;
+                        ctx.fillRect(0, 0, 1, 1);
+                    };
+                    img.src = dataUrl;
 
                     animationId = requestAnimationFrame(renderLoop);
                 }
 
                 requestAnimationFrame(renderLoop);
-            };
-
-            liveImageEl.onerror = () => {
-                alert("System Error: The SVG code is invalid or missing dependencies.");
-                renderOverlay.style.display = 'none';
-                convertBtn.disabled = false;
-            };
-
-            liveImageEl.src = svgUrl;
+            }
         });
     </script>
 </body>
