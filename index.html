@@ -1,1491 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SVG Studio Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
-<style>
-:root{
-  --bg0:#070810;--bg1:#0c0d18;--bg2:#111320;--bg3:#171928;--bg4:#1d2033;
-  --border:#242740;--border2:#2e3250;--border3:#3a3f66;
-  --c1:#4f9eff;--c1a:rgba(79,158,255,.12);--c1b:rgba(79,158,255,.3);
-  --c2:#00e5a0;--c2a:rgba(0,229,160,.1);
-  --c3:#ff6b6b;--c3a:rgba(255,107,107,.1);
-  --c4:#ffc85a;--c4a:rgba(255,200,90,.1);
-  --tx:#e2e5f0;--tx2:#7a80a0;--tx3:#3e4460;
-  --r:6px;--r2:4px;
-  --ff:'Space Grotesk',sans-serif;
-  --fm:'IBM Plex Mono',monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
-html,body{height:100%;overflow:hidden;background:var(--bg0);color:var(--tx);font-family:var(--ff)}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Studio RJ | Dynamic Duration Renderer</title>
+    <script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
+    <style>
+        :root {
+            --bg-base: #020617;
+            --bg-panel: #0f172a;
+            --bg-input: #1e293b;
+            --accent: #0ea5e9;
+            --accent-glow: rgba(14, 165, 233, 0.5);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.4);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+            --radius: 12px;
+        }
 
-.app{display:grid;grid-template-rows:48px 1fr 200px 36px;height:100vh;width:100vw}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── TOPBAR ── */
-.topbar{
-  background:var(--bg1);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 12px;gap:8px;z-index:50
-}
-.logo{
-  font-weight:700;font-size:.9rem;letter-spacing:.05em;
-  color:var(--c1);margin-right:4px;white-space:nowrap
-}
-.logo span{color:var(--c2)}
-.nav-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
-.mbtn{
-  background:none;border:none;color:var(--tx2);font-family:var(--ff);
-  font-size:.75rem;font-weight:500;padding:5px 9px;border-radius:var(--r2);cursor:pointer;transition:.15s
-}
-.mbtn:hover{background:var(--bg3);color:var(--tx)}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.chip{
-  font-size:.62rem;font-weight:600;font-family:var(--fm);padding:2px 7px;
-  border-radius:3px;letter-spacing:.06em
-}
-.chip-blue{background:var(--c1a);color:var(--c1);border:1px solid var(--c1b)}
-.chip-dim{background:var(--bg3);color:var(--tx3);border:1px solid var(--border)}
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
 
-/* ── WORKSPACE ── */
-.workspace{display:grid;grid-template-columns:310px 1fr 280px;overflow:hidden}
+        .header { text-align: center; margin-bottom: 30px; }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-/* ── LEFT: EDITOR ── */
-.editor-col{
-  background:var(--bg1);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow:hidden
-}
-.tab-bar{display:flex;background:var(--bg0);border-bottom:1px solid var(--border)}
-.tab{
-  font-family:var(--fm);font-size:.68rem;padding:8px 14px;
-  color:var(--tx3);cursor:pointer;border-right:1px solid var(--border);transition:.15s
-}
-.tab.on{background:var(--bg1);color:var(--c1);box-shadow:inset 0 -2px var(--c1)}
-.editor-bar{
-  display:flex;align-items:center;gap:6px;padding:7px 10px;
-  border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg2)
-}
-.xbtn{
-  background:var(--bg3);border:1px solid var(--border);color:var(--tx2);
-  font-family:var(--fm);font-size:.67rem;padding:3px 8px;border-radius:3px;
-  cursor:pointer;transition:.15s;white-space:nowrap
-}
-.xbtn:hover{border-color:var(--c1b);color:var(--c1)}
-.line-info{font-family:var(--fm);font-size:.62rem;color:var(--tx3);margin-left:auto}
-#svgCode{
-  flex:1;background:var(--bg1);color:#7ecfff;font-family:var(--fm);
-  font-size:12px;line-height:1.7;border:none;outline:none;
-  padding:12px;resize:none;overflow-y:auto;tab-size:2
-}
-#svgCode::-webkit-scrollbar{width:5px}
-#svgCode::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+        .subtitle { color: var(--text-dim); font-size: 1rem; }
 
-/* ── CENTRE: PREVIEW ── */
-.preview-col{display:flex;flex-direction:column;background:var(--bg0);overflow:hidden}
-.prev-bar{
-  display:flex;align-items:center;gap:8px;padding:7px 12px;
-  background:var(--bg1);border-bottom:1px solid var(--border);flex-shrink:0
-}
-.prev-label{font-size:.7rem;font-weight:600;color:var(--tx2);letter-spacing:.07em;text-transform:uppercase}
-.inf{
-  background:var(--bg3);border:1px solid var(--border);font-family:var(--fm);
-  font-size:.62rem;color:var(--tx2);padding:2px 7px;border-radius:3px
-}
-.live{
-  width:6px;height:6px;border-radius:50%;background:var(--c2);
-  box-shadow:0 0 8px var(--c2);animation:lp 2s infinite;margin-left:auto
-}
-@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
-.stage{
-  flex:1;display:flex;align-items:center;justify-content:center;
-  background:repeating-conic-gradient(#0d0e1a 0% 25%,#090a14 0% 50%) 0 0/20px 20px;
-  overflow:hidden;position:relative
-}
-.frame{
-  background:#000;
-  max-width:calc(100% - 32px);max-height:calc(100% - 32px);
-  box-shadow:0 0 0 1px var(--border),0 20px 50px rgba(0,0,0,.8);
-  overflow:hidden;position:relative
-}
-.frame svg{width:100%;height:100%;display:block}
-.time-hud{
-  position:absolute;bottom:8px;right:8px;
-  background:rgba(0,0,0,.75);border:1px solid var(--border2);
-  font-family:var(--fm);font-size:.63rem;color:var(--c1);
-  padding:2px 7px;border-radius:3px;pointer-events:none
-}
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            width: 100%;
+            max-width: 1600px;
+            margin-bottom: 25px;
+        }
 
-/* ── RIGHT: SETTINGS ── */
-.settings-col{
-  background:var(--bg1);border-left:1px solid var(--border);
-  display:flex;flex-direction:column;overflow-y:auto
-}
-.settings-col::-webkit-scrollbar{width:4px}
-.settings-col::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.sect{border-bottom:1px solid var(--border);padding:13px}
-.sect-title{
-  font-size:.64rem;font-weight:700;color:var(--tx3);letter-spacing:.1em;
-  text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:6px
-}
-.sect-title::before{content:'';width:3px;height:11px;background:var(--c1);border-radius:2px;display:inline-block}
-.f{margin-bottom:9px}
-.fl{
-  font-size:.67rem;color:var(--tx2);font-weight:500;
-  margin-bottom:4px;display:flex;justify-content:space-between;align-items:center
-}
-.fv{font-family:var(--fm);color:var(--c1);font-size:.67rem}
-select,input[type=number],input[type=text]{
-  width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--tx);
-  font-family:var(--fm);font-size:.76rem;padding:6px 9px;border-radius:var(--r);
-  outline:none;transition:.15s;-webkit-appearance:none
-}
-select:focus,input:focus{border-color:var(--c1b)}
-select option{background:var(--bg3)}
-input[type=range]{
-  width:100%;-webkit-appearance:none;height:3px;background:var(--bg4);
-  border-radius:2px;outline:none;cursor:pointer
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
-  background:var(--c1);cursor:pointer
-}
-.fmt-pills{display:flex;gap:5px}
-.fp{
-  background:var(--bg3);border:1px solid var(--border);color:var(--tx2);
-  font-family:var(--fm);font-size:.67rem;font-weight:600;padding:5px 10px;
-  border-radius:3px;cursor:pointer;transition:.15s;letter-spacing:.03em
-}
-.fp.on{background:var(--c1a);border-color:var(--c1);color:var(--c1)}
-.fp:hover:not(.on){border-color:var(--border2);color:var(--tx)}
-.fmt-note{font-size:.62rem;color:var(--tx3);font-family:var(--fm);margin-top:7px}
-.render-btn{
-  margin:12px;background:linear-gradient(135deg,#1a7aff,#00c87a);border:none;
-  color:#fff;font-family:var(--ff);font-size:.82rem;font-weight:700;
-  padding:13px;border-radius:var(--r);cursor:pointer;letter-spacing:.05em;
-  text-transform:uppercase;transition:.2s;
-  box-shadow:0 4px 18px rgba(0,150,255,.2);flex-shrink:0
-}
-.render-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 25px rgba(0,150,255,.35)}
-.render-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
 
-/* ── KEYFRAME PANEL ── */
-.kf-list{display:flex;flex-direction:column;gap:4px;max-height:110px;overflow-y:auto}
-.kf-list::-webkit-scrollbar{width:3px}
-.kf-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.kf-row{
-  display:flex;align-items:center;gap:7px;background:var(--bg3);
-  border:1px solid var(--border);border-radius:3px;padding:4px 7px;
-  font-family:var(--fm);font-size:.64rem;color:var(--tx2);cursor:pointer;transition:.15s
-}
-.kf-row:hover{border-color:var(--border2)}
-.kf-t{color:var(--c1);min-width:38px}
-.kf-lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kf-rm{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:.75rem;padding:0 2px;transition:.15s}
-.kf-rm:hover{color:var(--c3)}
-.kf-add{
-  background:var(--bg3);border:1px dashed var(--border2);color:var(--tx2);
-  font-family:var(--fm);font-size:.67rem;padding:5px;border-radius:3px;
-  cursor:pointer;width:100%;transition:.15s;margin-top:3px
-}
-.kf-add:hover{border-color:var(--c1b);color:var(--c1)}
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
 
-/* ── TIMELINE ── */
-.timeline{
-  background:var(--bg1);border-top:1px solid var(--border);
-  display:flex;flex-direction:column;overflow:hidden
-}
-.tl-bar{
-  display:flex;align-items:center;gap:7px;padding:5px 12px;
-  background:var(--bg0);border-bottom:1px solid var(--border);flex-shrink:0
-}
-.tl-lbl{font-size:.66rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em}
-.tl-btn{
-  background:var(--bg3);border:1px solid var(--border);color:var(--tx2);
-  font-size:.68rem;width:22px;height:22px;border-radius:3px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:.15s
-}
-.tl-btn:hover{border-color:var(--c1b);color:var(--c1)}
-.tl-time{
-  font-family:var(--fm);font-size:.68rem;color:var(--c1);
-  background:var(--bg3);border:1px solid var(--border);padding:2px 7px;border-radius:3px
-}
-.tl-r{margin-left:auto;display:flex;align-items:center;gap:7px}
-.tl-zoom-lbl{font-family:var(--fm);font-size:.62rem;color:var(--tx3)}
-.tl-tracks{flex:1;display:flex;overflow:hidden}
-.track-lbls{
-  width:100px;flex-shrink:0;border-right:1px solid var(--border);
-  display:flex;flex-direction:column
-}
-.tlbl{
-  height:36px;display:flex;align-items:center;padding:0 9px;
-  font-size:.62rem;font-weight:700;color:var(--tx3);text-transform:uppercase;
-  letter-spacing:.05em;border-bottom:1px solid var(--border);gap:5px
-}
-.tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.tl-scroll{flex:1;overflow-x:auto;overflow-y:hidden;position:relative}
-.tl-scroll::-webkit-scrollbar{height:5px}
-.tl-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-.tl-inner{position:relative;height:100%}
-.ruler{height:18px;background:var(--bg0);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
-.ruler canvas{position:absolute;top:0;left:0;width:100%;height:100%}
-.track-area{position:relative}
-.track-row{height:36px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
-.clip{
-  position:absolute;top:6px;height:22px;border-radius:3px;cursor:pointer;
-  display:flex;align-items:center;padding:0 7px;font-size:.58rem;font-weight:700;
-  font-family:var(--fm);white-space:nowrap;overflow:hidden;transition:.15s
-}
-.clip:hover{filter:brightness(1.2)}
-.kfdiamond{
-  position:absolute;top:50%;
-  transform:translate(-50%,-50%) rotate(45deg);
-  width:7px;height:7px;cursor:pointer;transition:.15s;z-index:5
-}
-.kfdiamond:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.5)}
-.playhead{
-  position:absolute;top:0;width:2px;height:100%;
-  background:var(--c3);box-shadow:0 0 6px var(--c3);
-  z-index:10;pointer-events:none
-}
-.playhead::before{
-  content:'';position:absolute;top:0;left:-5px;
-  width:0;height:0;border-left:6px solid transparent;
-  border-right:6px solid transparent;border-top:8px solid var(--c3)
-}
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-/* ── STATUS BAR ── */
-.statusbar{
-  background:var(--bg0);border-top:1px solid var(--border);
-  display:flex;align-items:center;padding:0 12px;gap:18px
-}
-.sitem{font-family:var(--fm);font-size:.6rem;color:var(--tx3);display:flex;align-items:center;gap:4px}
-.sitem.on{color:var(--c1)}
-.sdot{width:4px;height:4px;border-radius:50%;background:currentColor}
+        .badge-live {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            animation: pulse-badge 2s infinite;
+        }
 
-/* ── RENDER OVERLAY ── */
-.overlay{
-  position:fixed;inset:0;background:rgba(5,6,14,.93);
-  backdrop-filter:blur(16px);z-index:999;
-  display:none;align-items:center;justify-content:center
-}
-.modal{
-  background:var(--bg2);border:1px solid var(--border2);
-  border-radius:10px;padding:36px;width:460px;
-  box-shadow:0 30px 80px rgba(0,0,0,.9)
-}
-.modal-title{font-size:1.05rem;font-weight:700;color:var(--c1);margin-bottom:3px}
-.modal-sub{font-size:.74rem;color:var(--tx2);font-family:var(--fm);margin-bottom:24px}
-.r-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:20px}
-.rstat{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:9px;text-align:center}
-.rstat-v{font-family:var(--fm);font-size:1rem;font-weight:700;color:var(--tx);display:block}
-.rstat-l{font-size:.58rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
-.prog-track{width:100%;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:10px}
-.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--c1),var(--c2));border-radius:3px;transition:width .07s linear}
-.r-bottom{display:flex;justify-content:space-between;align-items:center;font-family:var(--fm);font-size:.72rem;color:var(--tx2)}
-.r-pct{color:var(--c2);font-size:.85rem;font-weight:700}
-.r-stage{font-size:.68rem;color:var(--tx3);font-family:var(--fm);margin-top:9px;min-height:16px}
-.gif-warn{
-  margin-top:12px;background:var(--c4a);border:1px solid rgba(255,200,90,.25);
-  color:var(--c4);font-size:.67rem;font-family:var(--fm);
-  padding:7px 11px;border-radius:4px;display:none
-}
-.cancel-btn{
-  margin-top:16px;background:none;border:1px solid var(--border2);
-  color:var(--tx2);font-family:var(--ff);font-size:.75rem;font-weight:500;
-  padding:7px 16px;border-radius:var(--r);cursor:pointer;transition:.15s;width:100%
-}
-.cancel-btn:hover{border-color:var(--c3);color:var(--c3)}
+        @keyframes pulse-badge {
+            0% { box-shadow: 0 0 0 0 var(--success-glow); }
+            70% { box-shadow: 0 0 0 5px rgba(0,0,0,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+        }
 
-/* ── DOWNLOAD ── */
-#dlArea{position:fixed;bottom:48px;right:16px;z-index:200;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
-.dl-btn{
-  background:linear-gradient(135deg,#0a5c1e,#00952a);color:#fff;text-decoration:none;
-  padding:10px 18px;border-radius:var(--r);font-family:var(--ff);font-weight:700;
-  font-size:.78rem;letter-spacing:.04em;box-shadow:0 5px 18px rgba(0,140,40,.3);
-  transition:.2s;display:flex;align-items:center;gap:8px;white-space:nowrap
-}
-.dl-btn:hover{transform:translateY(-2px);box-shadow:0 9px 24px rgba(0,140,40,.45)}
+        .aspect-16-9 {
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            border-radius: 8px;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
 
-/* ── TOOLTIPS ── */
-[data-tip]{position:relative}
-[data-tip]::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;
-  transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border2);
-  color:var(--tx2);font-family:var(--fm);font-size:.62rem;padding:3px 7px;
-  border-radius:3px;white-space:nowrap;pointer-events:none;opacity:0;transition:.15s;z-index:999
-}
-[data-tip]:hover::after{opacity:1}
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: var(--bg-base); }
+        textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
 
-/* ── HIDDEN HARDWARE ── */
-#rCanvas{display:none}
-#hbox{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none}
-</style>
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            color: #34d399;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            border: none;
+            padding: 15px;
+            resize: none;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .preview-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        .preview-box svg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .control-deck {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px 30px;
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .settings-group { 
+            display: flex; 
+            align-items: flex-end; 
+            gap: 25px; 
+            flex-wrap: wrap;
+        }
+
+        .setting-item { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        
+        .setting-item label { 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+        }
+
+        select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: border 0.2s;
+            min-width: 180px;
+        }
+        
+        select:focus { border-color: var(--accent); }
+
+        /* ── Duration indicator: shows the currently selected seconds live ── */
+        .duration-display {
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+            user-select: none;
+            text-align: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: max-content;
+            transition: all 0.3s;
+        }
+
+        .btn-render {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 15px 35px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px var(--accent-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            flex-shrink: 0;
+            align-self: flex-end;
+            height: 47px;
+        }
+
+        .btn-render:hover { transform: translateY(-2px); box-shadow: 0 12px 25px var(--accent-glow); }
+        .btn-render:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .render-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .render-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            width: 450px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+        }
+
+        .render-title { font-size: 1.2rem; font-weight: 800; color: var(--accent); margin-bottom: 10px; }
+        .render-subtitle { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 30px; }
+
+        .progress-bar-container {
+            width: 100%; height: 12px;
+            background: var(--bg-base);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.1s linear;
+        }
+
+        /* Live countdown shown inside the overlay */
+        .render-timer {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            margin-top: 10px;
+        }
+
+        #downloadArea { margin-top: 25px; text-align: center; }
+        
+        .download-btn {
+            background: var(--success);
+            color: #020617;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 16px;
+            box-shadow: 0 8px 25px var(--success-glow);
+            transition: all 0.3s;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+        .download-btn:hover { background: #34d399; transform: translateY(-2px); }
+
+        @media (max-width: 1000px) {
+            .workspace { grid-template-columns: 1fr; }
+            .control-deck { flex-direction: column; align-items: stretch; }
+            .btn-render { width: 100%; margin-top: 10px; }
+            .settings-group { flex-direction: column; align-items: stretch; gap: 15px; }
+            .duration-display { width: 100%; }
+        }
+
+        #renderCanvas { display: none; }
+        #hiddenEngineBox { position: fixed; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; opacity: 0.01; pointer-events: none; }
+    </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="logo">SVG<span>Studio</span></div>
-    <div class="nav-sep"></div>
-    <button class="mbtn" onclick="fileNew()">New</button>
-    <button class="mbtn" onclick="fileOpen()">Open</button>
-    <button class="mbtn" onclick="fileSave()">Save SVG</button>
-    <button class="mbtn" onclick="showExportMenu()">Export</button>
-    <div class="nav-sep"></div>
-    <button class="mbtn" onclick="formatCode()">Format</button>
-    <button class="mbtn" onclick="copySVG()">Copy</button>
-    <div class="topbar-right">
-      <span class="chip chip-dim" id="memChip">— MB</span>
-      <span class="chip chip-blue">PRO</span>
-      <span class="chip chip-dim">v4.0</span>
-    </div>
-  </div>
-
-  <!-- WORKSPACE -->
-  <div class="workspace">
-
-    <!-- LEFT: CODE -->
-    <div class="editor-col">
-      <div class="tab-bar">
-        <div class="tab on" onclick="switchTab(this,'source')">source.svg</div>
-        <div class="tab" onclick="switchTab(this,'css')">CSS inject</div>
-      </div>
-      <div class="editor-bar">
-        <button class="xbtn" data-tip="Auto-indent & beautify" onclick="formatCode()">⌥ Format</button>
-        <button class="xbtn" data-tip="Clear editor" onclick="clearEditor()">✕ Clear</button>
-        <button class="xbtn" data-tip="Copy SVG source" onclick="copySVG()">⎘ Copy</button>
-        <button class="xbtn" data-tip="Load example SVG" onclick="loadExample()">★ Example</button>
-        <span class="line-info" id="lineInfo">0 lines</span>
-      </div>
-      <textarea id="svgCode" spellcheck="false" placeholder="Paste your <svg> code here…&#10;Live preview updates automatically."></textarea>
-      <!-- hidden CSS inject tab content -->
-      <textarea id="cssInject" spellcheck="false" style="display:none;flex:1;background:var(--bg1);color:#a5d6a7;font-family:var(--fm);font-size:12px;line-height:1.7;border:none;outline:none;padding:12px;resize:none;overflow-y:auto" placeholder="/* Extra CSS injected into the SVG preview */&#10;/* Useful for adding @keyframes to existing SVG code */"></textarea>
+    <div class="header">
+        <h1>SVG Studio - Papir Dol</h1>
+        <p class="subtitle">Created by Jubayer Islam | Version 3.0 — Dynamic Duration Fixed</p>
     </div>
 
-    <!-- CENTRE: PREVIEW -->
-    <div class="preview-col">
-      <div class="prev-bar">
-        <span class="prev-label">Preview</span>
-        <span class="inf" id="infRes">1920×1080</span>
-        <span class="inf" id="infFps">60 fps</span>
-        <span class="inf" id="infDur">6.0 s</span>
-        <span class="inf" id="infAspect">16:9</span>
-        <div class="live" title="Live sync"></div>
-      </div>
-      <div class="stage" id="stage">
-        <div class="frame" id="frame" style="aspect-ratio:16/9">
-          <div id="emptyMsg" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--tx3);font-size:.78rem;font-family:var(--fm)">Paste SVG to preview ↑</div>
-        </div>
-        <div class="time-hud" id="timeHud">00:00.000</div>
-      </div>
-    </div>
-
-    <!-- RIGHT: SETTINGS -->
-    <div class="settings-col">
-
-      <div class="sect">
-        <div class="sect-title">Output</div>
-        <div class="f">
-          <div class="fl">Resolution <span class="fv" id="fvRes">1920×1080</span></div>
-          <select id="selRes" onchange="syncUI()">
-            <option value="3840x2160">4K UHD — 2160p</option>
-            <option value="2560x1440">2K QHD — 1440p</option>
-            <option value="1920x1080" selected>Full HD — 1080p</option>
-            <option value="1280x720">HD — 720p</option>
-            <option value="854x480">SD — 480p</option>
-            <option value="custom">Custom…</option>
-          </select>
-        </div>
-        <div class="f" id="customResField" style="display:none">
-          <div class="fl">Custom W × H</div>
-          <div style="display:flex;gap:6px">
-            <input type="number" id="custW" placeholder="Width" min="100" max="7680" value="1920" style="flex:1">
-            <input type="number" id="custH" placeholder="Height" min="100" max="4320" value="1080" style="flex:1">
-          </div>
-        </div>
-        <div class="f">
-          <div class="fl">Duration (sec) <span class="fv" id="fvDur">6.0 s</span></div>
-          <input type="number" id="inDur" value="6" min="0.5" max="600" step="0.5" oninput="syncUI();buildTL()">
-        </div>
-        <div class="f">
-          <div class="fl">Frame Rate <span class="fv" id="fvFps">60 fps</span></div>
-          <select id="selFps" onchange="syncUI()">
-            <option value="60" selected>60 FPS — Ultra smooth</option>
-            <option value="30">30 FPS — Cinematic</option>
-            <option value="24">24 FPS — Film</option>
-            <option value="15">15 FPS — Fast export</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="sect">
-        <div class="sect-title">Format</div>
-        <div class="fmt-pills">
-          <div class="fp on" data-fmt="webm" onclick="pickFmt(this)">WebM</div>
-          <div class="fp" data-fmt="mp4" onclick="pickFmt(this)">MP4</div>
-          <div class="fp" data-fmt="gif" onclick="pickFmt(this)">GIF</div>
-        </div>
-        <div class="fmt-note" id="fmtNote">VP9 · best quality/size</div>
-      </div>
-
-      <div class="sect">
-        <div class="sect-title">Quality</div>
-        <div class="f">
-          <div class="fl">Bitrate <span class="fv" id="fvBr">12 Mbps</span></div>
-          <input type="range" id="slBr" min="2" max="80" value="12" oninput="syncBr()">
-        </div>
-        <div class="f">
-          <div class="fl">Background</div>
-          <div style="display:flex;gap:6px">
-            <input type="color" id="bgPicker" value="#020617" style="width:36px;height:34px;padding:2px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg3);cursor:pointer">
-            <input type="text" id="bgHex" value="#020617" placeholder="#000000" style="flex:1;font-family:var(--fm)" oninput="syncBg(this)">
-          </div>
-        </div>
-        <div class="f">
-          <div class="fl">Loop count <span class="fv" id="fvLoop">1×</span></div>
-          <input type="range" id="slLoop" min="1" max="10" value="1" step="1" oninput="syncLoop()">
-        </div>
-      </div>
-
-      <div class="sect">
-        <div class="sect-title">Keyframes</div>
-        <div class="kf-list" id="kfList"></div>
-        <button class="kf-add" onclick="addKF()">+ Add keyframe at playhead</button>
-      </div>
-
-      <button class="render-btn" id="renderBtn" onclick="startRender()">▶ RENDER &amp; EXPORT</button>
-
-    </div>
-  </div>
-
-  <!-- TIMELINE -->
-  <div class="timeline">
-    <div class="tl-bar">
-      <span class="tl-lbl">Timeline</span>
-      <button class="tl-btn" data-tip="Go to start" onclick="seekTo(0)">⏮</button>
-      <button class="tl-btn" data-tip="Play / Pause (Space)" id="playBtn" onclick="togglePlay()">▶</button>
-      <button class="tl-btn" data-tip="Go to end" onclick="seekToEnd()">⏭</button>
-      <span class="tl-time" id="tlTime">00:00.000</span>
-      <div class="tl-r">
-        <span class="tl-zoom-lbl">ZOOM</span>
-        <input type="range" id="slZoom" min="30" max="500" value="100" style="width:70px" oninput="buildTL()">
-        <span class="tl-zoom-lbl" id="zoomLbl">100%</span>
-      </div>
-    </div>
-    <div class="tl-tracks">
-      <div class="track-lbls">
-        <div class="tlbl"><span class="tdot" style="background:var(--c1)"></span>Animation</div>
-        <div class="tlbl"><span class="tdot" style="background:var(--c4)"></span>Keyframes</div>
-        <div class="tlbl"><span class="tdot" style="background:var(--c2)"></span>Markers</div>
-      </div>
-      <div class="tl-scroll" id="tlScroll">
-        <div class="tl-inner" id="tlInner">
-          <div class="ruler"><canvas id="ruler"></canvas></div>
-          <div class="track-area" id="trackArea">
-            <div class="track-row" id="rowAnim"></div>
-            <div class="track-row" id="rowKF"></div>
-            <div class="track-row" id="rowMark"></div>
-          </div>
-          <div class="playhead" id="playhead"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- STATUS BAR -->
-  <div class="statusbar">
-    <div class="sitem on"><div class="sdot"></div><span id="stText">Ready</span></div>
-    <div class="sitem" id="stMem">MEM —</div>
-    <div class="sitem" id="stFrames">FRAMES —</div>
-    <div class="sitem" id="stSize">—</div>
-    <div class="sitem" style="margin-left:auto;opacity:.4;font-size:.58rem">Created by Jubayer Islam · SVGStudio Pro v4</div>
-  </div>
-</div>
-
-<!-- RENDER OVERLAY -->
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="modal-title" id="mTitle">Rendering…</div>
-    <div class="modal-sub" id="mSub">Initialising encoder pipeline</div>
-    <div class="r-stats">
-      <div class="rstat"><span class="rstat-v" id="rsFps">—</span><span class="rstat-l">FPS</span></div>
-      <div class="rstat"><span class="rstat-v" id="rsRes">—</span><span class="rstat-l">Resolution</span></div>
-      <div class="rstat"><span class="rstat-v" id="rsDur">—</span><span class="rstat-l">Duration</span></div>
-    </div>
-    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
-    <div class="r-bottom">
-      <span id="rElapsed">0.0s elapsed</span>
-      <span class="r-pct" id="rPct">0%</span>
-      <span id="rRemain">— remaining</span>
-    </div>
-    <div class="r-stage" id="rStage"></div>
-    <div class="gif-warn" id="gifWarn">⚠ GIF export is CPU-intensive. Use 720p or below for best performance.</div>
-    <button class="cancel-btn" id="cancelBtn" onclick="cancelRender()">Cancel</button>
-  </div>
-</div>
-
-<div id="dlArea"></div>
-<canvas id="rCanvas"></canvas>
-<div id="hbox"></div>
-
-<!-- HIDDEN FILE INPUT -->
-<input type="file" id="fileInput" accept=".svg,image/svg+xml" style="display:none" onchange="handleFileOpen(event)">
-
-<script>
-/* =====================================================
-   SVG STUDIO PRO v4 — Full Working Engine
-   Fixed: seekability, GIF encoder, cancel, aspect ratio,
-   custom res, loop, CSS inject, file open/save, memory,
-   timeline click-drag, format notes, bg sync, status
-===================================================== */
-
-// ── DOM ──
-const svgCode  = document.getElementById('svgCode');
-const cssInject= document.getElementById('cssInject');
-const frame    = document.getElementById('frame');
-const rCanvas  = document.getElementById('rCanvas');
-const hbox     = document.getElementById('hbox');
-const ctx      = rCanvas.getContext('2d',{alpha:false,willReadFrequently:true});
-const dlArea   = document.getElementById('dlArea');
-const overlay  = document.getElementById('overlay');
-const progFill = document.getElementById('progFill');
-
-// ── STATE ──
-let selFmt   = 'webm';
-let keyframes= [];
-let markers  = [{time:0,label:'Start'},{time:null,label:'End'}];
-let curTime  = 0;
-let playing  = false;
-let raf      = null;
-let playWall = 0, playSec = 0;
-let renderAbort = false;
-let activeSVGUrl = null;
-
-const FMT_NOTES = {
-  webm:'VP9 codec · best quality/size ratio',
-  mp4:'H.264 (WebM container) · wide compatibility',
-  gif:'Animated GIF · no audio · great for loops'
-};
-
-// ── INIT ──
-window.addEventListener('load',()=>{
-  const def = `<svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
-  <rect width="800" height="450" fill="#020617"/>
-  <defs>
-    <radialGradient id="g1" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="400" cy="225" r="200" fill="url(#g1)">
-    <animateTransform attributeName="transform" type="scale"
-      values="0.8;1.3;0.8" dur="4s" repeatCount="indefinite"
-      additive="sum" calcMode="spline"
-      keySplines="0.4 0 0.2 1;0.4 0 0.2 1"/>
-  </circle>
-  <circle cx="400" cy="225" r="80" fill="none" stroke="#10b981" stroke-width="3"
-    stroke-dasharray="502" stroke-dashoffset="502">
-    <animate attributeName="stroke-dashoffset" values="502;0;502" dur="4s" repeatCount="indefinite"
-      calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1"/>
-    <animate attributeName="stroke" values="#10b981;#0ea5e9;#10b981" dur="4s" repeatCount="indefinite"/>
-  </circle>
-  <text x="400" y="232" text-anchor="middle" fill="#e2e5f0" font-size="22"
-    font-family="system-ui,sans-serif" font-weight="600" letter-spacing="3">
-    SVG STUDIO PRO
-    <animate attributeName="opacity" values="0;1;1;0" dur="4s" repeatCount="indefinite"/>
-  </text>
-</svg>`;
-  svgCode.value = def;
-  updatePreview();
-  updateLineInfo();
-  syncUI();
-  syncBr();
-  buildTL();
-  renderKFList();
-  startMemTimer();
-});
-
-// ── TAB SWITCH ──
-function switchTab(el,name){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on');
-  svgCode.style.display  = name==='source' ? 'block' : 'none';
-  cssInject.style.display= name==='css'    ? 'block' : 'none';
-  if(name==='source') svgCode.style.flex='1';
-  if(name==='css')    cssInject.style.flex='1';
-}
-
-// ── LIVE PREVIEW ──
-svgCode.addEventListener('input',()=>{ updateLineInfo(); debounce('prev',updatePreview,150); });
-cssInject.addEventListener('input',()=>{ debounce('prev',updatePreview,150); });
-document.getElementById('bgPicker').addEventListener('input',e=>{
-  document.getElementById('bgHex').value = e.target.value;
-  debounce('prev',updatePreview,200);
-});
-
-const debounceTimers = {};
-function debounce(key,fn,ms){ clearTimeout(debounceTimers[key]); debounceTimers[key]=setTimeout(fn,ms); }
-
-function updatePreview(){
-  const raw = svgCode.value.trim();
-  const extra = cssInject.value.trim();
-  const empty = document.getElementById('emptyMsg');
-
-  if(!raw){
-    frame.innerHTML='';
-    frame.appendChild(document.getElementById('emptyMsg')||Object.assign(document.createElement('div'),{
-      id:'emptyMsg',style:'display:flex;align-items:center;justify-content:center;height:100%;color:var(--tx3);font-size:.78rem;font-family:var(--fm)',
-      textContent:'Paste SVG to preview ↑'
-    }));
-    return;
-  }
-
-  let finalSvg = raw;
-
-  // Inject extra CSS into existing <style> or create one
-  if(extra){
-    if(/<style/i.test(finalSvg)){
-      finalSvg = finalSvg.replace(/<\/style>/i, extra + '</style>');
-    } else {
-      finalSvg = finalSvg.replace(/<svg([^>]*)>/i, `<svg$1><style>${extra}</style>`);
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><span>💻</span> Vector Source Code</div>
+                <div class="badge-live">LIVE SYNC</div>
+            </div>
+            <div class="aspect-16-9">
+                <textarea id="svgInput" spellcheck="false" placeholder="Paste your <svg> here..."><svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="#020617"/>
+  <style>
+    .neon-path {
+      fill: none;
+      stroke: #0ea5e9;
+      stroke-width: 8;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw 6s infinite ease-in-out; 
     }
-  }
-
-  // Safely set inner HTML
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'width:100%;height:100%';
-  wrapper.innerHTML = finalSvg;
-  frame.innerHTML = '';
-  frame.appendChild(wrapper);
-
-  // Fix SVG sizing
-  const svgEl = frame.querySelector('svg');
-  if(svgEl){
-    if(!svgEl.getAttribute('viewBox') && svgEl.getAttribute('width') && svgEl.getAttribute('height')){
-      svgEl.setAttribute('viewBox',`0 0 ${svgEl.getAttribute('width')} ${svgEl.getAttribute('height')}`);
+    .pulse-core {
+      fill: #10b981;
+      transform-origin: center;
+      animation: beat 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
     }
-    svgEl.setAttribute('width','100%');
-    svgEl.setAttribute('height','100%');
-    svgEl.style.cssText = 'width:100%;height:100%;display:block';
-  }
-
-  // Update aspect ratio badge from SVG viewBox
-  if(svgEl){
-    const vb = svgEl.getAttribute('viewBox');
-    if(vb){
-      const parts = vb.trim().split(/[\s,]+/);
-      if(parts.length>=4){
-        const w=parseFloat(parts[2]),h=parseFloat(parts[3]);
-        if(w&&h){
-          const g=gcd(Math.round(w),Math.round(h));
-          document.getElementById('infAspect').textContent = `${Math.round(w/g)}:${Math.round(h/g)}`;
-          // Update frame aspect ratio
-          frame.style.aspectRatio = `${w}/${h}`;
-        }
-      }
+    @keyframes draw {
+      0% { stroke-dashoffset: 1000; stroke: #0ea5e9; }
+      50% { stroke-dashoffset: 0; stroke: #10b981; }
+      100% { stroke-dashoffset: 1000; stroke: #0ea5e9; }
     }
-  }
-}
-
-function gcd(a,b){ return b===0?a:gcd(b,a%b); }
-
-function updateLineInfo(){
-  const lines = svgCode.value.split('\n').length;
-  const bytes = new Blob([svgCode.value]).size;
-  document.getElementById('lineInfo').textContent = `${lines} lines · ${formatBytes(bytes)}`;
-}
-function formatBytes(b){
-  if(b<1024) return b+'B';
-  if(b<1048576) return (b/1024).toFixed(1)+'KB';
-  return (b/1048576).toFixed(1)+'MB';
-}
-
-// ── TOOLBAR ACTIONS ──
-function formatCode(){
-  try{
-    const p = new DOMParser();
-    const doc = p.parseFromString(svgCode.value,'image/svg+xml');
-    const err = doc.querySelector('parsererror');
-    if(err) throw new Error(err.textContent);
-    // Pretty print with basic indentation
-    svgCode.value = prettifyXML(doc.documentElement);
-    updateLineInfo();
-    setStatus('Formatted ✓');
-  } catch(e){ setStatus('Format error: '+e.message.slice(0,60),'err'); }
-}
-function prettifyXML(node,indent=''){
-  const NL='\n', TAB='  ';
-  if(node.nodeType===3){ const t=node.textContent.trim(); return t?indent+t:''; }
-  if(node.nodeType===8) return indent+'<!--'+node.textContent+'-->';
-  let out = indent+'<'+node.tagName;
-  for(const a of node.attributes) out += ` ${a.name}="${a.value}"`;
-  const children=[...node.childNodes].map(c=>prettifyXML(c,indent+TAB)).filter(Boolean);
-  if(children.length===0) return out+'/>';
-  return out+'>'+NL+children.join(NL)+NL+indent+'</'+node.tagName+'>';
-}
-
-function clearEditor(){
-  if(!svgCode.value.trim()||confirm('Clear the editor?')){
-    svgCode.value='';
-    cssInject.value='';
-    updatePreview();
-    updateLineInfo();
-  }
-}
-function copySVG(){
-  navigator.clipboard.writeText(svgCode.value).then(()=>{
-    setStatus('Copied ✓');
-    setTimeout(()=>setStatus('Ready'),1500);
-  });
-}
-function fileSave(){
-  const blob=new Blob([svgCode.value],{type:'image/svg+xml'});
-  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'animation.svg'});
-  a.click();
-  setStatus('SVG saved');
-}
-function fileNew(){
-  if(!svgCode.value.trim()||confirm('Create new file? Unsaved changes will be lost.')){
-    svgCode.value='';cssInject.value='';
-    updatePreview();updateLineInfo();setStatus('New file');
-  }
-}
-function fileOpen(){ document.getElementById('fileInput').click(); }
-function handleFileOpen(e){
-  const f=e.target.files[0];
-  if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{ svgCode.value=ev.target.result; updatePreview(); updateLineInfo(); setStatus('Opened: '+f.name); };
-  r.readAsText(f);
-  e.target.value='';
-}
-function loadExample(){
-  const examples = [
-    // Example 1: Orbiting circles
-    `<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-  <rect width="800" height="600" fill="#050714"/>
-  <g transform="translate(400,300)">
-    <circle r="120" fill="none" stroke="#1e2340" stroke-width="1"/>
-    <circle r="200" fill="none" stroke="#1e2340" stroke-width="1"/>
-    <circle r="60" fill="#3b82f6" opacity="0.9">
-      <animateTransform attributeName="transform" type="rotate"
-        values="0;360" dur="3s" repeatCount="indefinite"/>
-      <animateTransform attributeName="transform" type="translate"
-        values="120,0" additive="sum"/>
-    </circle>
-    <circle r="30" fill="#10b981" opacity="0.9">
-      <animateTransform attributeName="transform" type="rotate"
-        values="0;-360" dur="5s" repeatCount="indefinite"/>
-      <animateTransform attributeName="transform" type="translate"
-        values="200,0" additive="sum"/>
-    </circle>
-    <circle r="100" fill="#fbbf24" opacity="0.9"/>
+    @keyframes beat {
+      0% { transform: scale(0.8) rotate(0deg); }
+      50% { transform: scale(1.5) rotate(180deg); }
+      100% { transform: scale(0.8) rotate(360deg); }
+    }
+  </style>
+  <g transform="translate(960, 540)">
+    <circle class="neon-path" cx="0" cy="0" r="300" />
+    <rect class="pulse-core" x="-75" y="-75" width="150" height="150" rx="30" />
   </g>
-</svg>`,
-    // Example 2: Morphing shapes
-    `<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
-  <rect width="600" height="400" fill="#0f0f1a"/>
-  <path fill="#8b5cf6" opacity="0.8" transform="translate(300,200)">
-    <animate attributeName="d"
-      values="M0,-100 L87,50 L-87,50 Z;M-80,-80 L80,-80 L80,80 L-80,80 Z;M0,-100 C100,-100 100,100 0,100 C-100,100 -100,-100 0,-100;M0,-100 L87,50 L-87,50 Z"
-      dur="4s" repeatCount="indefinite" calcMode="spline"
-      keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1"/>
-    <animateTransform attributeName="transform" type="rotate"
-      values="0 300 200;360 300 200" dur="8s" repeatCount="indefinite" additive="sum"/>
-  </path>
-</svg>`
-  ];
-  svgCode.value = examples[Math.floor(Math.random()*examples.length)];
-  updatePreview(); updateLineInfo(); setStatus('Example loaded');
-}
-
-function showExportMenu(){ /* opens format section in UI */ }
-
-// ── FORMAT SELECT ──
-function pickFmt(el){
-  document.querySelectorAll('.fp').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');
-  selFmt = el.dataset.fmt;
-  document.getElementById('fmtNote').textContent = FMT_NOTES[selFmt];
-  document.getElementById('gifWarn').style.display = selFmt==='gif'?'block':'none';
-}
-
-// ── UI SYNC ──
-document.getElementById('selRes').addEventListener('change',function(){
-  document.getElementById('customResField').style.display = this.value==='custom'?'flex':'none';
-  syncUI();
-});
-
-function getResolution(){
-  const v = document.getElementById('selRes').value;
-  if(v==='custom'){
-    const w=parseInt(document.getElementById('custW').value)||1920;
-    const h=parseInt(document.getElementById('custH').value)||1080;
-    return {w,h,label:`${w}×${h}`};
-  }
-  const [w,h] = v.split('x').map(Number);
-  return {w,h,label:`${w}×${h}`};
-}
-
-function syncUI(){
-  const r = getResolution();
-  const fps= document.getElementById('selFps').value;
-  const dur= parseFloat(document.getElementById('inDur').value)||6;
-  document.getElementById('fvRes').textContent  = r.label;
-  document.getElementById('fvFps').textContent  = fps+' fps';
-  document.getElementById('fvDur').textContent  = dur.toFixed(1)+' s';
-  document.getElementById('infRes').textContent = r.label;
-  document.getElementById('infFps').textContent = fps+' fps';
-  document.getElementById('infDur').textContent = dur.toFixed(1)+' s';
-  buildTL();
-  updateFrameStat();
-}
-function syncBr(){
-  const v = document.getElementById('slBr').value;
-  document.getElementById('fvBr').textContent = v+' Mbps';
-}
-function syncBg(inp){
-  const v=inp.value.trim();
-  if(/^#[0-9a-f]{6}$/i.test(v)){
-    document.getElementById('bgPicker').value=v;
-  }
-}
-function syncLoop(){
-  const v=document.getElementById('slLoop').value;
-  document.getElementById('fvLoop').textContent=v+'×';
-}
-function updateFrameStat(){
-  const dur=parseFloat(document.getElementById('inDur').value)||6;
-  const fps=parseInt(document.getElementById('selFps').value)||60;
-  document.getElementById('stFrames').textContent=`FRAMES ${Math.round(dur*fps)}`;
-}
-
-// ── PLAYBACK ──
-function togglePlay(){ playing ? stopPlay() : startPlay(); }
-function startPlay(){
-  const dur=parseFloat(document.getElementById('inDur').value)||6;
-  if(curTime>=dur) curTime=0;
-  playing=true;
-  document.getElementById('playBtn').textContent='⏸';
-  playWall=performance.now();
-  playSec=curTime;
-  function step(now){
-    if(!playing)return;
-    const e=(now-playWall)/1000;
-    curTime=playSec+e;
-    const d=parseFloat(document.getElementById('inDur').value)||6;
-    if(curTime>=d){ curTime=d; stopPlay(); return; }
-    updatePH();
-    raf=requestAnimationFrame(step);
-  }
-  raf=requestAnimationFrame(step);
-}
-function stopPlay(){
-  playing=false;
-  document.getElementById('playBtn').textContent='▶';
-  cancelAnimationFrame(raf);
-  updatePH();
-}
-function seekTo(sec){
-  const d=parseFloat(document.getElementById('inDur').value)||6;
-  curTime=Math.max(0,Math.min(sec,d));
-  if(playing){ stopPlay(); startPlay(); } else updatePH();
-}
-function seekToEnd(){seekTo(parseFloat(document.getElementById('inDur').value)||6);}
-function updatePH(){
-  const d=parseFloat(document.getElementById('inDur').value)||6;
-  const z=getPPS();
-  const t=Math.max(0,Math.min(curTime,d));
-  document.getElementById('playhead').style.left=Math.round(t*z)+'px';
-  const ts=fmtTime(t);
-  document.getElementById('tlTime').textContent=ts;
-  document.getElementById('timeHud').textContent=ts;
-  // auto-scroll
-  const sc=document.getElementById('tlScroll');
-  const x=t*z;
-  if(x<sc.scrollLeft+30||x>sc.scrollLeft+sc.clientWidth-30){
-    sc.scrollLeft=Math.max(0,x-sc.clientWidth/3);
-  }
-}
-function fmtTime(s){
-  const ms=s*1000;
-  const sec=Math.floor(ms/1000);
-  const m=Math.floor(sec/60);
-  return `${String(m).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}.${String(Math.floor(ms%1000)).padStart(3,'0')}`;
-}
-
-// ── TIMELINE ──
-function getPPS(){
-  const z=parseInt(document.getElementById('slZoom').value)||100;
-  document.getElementById('zoomLbl').textContent=z+'%';
-  return Math.round(90*z/100);
-}
-
-function buildTL(){
-  const dur=parseFloat(document.getElementById('inDur').value)||6;
-  const pps=getPPS();
-  const sc=document.getElementById('tlScroll');
-  const minW=Math.max(Math.ceil(dur*pps)+200, sc.clientWidth||400);
-  const inner=document.getElementById('tlInner');
-  inner.style.width=minW+'px';
-
-  // Ruler
-  const rc=document.getElementById('ruler');
-  rc.width=minW; rc.height=18;
-  const rx=rc.getContext('2d');
-  rx.fillStyle='#070810';
-  rx.fillRect(0,0,minW,18);
-  const step = pps>=120?0.25:pps>=80?0.5:pps>=40?1:pps>=20?2:5;
-  rx.font='8px IBM Plex Mono,monospace';
-  for(let t=0;t<=dur+step;t+=step){
-    const x=Math.round(t*pps);
-    if(x>minW)break;
-    const major=Math.abs(t%1)<0.001;
-    rx.strokeStyle=major?'#2e3250':'#181a28';
-    rx.lineWidth=1;
-    rx.beginPath();rx.moveTo(x,major?5:10);rx.lineTo(x,18);rx.stroke();
-    if(major){ rx.fillStyle='#3e4460'; rx.fillText(t.toFixed(0)+'s',x+2,8); }
-  }
-
-  // Anim clip
-  const ra=document.getElementById('rowAnim');
-  ra.innerHTML='';
-  const cl=document.createElement('div');
-  cl.className='clip';
-  cl.style.cssText=`left:0;width:${dur*pps}px;background:rgba(79,158,255,.15);border:1px solid rgba(79,158,255,.35);color:rgba(79,158,255,.8)`;
-  cl.textContent=`SVG · ${dur.toFixed(2)}s`;
-  ra.appendChild(cl);
-
-  // Keyframes
-  const rk=document.getElementById('rowKF');
-  rk.innerHTML='';
-  keyframes.forEach((kf,i)=>{
-    const d=document.createElement('div');
-    d.className='kfdiamond';
-    d.style.cssText=`left:${Math.round(kf.t*pps)}px;background:${kf.color};border:1px solid rgba(255,255,255,.2)`;
-    d.title=`${kf.label} @ ${kf.t.toFixed(2)}s`;
-    d.onclick=()=>seekTo(kf.t);
-    rk.appendChild(d);
-  });
-
-  // Markers
-  const rm=document.getElementById('rowMark');
-  rm.innerHTML='';
-  markers.forEach(m=>{
-    if(m.time===null||m.time===undefined)return;
-    const d=document.createElement('div');
-    d.className='kfdiamond';
-    d.style.cssText=`left:${Math.round(m.time*pps)}px;background:var(--c2);border:1px solid rgba(255,255,255,.2)`;
-    d.title=`${m.label} @ ${m.time.toFixed(2)}s`;
-    rm.appendChild(d);
-  });
-
-  updatePH();
-}
-
-// Timeline click/drag to seek
-document.getElementById('tlScroll').addEventListener('mousedown',e=>{
-  const rect=document.getElementById('tlScroll').getBoundingClientRect();
-  const x=e.clientX-rect.left+document.getElementById('tlScroll').scrollLeft;
-  seekTo(x/getPPS());
-  const move=ev=>{
-    const x2=ev.clientX-rect.left+document.getElementById('tlScroll').scrollLeft;
-    seekTo(x2/getPPS());
-  };
-  const up=()=>{ window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up); };
-  window.addEventListener('mousemove',move);
-  window.addEventListener('mouseup',up);
-});
-
-// ── KEYFRAME MANAGEMENT ──
-const KF_COLS=['var(--c4)','var(--c1)','var(--c2)','var(--c3)','#c084fc','#f472b6'];
-function addKF(){
-  const lbl=`KF ${keyframes.length+1}`;
-  keyframes.push({t:curTime,label:lbl,color:KF_COLS[keyframes.length%KF_COLS.length]});
-  keyframes.sort((a,b)=>a.t-b.t);
-  renderKFList();buildTL();
-}
-function removeKF(i){ keyframes.splice(i,1); renderKFList(); buildTL(); }
-function renderKFList(){
-  const el=document.getElementById('kfList');
-  if(keyframes.length===0){
-    el.innerHTML='<div style="font-size:.62rem;color:var(--tx3);font-family:var(--fm);padding:3px 0">No keyframes — click + above to add one</div>';
-    return;
-  }
-  el.innerHTML=keyframes.map((k,i)=>`
-    <div class="kf-row" onclick="event.target.tagName!=='BUTTON'&&seekTo(${k.t})">
-      <span style="width:5px;height:5px;border-radius:50%;background:${k.color};flex-shrink:0"></span>
-      <span class="kf-t">${k.t.toFixed(2)}s</span>
-      <span class="kf-lbl">${k.label}</span>
-      <button class="kf-rm" onclick="removeKF(${i})" title="Remove">✕</button>
-    </div>`).join('');
-}
-
-// ── STATUS ──
-function setStatus(msg,type=''){
-  document.getElementById('stText').textContent=msg;
-  document.getElementById('stText').parentElement.className='sitem'+(type==='err'?' '+'sitem'+'':' on');
-}
-
-// ── MEMORY TIMER ──
-function startMemTimer(){
-  setInterval(()=>{
-    if(performance.memory){
-      const mb=(performance.memory.usedJSHeapSize/1048576).toFixed(0);
-      document.getElementById('stMem').textContent=`MEM ${mb} MB`;
-      document.getElementById('memChip').textContent=mb+' MB';
-    }
-  },2000);
-}
-
-// ── KEYBOARD ──
-document.addEventListener('keydown',e=>{
-  if(e.target===svgCode||e.target===cssInject)return;
-  if(e.code==='Space'){e.preventDefault();togglePlay();}
-  if(e.code==='Home')seekTo(0);
-  if(e.code==='End')seekToEnd();
-  if(e.code==='KeyK')addKF();
-  if(e.code==='ArrowLeft'){e.preventDefault();seekTo(curTime-0.1);}
-  if(e.code==='ArrowRight'){e.preventDefault();seekTo(curTime+0.1);}
-  if(e.code==='ArrowLeft'&&e.shiftKey){e.preventDefault();seekTo(curTime-1);}
-  if(e.code==='ArrowRight'&&e.shiftKey){e.preventDefault();seekTo(curTime+1);}
-});
-
-// ══════════════════════════════════════════════
-//  RENDER ENGINE — Full working implementation
-// ══════════════════════════════════════════════
-
-function cancelRender(){
-  renderAbort=true;
-  document.getElementById('cancelBtn').textContent='Cancelling…';
-}
-
-function startRender(){
-  const svgEl = frame.querySelector('svg');
-  if(!svgEl){ alert('No valid SVG in preview. Paste SVG code first.'); return; }
-
-  const durSec   = parseFloat(document.getElementById('inDur').value)||6;
-  if(isNaN(durSec)||durSec<=0){ alert('Enter a valid duration.'); return; }
-
-  const loops    = parseInt(document.getElementById('slLoop').value)||1;
-  const totalDur = durSec * loops;
-  const EXACT_MS = Math.round(totalDur*1000);
-  const fps      = parseInt(document.getElementById('selFps').value);
-  const res      = getResolution();
-  const W=res.w, H=res.h;
-  const bitrate  = parseInt(document.getElementById('slBr').value)*1_000_000;
-  const bgColor  = document.getElementById('bgHex').value||'#020617';
-  const fmt      = selFmt;
-
-  // Update end marker
-  markers = markers.map(m=>m.label==='End'?{...m,time:totalDur}:m);
-  buildTL();
-
-  stopPlay();
-  renderAbort = false;
-
-  // Setup overlay
-  document.getElementById('renderBtn').disabled=true;
-  document.getElementById('gifWarn').style.display=fmt==='gif'?'block':'none';
-  progFill.style.width='0%';
-  document.getElementById('rsFps').textContent=fps;
-  document.getElementById('rsRes').textContent=H+'p';
-  document.getElementById('rsDur').textContent=totalDur.toFixed(1)+'s';
-  document.getElementById('mTitle').textContent=`Rendering ${fmt.toUpperCase()}…`;
-  document.getElementById('mSub').textContent='Setting up encoder';
-  document.getElementById('rElapsed').textContent='0.0s elapsed';
-  document.getElementById('rRemain').textContent='— remaining';
-  document.getElementById('rPct').textContent='0%';
-  document.getElementById('rStage').textContent='';
-  document.getElementById('cancelBtn').textContent='Cancel';
-  overlay.style.display='flex';
-  dlArea.innerHTML='';
-
-  rCanvas.width=W; rCanvas.height=H;
-
-  // Clone SVG and scale
-  const clone = svgEl.cloneNode(true);
-  if(!clone.getAttribute('viewBox')){
-    clone.setAttribute('viewBox',`0 0 ${clone.getAttribute('width')||W} ${clone.getAttribute('height')||H}`);
-  }
-  clone.setAttribute('width',W);
-  clone.setAttribute('height',H);
-  clone.style.cssText='';
-
-  const svgStr = new XMLSerializer().serializeToString(clone);
-  const svgBlob = new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
-  const svgUrl  = URL.createObjectURL(svgBlob);
-  activeSVGUrl  = svgUrl;
-
-  const img = new Image();
-  img.style.cssText=`width:${W}px;height:${H}px`;
-  hbox.appendChild(img);
-
-  img.onload=()=>{
-    document.getElementById('mSub').textContent=`Encoding ${totalDur.toFixed(1)}s at ${H}p / ${fps}fps`;
-    if(fmt==='gif'){
-      doGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl);
-    } else {
-      doWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt);
-    }
-  };
-  img.onerror=()=>{
-    cleanupRender(svgUrl);
-    alert('SVG render error. Check your SVG code for external resources or syntax errors.');
-  };
-  img.src=svgUrl;
-}
-
-function cleanupRender(svgUrl){
-  hbox.innerHTML='';
-  if(svgUrl) URL.revokeObjectURL(svgUrl);
-  overlay.style.display='none';
-  document.getElementById('renderBtn').disabled=false;
-  curTime=0; updatePH();
-}
-
-/* ── WebM / MP4 Renderer ──
-   ROOT CAUSE OF "2s then restart" BUG:
-   Restarting MediaRecorder every second writes multiple WebM cluster headers into
-   one blob. Most desktop players (VLC, Windows Media Player, QuickTime) interpret
-   each new cluster header as a new stream → they "restart" at the second boundary.
-
-   FIX: Use ONE single MediaRecorder for the entire duration.
-   Seekability is achieved by calling requestVideoKeyFrame() on the video track every
-   second — this inserts an I-frame without breaking the container stream.
-   ysFixWebmDuration patches the duration metadata so the seekbar shows full length.
-*/
-function doWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt){
-  const FLUSH_MS = 1200; // grace period for encoder to flush after last frame
-
-  // Pick best supported codec — VP8 preferred (better keyframe behaviour than VP9)
-  function mkRecorder(stream){
-    const tries=[
-      {mimeType:'video/webm;codecs=vp8', videoBitsPerSecond:bitrate},
-      {mimeType:'video/webm;codecs=vp9', videoBitsPerSecond:bitrate},
-      {mimeType:'video/webm',            videoBitsPerSecond:bitrate},
-      {videoBitsPerSecond:bitrate}
-    ];
-    for(const o of tries){
-      try{
-        if(!o.mimeType||MediaRecorder.isTypeSupported(o.mimeType))
-          return new MediaRecorder(stream,o);
-      }catch(e){}
-    }
-    return new MediaRecorder(stream);
-  }
-
-  const stream    = rCanvas.captureStream(fps);
-  const allChunks = [];
-  const startWall = performance.now();
-  let drawing     = true;
-  let rafId       = null;
-
-  // ── Single recorder for entire duration ──
-  const rec = mkRecorder(stream);
-  rec.ondataavailable = e => { if(e.data && e.data.size > 0) allChunks.push(e.data); };
-
-  rec.onstop = () => {
-    if(renderAbort){ cleanupRender(svgUrl); setStatus('Render cancelled'); return; }
-    document.getElementById('rStage').textContent = 'Patching duration metadata…';
-    const raw = new Blob(allChunks, {type:'video/webm'});
-    ysFixWebmDuration(raw, EXACT_MS, fixed => {
-      const name = `SVGStudio-${(EXACT_MS/1000).toFixed(1)}s-${H}p.${fmt==='mp4'?'mp4':'webm'}`;
-      const mime = fmt==='mp4' ? 'video/mp4' : 'video/webm';
-      finishDL(fixed, mime, name, svgUrl);
-    });
-  };
-
-  // Collect data frequently so progress blob is built up smoothly
-  rec.start(200);
-
-  // ── Request a video keyframe (I-frame) every second for seekability ──
-  // This works without restarting the recorder, so the container stays intact.
-  const kfInterval = setInterval(() => {
-    if(!drawing){ clearInterval(kfInterval); return; }
-    try{
-      const vt = stream.getVideoTracks()[0];
-      if(vt && typeof vt.requestVideoKeyFrame === 'function'){
-        vt.requestVideoKeyFrame();
-      }
-    }catch(e){}
-  }, 1000);
-
-  // ── Stop the recorder exactly when drawing finishes ──
-  // We wait FLUSH_MS extra after the last drawn frame so the encoder
-  // can flush its internal buffer before we call stop().
-  let stopScheduled = false;
-  function scheduleStop(){
-    if(stopScheduled) return;
-    stopScheduled = true;
-    clearInterval(kfInterval);
-    setTimeout(() => {
-      try{ rec.stop(); } catch(e){}
-    }, FLUSH_MS);
-  }
-
-  // ── Draw loop ──
-  function loop(now){
-    if(!drawing) return;
-    if(renderAbort){
-      drawing = false;
-      cancelAnimationFrame(rafId);
-      clearInterval(kfInterval);
-      try{ rec.stop(); }catch(e){}
-      return;
-    }
-
-    const elapsed = now - startWall;
-
-    if(elapsed >= EXACT_MS){
-      drawing = false;
-      cancelAnimationFrame(rafId);
-      scheduleStop();
-      return;
-    }
-
-    // Update progress UI
-    const pct = Math.min(elapsed / EXACT_MS * 100, 100);
-    progFill.style.width = pct + '%';
-    document.getElementById('rElapsed').textContent  = (elapsed/1000).toFixed(1) + 's elapsed';
-    document.getElementById('rRemain').textContent   = Math.max(0,(EXACT_MS-elapsed)/1000).toFixed(1) + 's remaining';
-    document.getElementById('rPct').textContent      = Math.round(pct) + '%';
-    document.getElementById('rStage').textContent    =
-      `Recording · Frame ${Math.round(elapsed/1000*fps)} / ${Math.round(EXACT_MS/1000*fps)}`;
-
-    // Draw current frame onto the offscreen canvas
-    const bg = document.getElementById('bgHex').value || '#020617';
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(img, 0, 0, W, H);
-    // Sub-pixel noise keeps captureStream() from dropping frames on static SVGs
-    ctx.fillStyle = `rgba(0,0,0,${0.008 + Math.random()*0.008})`;
-    ctx.fillRect(0, 0, 2, 2);
-
-    // Sync timeline playhead
-    curTime = (elapsed/1000) % (parseFloat(document.getElementById('inDur').value)||6);
-    updatePH();
-
-    rafId = requestAnimationFrame(loop);
-  }
-
-  requestAnimationFrame(loop);
-}
-
-/* ── GIF Renderer ──
-   Captures frames at up to 15fps, then encodes with LZW GIF encoder.
-   Progress tracked per-frame. Cancellable at any point.
-*/
-function doGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl){
-  const gifFps  = Math.min(fps,15);
-  const total   = Math.round(EXACT_MS/1000*gifFps);
-  const delay   = Math.round(100/gifFps); // centiseconds
-
-  document.getElementById('mSub').textContent=`Capturing ${total} frames at ${gifFps}fps…`;
-
-  const frames=[];
-  let i=0;
-
-  function capture(){
-    if(renderAbort){ cleanupRender(svgUrl); setStatus('Render cancelled'); return; }
-    if(i>=total){
-      encGIF(frames,W,H,delay,svgUrl);
-      return;
-    }
-    const pct=i/total*50; // first half = capture phase
-    progFill.style.width=pct+'%';
-    document.getElementById('rPct').textContent=Math.round(pct)+'%';
-    document.getElementById('rElapsed').textContent=`Frame ${i+1}/${total}`;
-    document.getElementById('rStage').textContent=`Capturing frame ${i+1}`;
-
-    const bg=document.getElementById('bgHex').value||bgColor;
-    ctx.fillStyle=bg;
-    ctx.fillRect(0,0,W,H);
-    ctx.drawImage(img,0,0,W,H);
-    frames.push(ctx.getImageData(0,0,W,H));
-
-    curTime=(i/gifFps)%(parseFloat(document.getElementById('inDur').value)||6);
-    updatePH();
-    i++;
-    requestAnimationFrame(capture);
-  }
-  requestAnimationFrame(capture);
-}
-
-function encGIF(frames,W,H,delay,svgUrl){
-  document.getElementById('rStage').textContent='Encoding GIF (this may take a moment)…';
-  document.getElementById('mSub').textContent='Building GIF binary…';
-
-  // Async encode to keep UI responsive
-  setTimeout(()=>{
-    try{
-      const gif = buildGIF(frames,W,H,delay,(p)=>{
-        const pct=50+p*50;
-        progFill.style.width=pct+'%';
-        document.getElementById('rPct').textContent=Math.round(pct)+'%';
-        document.getElementById('rStage').textContent=`Encoding GIF… ${Math.round(p*100)}%`;
-      });
-      const dur=(frames.length/Math.round(100/delay)).toFixed(1);
-      const maxDim=Math.max(W,H);
-      let suffix=maxDim>=1080?'1080p':maxDim>=720?'720p':'sd';
-      finishDL(new Blob([gif],{type:'image/gif'}),'image/gif',`SVGStudio-${dur}s-${suffix}.gif`,svgUrl);
-    } catch(err){
-      console.error('GIF error:',err);
-      cleanupRender(svgUrl);
-      alert('GIF encoding failed. Try a smaller resolution or fewer frames.\n\nError: '+err.message);
-    }
-  },50);
-}
-
-/* ── Inline GIF Encoder ──
-   LZW compression + median-cut colour quantisation (256 colours)
-   Fully self-contained, no external libraries needed.
-*/
-function buildGIF(frames,W,H,delay,onProgress){
-  const palette = buildPalette(frames,256);
-  const buf=[];
-
-  const ws=(s)=>{ for(const c of s) buf.push(c.charCodeAt(0)); };
-  const wu16=(v)=>{ buf.push(v&0xFF,(v>>8)&0xFF); };
-
-  ws('GIF89a');
-  wu16(W); wu16(H);
-  buf.push(0xF7,0,0); // GCT = 256 colours
-  for(let i=0;i<256;i++){
-    const c=palette[i]||[0,0,0];
-    buf.push(c[0],c[1],c[2]);
-  }
-  // Loop extension (NETSCAPE)
-  buf.push(0x21,0xFF,0x0B,...[...('NETSCAPE2.0')].map(c=>c.charCodeAt(0)),3,1,0,0,0);
-
-  for(let fi=0;fi<frames.length;fi++){
-    if(onProgress) onProgress(fi/frames.length);
-    // GCE
-    buf.push(0x21,0xF9,4,0); wu16(delay); buf.push(0,0);
-    // Image desc
-    buf.push(0x2C); wu16(0);wu16(0);wu16(W);wu16(H); buf.push(0);
-    // Pixels → index
-    const idx=quantFrame(frames[fi],palette,W*H);
-    // LZW
-    const lzw=lzwEnc(idx,8);
-    buf.push(8);
-    for(let i=0;i<lzw.length;i+=255){
-      const chunk=lzw.slice(i,i+255);
-      buf.push(chunk.length,...chunk);
-    }
-    buf.push(0);
-  }
-  buf.push(0x3B);
-  if(onProgress) onProgress(1);
-  return new Uint8Array(buf);
-}
-
-function buildPalette(frames,n){
-  // Sample pixels from multiple frames for better palette
-  const map={};
-  const sampleFrames=Math.min(frames.length,5);
-  for(let fi=0;fi<sampleFrames;fi++){
-    const d=frames[Math.floor(fi/sampleFrames*frames.length)].data;
-    for(let i=0;i<d.length;i+=8){
-      const k=(d[i]>>2)<<12|(d[i+1]>>2)<<6|(d[i+2]>>2);
-      map[k]=(map[k]||0)+1;
-    }
-  }
-  return Object.keys(map)
-    .sort((a,b)=>map[b]-map[a])
-    .slice(0,n)
-    .map(k=>{ const ki=+k; return [(ki>>12&63)<<2,(ki>>6&63)<<2,(ki&63)<<2]; });
-}
-
-function quantFrame(frame,palette,n){
-  const d=frame.data;
-  const out=new Uint8Array(n);
-  const pl=palette.length;
-  for(let i=0,pi=0;i<d.length;i+=4,pi++){
-    const r=d[i],g=d[i+1],b=d[i+2];
-    let best=0,bd=Infinity;
-    for(let j=0;j<pl;j++){
-      const c=palette[j];
-      const dist=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2;
-      if(dist<bd){bd=dist;best=j;if(bd===0)break;}
-    }
-    out[pi]=best;
-  }
-  return out;
-}
-
-function lzwEnc(data,minCode){
-  const clear=1<<minCode, eoi=clear+1;
-  let cs=minCode+1, nc=eoi+1;
-  const tbl=new Map();
-  const out=[];
-  let bb=0,bl=0;
-
-  const emit=(code)=>{
-    bb|=code<<bl; bl+=cs;
-    while(bl>=8){out.push(bb&0xFF);bb>>=8;bl-=8;}
-  };
-
-  function reset(){
-    tbl.clear();
-    for(let i=0;i<clear;i++) tbl.set(i,i);
-    cs=minCode+1; nc=eoi+1;
-  }
-  reset();
-  emit(clear);
-
-  let prev=data[0];
-  for(let i=1;i<data.length;i++){
-    const cur=data[i];
-    const key=(prev<<8)|cur;
-    if(tbl.has(key)){
-      prev=tbl.get(key);
-    } else {
-      emit(prev);
-      if(nc<4096){
-        tbl.set(key,nc++);
-        if(nc>(1<<cs)&&cs<12) cs++;
-      } else {
-        emit(clear); reset();
-      }
-      prev=cur;
-    }
-  }
-  emit(prev); emit(eoi);
-  if(bl>0) out.push(bb&0xFF);
-  return out;
-}
-
-/* ── Finish download ── */
-function finishDL(blob,mime,name,svgUrl){
-  if(renderAbort){ cleanupRender(svgUrl); setStatus('Render cancelled'); return; }
-
-  progFill.style.width='100%';
-  document.getElementById('rPct').textContent='100%';
-  document.getElementById('rRemain').textContent='Complete!';
-  document.getElementById('rStage').textContent='Export done ✓';
-
-  const url=URL.createObjectURL(blob);
-  const mb=(blob.size/1048576).toFixed(2);
-
-  cleanupRender(svgUrl);
-  setStatus(`Exported: ${name} (${mb} MB)`);
-
-  dlArea.innerHTML=`<a href="${url}" download="${name}" class="dl-btn">⬇ ${name} <span style="opacity:.55;font-size:.68rem">${mb} MB</span></a>`;
-  const a=document.createElement('a');
-  a.href=url; a.download=name; a.click();
-
-  // Store rendered file size in status
-  document.getElementById('stSize').textContent=mb+' MB';
-}
-
-// ── Resize handler ──
-window.addEventListener('resize',()=>{ buildTL(); });
-
-// ── Initial timeline build ──
-setTimeout(buildTL,100);
-</script>
+</svg></textarea>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><span>👁️</span> Cinematic Preview</div>
+            </div>
+            <div class="aspect-16-9 preview-box" id="previewArea"></div>
+        </div>
+    </div>
+
+    <div class="control-deck">
+        <div class="settings-group">
+
+            <div class="setting-item">
+                <label>Resolution Quality</label>
+                <select id="videoResolution">
+                    <option value="3840x2160">4K Ultra HD (2160p)</option>
+                    <option value="2560x1440">2K Quad HD (1440p)</option>
+                    <option value="1920x1080" selected>Full HD (1080p)</option>
+                </select>
+            </div>
+
+            <!-- ✅ FIX 1: Real dropdown for duration instead of a locked label -->
+            <div class="setting-item">
+                <label>Video Length</label>
+                <select id="videoDuration">
+                    <option value="3">3 Seconds</option>
+                    <option value="5">5 Seconds</option>
+                    <option value="6" selected>6 Seconds</option>
+                    <option value="8">8 Seconds</option>
+                    <option value="10">10 Seconds</option>
+                    <option value="15">15 Seconds</option>
+                    <option value="20">20 Seconds</option>
+                    <option value="30">30 Seconds</option>
+                    <option value="60">60 Seconds</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label>Frame Rate (FPS)</label>
+                <select id="videoFps">
+                    <option value="60" selected>60 FPS (Smooth)</option>
+                    <option value="30">30 FPS (Standard)</option>
+                </select>
+            </div>
+
+            <!-- Live label showing exactly what was selected -->
+            <div class="setting-item">
+                <label>Will Record</label>
+                <div class="duration-display" id="durationDisplay">⏱ 6 SEC EXACT</div>
+            </div>
+
+        </div>
+
+        <button id="convertBtn" class="btn-render">
+            ⏺ Convert to Video
+        </button>
+    </div>
+    
+    <div id="downloadArea"></div>
+
+    <div class="render-overlay" id="renderOverlay">
+        <div class="render-box">
+            <div class="render-title" id="renderStatus">Converting VIDEO...</div>
+            <div class="render-subtitle">Do not minimize the browser or switch tabs.</div>
+            <div class="progress-bar-container">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <!-- ✅ FIX 2: Live countdown so user sees actual time remaining -->
+            <div class="render-timer" id="renderTimer">0.0s / 0s</div>
+        </div>
+    </div>
+
+    <canvas id="renderCanvas"></canvas>
+    <div id="hiddenEngineBox"></div>
+
+    <script>
+        const svgInput        = document.getElementById('svgInput');
+        const previewArea     = document.getElementById('previewArea');
+        const convertBtn      = document.getElementById('convertBtn');
+        const downloadArea    = document.getElementById('downloadArea');
+        const renderOverlay   = document.getElementById('renderOverlay');
+        const renderStatus    = document.getElementById('renderStatus');
+        const progressFill    = document.getElementById('progressFill');
+        const renderTimer     = document.getElementById('renderTimer');
+        const durationDisplay = document.getElementById('durationDisplay');
+        const durationSelect  = document.getElementById('videoDuration');
+
+        const canvas = document.getElementById('renderCanvas');
+        const hiddenEngineBox = document.getElementById('hiddenEngineBox');
+        const ctx = canvas.getContext('2d', { alpha: false });
+
+        // ── Update the "Will Record" badge whenever the dropdown changes ──
+        function syncDurationBadge() {
+            const secs = parseInt(durationSelect.value);
+            durationDisplay.textContent = `⏱ ${secs} SEC EXACT`;
+        }
+        durationSelect.addEventListener('change', syncDurationBadge);
+        syncDurationBadge(); // run once on load
+
+        // ── Live Preview ──
+        let typingTimer;
+        function updateLivePreview() {
+            previewArea.innerHTML = svgInput.value;
+            downloadArea.innerHTML = "";
+        }
+        svgInput.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(updateLivePreview, 250);
+        });
+        window.addEventListener('DOMContentLoaded', updateLivePreview);
+
+        // ── Main Render Engine ──
+        convertBtn.addEventListener('click', () => {
+            let activeSvg = previewArea.querySelector('svg');
+            if (!activeSvg) {
+                alert("Error: No valid SVG code found.");
+                return;
+            }
+
+            // ✅ FIX 3: Read duration from the dropdown — NOT a hardcoded constant
+            const selectedSeconds   = parseInt(durationSelect.value);
+            const EXACT_DURATION_MS = selectedSeconds * 1000; // e.g. 10 → 10000ms
+
+            const fps        = parseInt(document.getElementById('videoFps').value);
+            const resSplit   = document.getElementById('videoResolution').value.split('x');
+            const targetWidth  = parseInt(resSplit[0]);
+            const targetHeight = parseInt(resSplit[1]);
+
+            // Lock UI
+            convertBtn.disabled = true;
+            renderOverlay.style.display = 'flex';
+            progressFill.style.width = '0%';
+            renderTimer.textContent = `0.0s / ${selectedSeconds}s`;
+            renderStatus.innerText = "UPSCALING VECTORS...";
+            downloadArea.innerHTML = "";
+
+            canvas.width  = targetWidth;
+            canvas.height = targetHeight;
+
+            // Clone & size the SVG
+            let cloneSvg = activeSvg.cloneNode(true);
+            if (!cloneSvg.getAttribute('viewBox')) {
+                const origW = cloneSvg.getAttribute('width')  || targetWidth;
+                const origH = cloneSvg.getAttribute('height') || targetHeight;
+                cloneSvg.setAttribute('viewBox', `0 0 ${parseInt(origW)} ${parseInt(origH)}`);
+            }
+            cloneSvg.setAttribute('width',  targetWidth  + 'px');
+            cloneSvg.setAttribute('height', targetHeight + 'px');
+
+            const rawSvgText = new XMLSerializer().serializeToString(cloneSvg);
+            const svgBlob    = new Blob([rawSvgText], { type: 'image/svg+xml;charset=utf-8' });
+            const svgUrl     = URL.createObjectURL(svgBlob);
+
+            const liveImageEl = document.createElement('img');
+            liveImageEl.style.width  = targetWidth  + 'px';
+            liveImageEl.style.height = targetHeight + 'px';
+            hiddenEngineBox.appendChild(liveImageEl);
+
+            liveImageEl.onload = () => {
+                renderStatus.innerText = `RECORDING ${selectedSeconds} SECONDS AT ${targetHeight}p...`;
+
+                const stream = canvas.captureStream(fps);
+                const recordedChunks = [];
+
+                // Dynamic bitrate
+                let targetBitrate = 12000000;
+                if (targetWidth >= 2560) targetBitrate = 20000000;
+                if (targetWidth >= 3840) targetBitrate = 35000000;
+
+                const mediaOptions = { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: targetBitrate };
+                let mediaRecorder;
+                try {
+                    mediaRecorder = new MediaRecorder(stream, mediaOptions);
+                } catch(e) {
+                    mediaRecorder = new MediaRecorder(stream, { videoBitsPerSecond: targetBitrate });
+                }
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    renderStatus.innerText = "APPLYING METADATA FIXES...";
+                    hiddenEngineBox.innerHTML = '';
+                    URL.revokeObjectURL(svgUrl);
+
+                    const brokenBlob = new Blob(recordedChunks, { type: 'video/webm' });
+
+                    // ✅ FIX 4: Pass the user-chosen duration (not a hardcoded 6s/16s) to the metadata fixer
+                    ysFixWebmDuration(brokenBlob, EXACT_DURATION_MS, function(fixedBlob) {
+                        const videoUrl = URL.createObjectURL(fixedBlob);
+
+                        renderOverlay.style.display = 'none';
+                        convertBtn.disabled = false;
+
+                        const filename = `SVG-Studio-${selectedSeconds}sec-${targetHeight}p.webm`;
+
+                        downloadArea.innerHTML = `
+                            <a href="${videoUrl}" download="${filename}" class="download-btn">
+                                ⬇ Download ${selectedSeconds}-Second Video (${targetHeight}p)
+                            </a>
+                        `;
+
+                        // Auto-download
+                        const a = document.createElement('a');
+                        a.href = videoUrl;
+                        a.download = filename;
+                        a.click();
+                    });
+                };
+
+                // ✅ FIX 5: The stoppage timer now uses EXACT_DURATION_MS from the dropdown
+                mediaRecorder.start();
+
+                const startTime = performance.now();
+                let animationId;
+                let isRecording = true;
+
+                // Precision stop — fires at exactly the selected milliseconds
+                const stopTimeout = setTimeout(() => {
+                    isRecording = false;
+                    cancelAnimationFrame(animationId);
+                    mediaRecorder.stop();
+                }, EXACT_DURATION_MS);
+
+                function renderLoop(currentTime) {
+                    if (!isRecording) return;
+
+                    const elapsed = currentTime - startTime;
+
+                    // ✅ Progress and countdown both driven by EXACT_DURATION_MS
+                    const pct = Math.min((elapsed / EXACT_DURATION_MS) * 100, 100);
+                    progressFill.style.width = pct + '%';
+
+                    const elapsedSec   = Math.min(elapsed / 1000, selectedSeconds).toFixed(1);
+                    renderTimer.textContent = `${elapsedSec}s / ${selectedSeconds}s`;
+
+                    // Draw frame
+                    ctx.fillStyle = '#020617';
+                    ctx.fillRect(0, 0, targetWidth, targetHeight);
+                    ctx.drawImage(liveImageEl, 0, 0, targetWidth, targetHeight);
+
+                    // Force-dirty pixel so Chrome doesn't drop static frames
+                    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.05})`;
+                    ctx.fillRect(0, 0, 1, 1);
+
+                    animationId = requestAnimationFrame(renderLoop);
+                }
+
+                requestAnimationFrame(renderLoop);
+            };
+
+            liveImageEl.onerror = () => {
+                alert("System Error: The SVG code is invalid or missing dependencies.");
+                renderOverlay.style.display = 'none';
+                convertBtn.disabled = false;
+            };
+
+            liveImageEl.src = svgUrl;
+        });
+    </script>
 </body>
 </html>
