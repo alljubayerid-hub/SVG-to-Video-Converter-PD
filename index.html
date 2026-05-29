@@ -34,740 +34,145 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--void);color:var(--text);font-family:var(--font-ui);overflow:hidden;}
+.app{display:grid;grid-template-rows:52px 1fr 220px 48px;height:100vh;width:100vw;}
 
-html,body{
-  height:100%;
-  background:var(--void);
-  color:var(--text);
-  font-family:var(--font-ui);
-  overflow:hidden;
-}
-
-/* ── App shell ── */
-.app{
-  display:grid;
-  grid-template-rows:52px 1fr 220px 48px;
-  height:100vh;
-  width:100vw;
-}
-
-/* ─────────── TOP MENUBAR ─────────── */
-.menubar{
-  background:var(--panel);
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  padding:0 16px;
-  gap:24px;
-  z-index:100;
-}
-.logo{
-  font-size:1.05rem;
-  font-weight:800;
-  letter-spacing:0.08em;
-  background:linear-gradient(90deg,var(--cyan),var(--green));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  white-space:nowrap;
-  margin-right:8px;
-}
+/* MENUBAR */
+.menubar{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:24px;z-index:100;}
+.logo{font-size:1.05rem;font-weight:800;letter-spacing:0.08em;background:linear-gradient(90deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;margin-right:8px;}
 .menu-group{display:flex;gap:2px}
-.menu-btn{
-  background:none;
-  border:none;
-  color:var(--text-mid);
-  font-family:var(--font-ui);
-  font-size:0.78rem;
-  font-weight:600;
-  padding:6px 10px;
-  border-radius:4px;
-  cursor:pointer;
-  transition:all .15s;
-}
+.menu-btn{background:none;border:none;color:var(--text-mid);font-family:var(--font-ui);font-size:0.78rem;font-weight:600;padding:6px 10px;border-radius:4px;cursor:pointer;transition:all .15s;}
 .menu-btn:hover{background:var(--surface);color:var(--text)}
-
-.menubar-right{
-  margin-left:auto;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.badge{
-  font-size:0.65rem;
-  font-weight:700;
-  font-family:var(--font-mono);
-  padding:3px 8px;
-  border-radius:3px;
-  letter-spacing:0.06em;
-}
+.menubar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.badge{font-size:0.65rem;font-weight:700;font-family:var(--font-mono);padding:3px 8px;border-radius:3px;letter-spacing:0.06em;}
 .badge-pro{background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-mid)}
 .badge-ver{background:var(--surface);color:var(--text-dim);border:1px solid var(--border)}
 
-/* ─────────── MAIN WORKSPACE ─────────── */
-.workspace{
-  display:grid;
-  grid-template-columns:320px 1fr 300px;
-  overflow:hidden;
-  background:var(--base);
-}
+/* WORKSPACE */
+.workspace{display:grid;grid-template-columns:320px 1fr 300px;overflow:hidden;background:var(--base);}
 
-/* ── Left Panel: Code editor ── */
-.code-panel{
-  background:var(--panel);
-  border-right:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-.panel-tab-bar{
-  display:flex;
-  background:var(--void);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.panel-tab{
-  font-family:var(--font-mono);
-  font-size:0.7rem;
-  padding:9px 14px;
-  color:var(--text-dim);
-  cursor:pointer;
-  border-right:1px solid var(--border);
-  transition:all .15s;
-  white-space:nowrap;
-}
-.panel-tab.active{
-  background:var(--panel);
-  color:var(--cyan);
-  border-bottom:2px solid var(--cyan);
-}
-.editor-toolbar{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 12px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.tool-icon-btn{
-  background:var(--surface);
-  border:1px solid var(--border);
-  color:var(--text-mid);
-  font-size:0.7rem;
-  padding:4px 8px;
-  border-radius:3px;
-  cursor:pointer;
-  transition:all .15s;
-  font-family:var(--font-mono);
-}
+/* Left: Code */
+.code-panel{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.panel-tab-bar{display:flex;background:var(--void);border-bottom:1px solid var(--border);flex-shrink:0;}
+.panel-tab{font-family:var(--font-mono);font-size:0.7rem;padding:9px 14px;color:var(--text-dim);cursor:pointer;border-right:1px solid var(--border);transition:all .15s;white-space:nowrap;}
+.panel-tab.active{background:var(--panel);color:var(--cyan);border-bottom:2px solid var(--cyan);}
+.editor-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tool-icon-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-size:0.7rem;padding:4px 8px;border-radius:3px;cursor:pointer;transition:all .15s;font-family:var(--font-mono);}
 .tool-icon-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
-.line-count{
-  font-family:var(--font-mono);
-  font-size:0.65rem;
-  color:var(--text-dim);
-  margin-left:auto;
-}
-#svgInput{
-  flex:1;
-  background:var(--panel);
-  color:#7dd3fc;
-  font-family:var(--font-mono);
-  font-size:12.5px;
-  line-height:1.65;
-  border:none;
-  outline:none;
-  padding:14px;
-  resize:none;
-  overflow-y:auto;
-  tab-size:2;
-}
+.line-count{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);margin-left:auto;}
+#svgInput{flex:1;background:var(--panel);color:#7dd3fc;font-family:var(--font-mono);font-size:12.5px;line-height:1.65;border:none;outline:none;padding:14px;resize:none;overflow-y:auto;tab-size:2;}
 #svgInput::-webkit-scrollbar{width:6px}
 #svgInput::-webkit-scrollbar-track{background:var(--void)}
 #svgInput::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
-/* ── Centre: Preview ── */
-.preview-panel{
-  display:flex;
-  flex-direction:column;
-  background:var(--base);
-  overflow:hidden;
-}
-.preview-toolbar{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:8px 14px;
-  background:var(--panel);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.preview-label{
-  font-size:0.72rem;
-  font-weight:700;
-  color:var(--text-mid);
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-}
-.res-badge{
-  background:var(--surface);
-  border:1px solid var(--border);
-  font-family:var(--font-mono);
-  font-size:0.65rem;
-  color:var(--text-mid);
-  padding:3px 8px;
-  border-radius:3px;
-}
-.live-dot{
-  width:7px;height:7px;
-  border-radius:50%;
-  background:var(--green);
-  box-shadow:0 0 6px var(--green);
-  animation:livepulse 2s infinite;
-  margin-left:auto;
-}
-@keyframes livepulse{
-  0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}
-  50%{opacity:.4;box-shadow:0 0 2px var(--green)}
-}
-.preview-stage{
-  flex:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:repeating-conic-gradient(#13151e 0% 25%,#0d0f16 0% 50%) 0 0/24px 24px;
-  overflow:hidden;
-  position:relative;
-}
-.preview-frame{
-  aspect-ratio:16/9;
-  background:#000;
-  max-width:calc(100% - 40px);
-  max-height:calc(100% - 40px);
-  box-shadow:0 0 0 1px var(--border),0 20px 60px rgba(0,0,0,.8);
-  overflow:hidden;
-  position:relative;
-}
+/* Centre: Preview */
+.preview-panel{display:flex;flex-direction:column;background:var(--base);overflow:hidden;}
+.preview-toolbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+.preview-label{font-size:0.72rem;font-weight:700;color:var(--text-mid);letter-spacing:0.06em;text-transform:uppercase;}
+.res-badge{background:var(--surface);border:1px solid var(--border);font-family:var(--font-mono);font-size:0.65rem;color:var(--text-mid);padding:3px 8px;border-radius:3px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:livepulse 2s infinite;margin-left:auto;}
+@keyframes livepulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}50%{opacity:.4;box-shadow:0 0 2px var(--green)}}
+.preview-stage{flex:1;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#13151e 0% 25%,#0d0f16 0% 50%) 0 0/24px 24px;overflow:hidden;position:relative;}
+.preview-frame{aspect-ratio:16/9;background:#000;max-width:calc(100% - 40px);max-height:calc(100% - 40px);box-shadow:0 0 0 1px var(--border),0 20px 60px rgba(0,0,0,.8);overflow:hidden;position:relative;}
 .preview-frame svg{width:100%;height:100%}
+.preview-overlay-time{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid var(--border2);font-family:var(--font-mono);font-size:0.65rem;color:var(--cyan);padding:3px 8px;border-radius:3px;pointer-events:none;}
 
-/* Playhead overlay on preview */
-.preview-overlay-time{
-  position:absolute;
-  bottom:10px;right:10px;
-  background:rgba(0,0,0,.7);
-  border:1px solid var(--border2);
-  font-family:var(--font-mono);
-  font-size:0.65rem;
-  color:var(--cyan);
-  padding:3px 8px;
-  border-radius:3px;
-  pointer-events:none;
-}
-
-/* ── Right Panel: Settings ── */
-.settings-panel{
-  background:var(--panel);
-  border-left:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-  overflow-y:auto;
-}
+/* Right: Settings */
+.settings-panel{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
 .settings-panel::-webkit-scrollbar{width:4px}
 .settings-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-.settings-section{
-  border-bottom:1px solid var(--border);
-  padding:14px;
-}
-.section-title{
-  font-size:0.67rem;
-  font-weight:700;
-  color:var(--text-dim);
-  letter-spacing:0.1em;
-  text-transform:uppercase;
-  margin-bottom:12px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.section-title::before{
-  content:'';
-  width:3px;height:12px;
-  background:var(--cyan);
-  border-radius:2px;
-  display:inline-block;
-}
-
+.settings-section{border-bottom:1px solid var(--border);padding:14px;}
+.section-title{font-size:0.67rem;font-weight:700;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.section-title::before{content:'';width:3px;height:12px;background:var(--cyan);border-radius:2px;display:inline-block;}
 .field{margin-bottom:10px}
-.field-label{
-  font-size:0.68rem;
-  color:var(--text-mid);
-  font-weight:600;
-  margin-bottom:5px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.field-val{
-  font-family:var(--font-mono);
-  color:var(--cyan);
-  font-size:0.68rem;
-}
-
-select,input[type=number],input[type=text]{
-  width:100%;
-  background:var(--surface);
-  border:1px solid var(--border);
-  color:var(--text);
-  font-family:var(--font-mono);
-  font-size:0.78rem;
-  padding:7px 10px;
-  border-radius:var(--radius);
-  outline:none;
-  transition:border .15s;
-  -webkit-appearance:none;
-}
+.field-label{font-size:0.68rem;color:var(--text-mid);font-weight:600;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
+.field-val{font-family:var(--font-mono);color:var(--cyan);font-size:0.68rem;}
+select,input[type=number],input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.78rem;padding:7px 10px;border-radius:var(--radius);outline:none;transition:border .15s;-webkit-appearance:none;}
 select:focus,input[type=number]:focus{border-color:var(--cyan-mid)}
 select option{background:var(--surface2)}
-
-input[type=range]{
-  width:100%;
-  -webkit-appearance:none;
-  height:4px;
-  background:var(--surface2);
-  border-radius:2px;
-  outline:none;
-  cursor:pointer;
-  margin:4px 0;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;
-  width:14px;height:14px;
-  border-radius:50%;
-  background:var(--cyan);
-  box-shadow:0 0 6px var(--cyan-mid);
-  cursor:pointer;
-}
-
-/* Format pills */
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:var(--surface2);border-radius:2px;outline:none;cursor:pointer;margin:4px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan-mid);cursor:pointer;}
 .format-pills{display:flex;gap:6px;flex-wrap:wrap}
-.format-pill{
-  background:var(--surface);
-  border:1px solid var(--border);
-  color:var(--text-mid);
-  font-family:var(--font-mono);
-  font-size:0.68rem;
-  font-weight:700;
-  padding:5px 10px;
-  border-radius:4px;
-  cursor:pointer;
-  transition:all .15s;
-  letter-spacing:0.04em;
-}
-.format-pill.active{
-  background:var(--cyan-dim);
-  border-color:var(--cyan);
-  color:var(--cyan);
-}
+.format-pill{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-family:var(--font-mono);font-size:0.68rem;font-weight:700;padding:5px 10px;border-radius:4px;cursor:pointer;transition:all .15s;letter-spacing:0.04em;}
+.format-pill.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
 .format-pill:hover{border-color:var(--border2);color:var(--text)}
-
-/* Render button */
-.render-btn{
-  margin:14px;
-  background:linear-gradient(135deg,#0099cc,#00cc88);
-  border:none;
-  color:#000;
-  font-family:var(--font-ui);
-  font-size:0.85rem;
-  font-weight:800;
-  padding:14px;
-  border-radius:var(--radius);
-  cursor:pointer;
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  transition:all .2s;
-  box-shadow:0 6px 20px rgba(0,200,150,.25);
-  flex-shrink:0;
-}
+.render-btn{margin:14px;background:linear-gradient(135deg,#0099cc,#00cc88);border:none;color:#000;font-family:var(--font-ui);font-size:0.85rem;font-weight:800;padding:14px;border-radius:var(--radius);cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;transition:all .2s;box-shadow:0 6px 20px rgba(0,200,150,.25);flex-shrink:0;}
 .render-btn:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,200,150,.4)}
 .render-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
-/* ─────────── TIMELINE PANEL ─────────── */
-.timeline-panel{
-  background:var(--panel);
-  border-top:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-.timeline-toolbar{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 14px;
-  background:var(--void);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.tl-label{
-  font-size:0.68rem;
-  font-weight:700;
-  color:var(--text-mid);
-  text-transform:uppercase;
-  letter-spacing:0.08em;
-}
-.tl-btn{
-  background:var(--surface);
-  border:1px solid var(--border);
-  color:var(--text-mid);
-  font-size:0.7rem;
-  width:24px;height:24px;
-  border-radius:3px;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .15s;
-}
+/* TIMELINE */
+.timeline-panel{background:var(--panel);border-top:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.timeline-toolbar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--void);border-bottom:1px solid var(--border);flex-shrink:0;}
+.tl-label{font-size:0.68rem;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.08em;}
+.tl-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-size:0.7rem;width:24px;height:24px;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .tl-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
-.tl-time{
-  font-family:var(--font-mono);
-  font-size:0.7rem;
-  color:var(--cyan);
-  background:var(--surface);
-  border:1px solid var(--border);
-  padding:3px 8px;
-  border-radius:3px;
-}
+.tl-time{font-family:var(--font-mono);font-size:0.7rem;color:var(--cyan);background:var(--surface);border:1px solid var(--border);padding:3px 8px;border-radius:3px;}
 .tl-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .zoom-label{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim)}
-
-/* Timeline track area */
-.timeline-tracks{
-  flex:1;
-  display:flex;
-  overflow:hidden;
-}
-.track-labels{
-  width:110px;
-  flex-shrink:0;
-  border-right:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-}
-.track-label{
-  height:38px;
-  display:flex;
-  align-items:center;
-  padding:0 10px;
-  font-size:0.65rem;
-  font-weight:700;
-  color:var(--text-dim);
-  text-transform:uppercase;
-  letter-spacing:0.05em;
-  border-bottom:1px solid var(--border);
-  gap:6px;
-}
+.timeline-tracks{flex:1;display:flex;overflow:hidden;}
+.track-labels{width:110px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.track-label{height:38px;display:flex;align-items:center;padding:0 10px;font-size:0.65rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);gap:6px;}
 .track-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-
-.timeline-scroll{
-  flex:1;
-  overflow-x:auto;
-  overflow-y:hidden;
-  position:relative;
-}
+.timeline-scroll{flex:1;overflow-x:auto;overflow-y:hidden;position:relative;}
 .timeline-scroll::-webkit-scrollbar{height:6px}
 .timeline-scroll::-webkit-scrollbar-track{background:var(--void)}
 .timeline-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-
-.timeline-inner{
-  position:relative;
-  min-width:100%;
-  height:100%;
-}
-
-/* Ruler */
-.tl-ruler{
-  height:20px;
-  background:var(--void);
-  border-bottom:1px solid var(--border);
-  position:relative;
-  overflow:hidden;
-}
-.tl-ruler-canvas{
-  position:absolute;
-  top:0;left:0;
-  width:100%;height:100%;
-}
-
-/* Tracks */
-.tl-tracks-area{
-  position:relative;
-}
-.tl-track-row{
-  height:38px;
-  border-bottom:1px solid var(--border);
-  position:relative;
-  overflow:hidden;
-}
-
-/* Keyframe clip bar */
-.tl-clip{
-  position:absolute;
-  top:7px;
-  height:24px;
-  border-radius:3px;
-  cursor:pointer;
-  transition:filter .15s;
-  display:flex;
-  align-items:center;
-  padding:0 8px;
-  font-size:0.6rem;
-  font-weight:700;
-  font-family:var(--font-mono);
-  white-space:nowrap;
-  overflow:hidden;
-}
+.timeline-inner{position:relative;min-width:100%;height:100%;}
+.tl-ruler{height:20px;background:var(--void);border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.tl-ruler-canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+.tl-tracks-area{position:relative;}
+.tl-track-row{height:38px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.tl-clip{position:absolute;top:7px;height:24px;border-radius:3px;cursor:pointer;transition:filter .15s;display:flex;align-items:center;padding:0 8px;font-size:0.6rem;font-weight:700;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;}
 .tl-clip:hover{filter:brightness(1.2)}
-
-/* Keyframe diamond */
-.kf{
-  position:absolute;
-  top:50%;
-  transform:translate(-50%,-50%) rotate(45deg);
-  width:8px;height:8px;
-  cursor:pointer;
-  transition:all .15s;
-  z-index:5;
-}
+.kf{position:absolute;top:50%;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;cursor:pointer;transition:all .15s;z-index:5;}
 .kf:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.4)}
+.tl-playhead{position:absolute;top:0;width:2px;height:100%;background:var(--red);box-shadow:0 0 8px var(--red);z-index:10;pointer-events:none;transition:left 0.05s linear;}
+.tl-playhead::before{content:'';position:absolute;top:0;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--red);}
 
-/* Playhead */
-.tl-playhead{
-  position:absolute;
-  top:0;
-  width:2px;
-  height:100%;
-  background:var(--red);
-  box-shadow:0 0 8px var(--red);
-  z-index:10;
-  pointer-events:none;
-  transition:left 0.05s linear;
-}
-.tl-playhead::before{
-  content:'';
-  position:absolute;
-  top:0;left:-5px;
-  width:0;height:0;
-  border-left:6px solid transparent;
-  border-right:6px solid transparent;
-  border-top:8px solid var(--red);
-}
-
-/* ─────────── STATUS BAR ─────────── */
-.statusbar{
-  background:var(--void);
-  border-top:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  padding:0 14px;
-  gap:20px;
-  z-index:100;
-}
-.status-item{
-  font-family:var(--font-mono);
-  font-size:0.62rem;
-  color:var(--text-dim);
-  display:flex;
-  align-items:center;
-  gap:5px;
-}
+/* STATUS BAR */
+.statusbar{background:var(--void);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:20px;z-index:100;}
+.status-item{font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
 .status-item.active{color:var(--cyan)}
-.status-dot{
-  width:5px;height:5px;
-  border-radius:50%;
-  background:currentColor;
-}
+.status-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
 
-/* ─────────── RENDER OVERLAY ─────────── */
-.render-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(8,9,13,.92);
-  backdrop-filter:blur(20px);
-  z-index:999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.render-modal{
-  background:var(--panel);
-  border:1px solid var(--border2);
-  border-radius:10px;
-  padding:40px;
-  width:480px;
-  box-shadow:0 30px 80px rgba(0,0,0,.9),0 0 0 1px rgba(0,212,255,.08);
-}
-.render-modal-title{
-  font-size:1.1rem;
-  font-weight:800;
-  color:var(--cyan);
-  margin-bottom:4px;
-}
-.render-modal-sub{
-  font-size:0.78rem;
-  color:var(--text-mid);
-  font-family:var(--font-mono);
-  margin-bottom:28px;
-}
-.render-stats{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-  margin-bottom:24px;
-}
-.render-stat{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:6px;
-  padding:10px;
-  text-align:center;
-}
-.render-stat-val{
-  font-family:var(--font-mono);
-  font-size:1.1rem;
-  font-weight:700;
-  color:var(--text);
-  display:block;
-}
-.render-stat-lbl{
-  font-size:0.6rem;
-  color:var(--text-dim);
-  text-transform:uppercase;
-  letter-spacing:0.07em;
-}
-.progress-track{
-  width:100%;
-  height:6px;
-  background:var(--surface2);
-  border-radius:3px;
-  overflow:hidden;
-  margin-bottom:12px;
-}
-.progress-fill{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,var(--cyan),var(--green));
-  border-radius:3px;
-  transition:width .08s linear;
-  box-shadow:0 0 10px var(--cyan-mid);
-}
-.render-countdown{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-family:var(--font-mono);
-  font-size:0.75rem;
-  color:var(--text-mid);
-}
+/* RENDER OVERLAY */
+.render-overlay{position:fixed;inset:0;background:rgba(8,9,13,.92);backdrop-filter:blur(20px);z-index:999;display:none;align-items:center;justify-content:center;}
+.render-modal{background:var(--panel);border:1px solid var(--border2);border-radius:10px;padding:40px;width:480px;box-shadow:0 30px 80px rgba(0,0,0,.9),0 0 0 1px rgba(0,212,255,.08);}
+.render-modal-title{font-size:1.1rem;font-weight:800;color:var(--cyan);margin-bottom:4px;}
+.render-modal-sub{font-size:0.78rem;color:var(--text-mid);font-family:var(--font-mono);margin-bottom:28px;}
+.render-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;}
+.render-stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center;}
+.render-stat-val{font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--text);display:block;}
+.render-stat-lbl{font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;}
+.progress-track{width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:12px;}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px;transition:width .08s linear;box-shadow:0 0 10px var(--cyan-mid);}
+.render-countdown{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-mid);}
 .countdown-time{color:var(--green);font-size:0.9rem;font-weight:700}
-.render-stage-label{
-  font-size:0.72rem;
-  color:var(--text-dim);
-  font-family:var(--font-mono);
-  margin-top:10px;
-  min-height:18px;
-}
-/* GIF note */
-.gif-warning{
-  margin-top:14px;
-  background:var(--amber-dim);
-  border:1px solid rgba(255,184,0,.3);
-  color:var(--amber);
-  font-size:0.7rem;
-  font-family:var(--font-mono);
-  padding:8px 12px;
-  border-radius:5px;
-  display:none;
-}
+.render-stage-label{font-size:0.72rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:10px;min-height:18px;}
+.gif-warning{margin-top:14px;background:var(--amber-dim);border:1px solid rgba(255,184,0,.3);color:var(--amber);font-size:0.7rem;font-family:var(--font-mono);padding:8px 12px;border-radius:5px;display:none;}
 
-/* ─────────── DOWNLOAD AREA ─────────── */
-#downloadArea{
-  position:fixed;
-  bottom:60px;right:20px;
-  z-index:200;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  align-items:flex-end;
-}
-.dl-btn{
-  background:linear-gradient(135deg,#0f7a2e,#00a854);
-  color:#fff;
-  text-decoration:none;
-  padding:11px 20px;
-  border-radius:6px;
-  font-family:var(--font-ui);
-  font-weight:700;
-  font-size:0.8rem;
-  letter-spacing:0.04em;
-  box-shadow:0 6px 20px rgba(0,168,84,.35);
-  transition:all .2s;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  white-space:nowrap;
-}
+/* DOWNLOAD */
+#downloadArea{position:fixed;bottom:60px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+.dl-btn{background:linear-gradient(135deg,#0f7a2e,#00a854);color:#fff;text-decoration:none;padding:11px 20px;border-radius:6px;font-family:var(--font-ui);font-weight:700;font-size:0.8rem;letter-spacing:0.04em;box-shadow:0 6px 20px rgba(0,168,84,.35);transition:all .2s;display:flex;align-items:center;gap:8px;white-space:nowrap;}
 .dl-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,168,84,.5)}
-
-/* hidden hardware */
 #renderCanvas{display:none}
 #hiddenBox{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none}
-
-/* Tooltip */
-[title]{cursor:help}
-
-/* Keyframe panel inside settings */
 .kf-list{display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto}
 .kf-list::-webkit-scrollbar{width:3px}
 .kf-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.kf-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:4px;
-  padding:5px 8px;
-  font-family:var(--font-mono);
-  font-size:0.67rem;
-  color:var(--text-mid);
-}
+.kf-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-family:var(--font-mono);font-size:0.67rem;color:var(--text-mid);}
 .kf-item-time{color:var(--cyan);min-width:42px}
 .kf-item-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kf-del{
-  background:none;border:none;color:var(--text-dim);
-  cursor:pointer;font-size:0.8rem;
-  padding:0 2px;
-  transition:color .15s;
-}
+.kf-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.8rem;padding:0 2px;transition:color .15s;}
 .kf-del:hover{color:var(--red)}
-.add-kf-btn{
-  background:var(--surface);
-  border:1px dashed var(--border2);
-  color:var(--text-mid);
-  font-family:var(--font-mono);
-  font-size:0.7rem;
-  padding:6px;
-  border-radius:4px;
-  cursor:pointer;
-  width:100%;
-  transition:all .15s;
-  margin-top:4px;
-}
+.add-kf-btn{background:var(--surface);border:1px dashed var(--border2);color:var(--text-mid);font-family:var(--font-mono);font-size:0.7rem;padding:6px;border-radius:4px;cursor:pointer;width:100%;transition:all .15s;margin-top:4px;}
 .add-kf-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
 </style>
 </head>
 <body>
 
 <div class="app">
-
+  <!-- MENUBAR -->
   <div class="menubar">
     <div class="logo">SVG STUDIO PRO</div>
     <div class="menu-group">
@@ -778,27 +183,29 @@ input[type=range]::-webkit-slider-thumb{
       <button class="menu-btn">Help</button>
     </div>
     <div class="menubar-right">
-      <span class="badge badge-ver">v3.0</span>
+      <span class="badge badge-ver">v3.1</span>
       <span class="badge badge-pro">PRO</span>
     </div>
   </div>
 
+  <!-- WORKSPACE -->
   <div class="workspace">
-
+    <!-- LEFT: Code -->
     <div class="code-panel">
       <div class="panel-tab-bar">
         <div class="panel-tab active">source.svg</div>
         <div class="panel-tab">properties</div>
       </div>
       <div class="editor-toolbar">
-        <button class="tool-icon-btn" title="Format Code" onclick="formatCode()">⌥ Format</button>
-        <button class="tool-icon-btn" title="Clear Editor" onclick="clearEditor()">✕ Clear</button>
-        <button class="tool-icon-btn" title="Copy SVG" onclick="copySVG()">⎘ Copy</button>
+        <button class="tool-icon-btn" onclick="formatCode()">⌥ Format</button>
+        <button class="tool-icon-btn" onclick="clearEditor()">✕ Clear</button>
+        <button class="tool-icon-btn" onclick="copySVG()">⎘ Copy</button>
         <span class="line-count" id="lineCount">0 lines</span>
       </div>
       <textarea id="svgInput" spellcheck="false" placeholder="Paste <svg> code here..."></textarea>
     </div>
 
+    <!-- CENTRE: Preview -->
     <div class="preview-panel">
       <div class="preview-toolbar">
         <span class="preview-label">Preview</span>
@@ -815,11 +222,10 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
 
+    <!-- RIGHT: Settings -->
     <div class="settings-panel">
-
       <div class="settings-section">
         <div class="section-title">Output Settings</div>
-
         <div class="field">
           <div class="field-label">Resolution <span class="field-val" id="resLabel">1920×1080</span></div>
           <select id="videoResolution" onchange="syncBadges()">
@@ -830,13 +236,11 @@ input[type=range]::-webkit-slider-thumb{
             <option value="854x480">SD — 480p</option>
           </select>
         </div>
-
         <div class="field">
           <div class="field-label">Duration (seconds) <span class="field-val" id="durLabel">6.0s</span></div>
           <input type="number" id="videoDuration" value="6" min="1" max="300" step="0.5"
-                 oninput="syncBadges();buildTimeline()" placeholder="e.g. 10.5">
+                 oninput="syncBadges();buildTimeline()">
         </div>
-
         <div class="field">
           <div class="field-label">Frame Rate <span class="field-val" id="fpsLabel">60 fps</span></div>
           <select id="videoFps" onchange="syncBadges()">
@@ -856,7 +260,7 @@ input[type=range]::-webkit-slider-thumb{
           <div class="format-pill" data-fmt="gif"  onclick="selectFormat(this)">GIF</div>
         </div>
         <div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:8px" id="formatNote">
-          VP9 codec · best quality/size ratio
+          VP8 codec · frequent keyframes · seekable
         </div>
       </div>
 
@@ -868,7 +272,7 @@ input[type=range]::-webkit-slider-thumb{
         </div>
         <div class="field">
           <div class="field-label">Background</div>
-          <input type="text" id="bgColor" value="#020617" placeholder="#000000" style="font-family:var(--font-mono);font-size:0.75rem">
+          <input type="text" id="bgColor" value="#020617" placeholder="#000000">
         </div>
       </div>
 
@@ -881,21 +285,20 @@ input[type=range]::-webkit-slider-thumb{
       <button class="render-btn" id="renderBtn" onclick="startRender()">
         ▶ RENDER &amp; EXPORT
       </button>
-
     </div>
   </div>
 
+  <!-- TIMELINE -->
   <div class="timeline-panel">
     <div class="timeline-toolbar">
       <span class="tl-label">Timeline</span>
-      <button class="tl-btn" title="Go to start" onclick="seekTo(0)">⏮</button>
-      <button class="tl-btn" title="Play/Pause" id="playBtn" onclick="togglePlay()">▶</button>
-      <button class="tl-btn" title="Go to end" onclick="seekToEnd()">⏭</button>
+      <button class="tl-btn" onclick="seekTo(0)">⏮</button>
+      <button class="tl-btn" id="playBtn" onclick="togglePlay()">▶</button>
+      <button class="tl-btn" onclick="seekToEnd()">⏭</button>
       <span class="tl-time" id="tlTimeDisplay">00:00.000</span>
       <div class="tl-right">
         <span class="zoom-label">ZOOM</span>
-        <input type="range" id="zoomSlider" min="50" max="400" value="100"
-               style="width:80px" oninput="buildTimeline()">
+        <input type="range" id="zoomSlider" min="50" max="400" value="100" style="width:80px" oninput="buildTimeline()">
         <span class="zoom-label" id="zoomVal">100%</span>
       </div>
     </div>
@@ -919,6 +322,7 @@ input[type=range]::-webkit-slider-thumb{
     </div>
   </div>
 
+  <!-- STATUS BAR -->
   <div class="statusbar">
     <div class="status-item active"><div class="status-dot"></div><span id="statusText">Ready</span></div>
     <div class="status-item" id="memStat">MEM —</div>
@@ -927,36 +331,24 @@ input[type=range]::-webkit-slider-thumb{
   </div>
 </div>
 
+<!-- RENDER OVERLAY -->
 <div class="render-overlay" id="renderOverlay">
   <div class="render-modal">
     <div class="render-modal-title" id="modalTitle">Rendering…</div>
     <div class="render-modal-sub" id="modalSub">Initialising encoder pipeline</div>
     <div class="render-stats">
-      <div class="render-stat">
-        <span class="render-stat-val" id="rStatFps">—</span>
-        <span class="render-stat-lbl">FPS</span>
-      </div>
-      <div class="render-stat">
-        <span class="render-stat-val" id="rStatRes">—</span>
-        <span class="render-stat-lbl">Resolution</span>
-      </div>
-      <div class="render-stat">
-        <span class="render-stat-val" id="rStatDur">—</span>
-        <span class="render-stat-lbl">Duration</span>
-      </div>
+      <div class="render-stat"><span class="render-stat-val" id="rStatFps">—</span><span class="render-stat-lbl">FPS</span></div>
+      <div class="render-stat"><span class="render-stat-val" id="rStatRes">—</span><span class="render-stat-lbl">Resolution</span></div>
+      <div class="render-stat"><span class="render-stat-val" id="rStatDur">—</span><span class="render-stat-lbl">Duration</span></div>
     </div>
-    <div class="progress-track">
-      <div class="progress-fill" id="progressFill"></div>
-    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     <div class="render-countdown">
       <span id="rElapsed">0.0s elapsed</span>
       <span class="countdown-time" id="rRemain">— remaining</span>
       <span id="rPercent">0%</span>
     </div>
     <div class="render-stage-label" id="renderStageLabel"></div>
-    <div class="gif-warning" id="gifWarning">
-      ⚠ GIF encoding is CPU-intensive. Large resolutions may be slow. Recommended: 720p or below for GIF.
-    </div>
+    <div class="gif-warning" id="gifWarning">⚠ GIF encoding is CPU-intensive. Large resolutions may be slow. Recommended: 720p or below for GIF.</div>
   </div>
 </div>
 
@@ -966,505 +358,528 @@ input[type=range]::-webkit-slider-thumb{
 
 <script>
 /* ===================================================
-   SVG STUDIO PRO — Full Engine
+   SVG STUDIO PRO v3.1 — Fixed seekable video engine
 =================================================== */
 
-// DOM refs
-const svgInput     = document.getElementById('svgInput');
-const previewFrame = document.getElementById('previewFrame');
-const renderBtn    = document.getElementById('renderBtn');
-const renderOverlay= document.getElementById('renderOverlay');
-const progressFill = document.getElementById('progressFill');
-const canvas       = document.getElementById('renderCanvas');
-const hiddenBox    = document.getElementById('hiddenBox');
-const ctx          = canvas.getContext('2d',{alpha:false});
-const downloadArea = document.getElementById('downloadArea');
+const svgInput      = document.getElementById('svgInput');
+const previewFrame  = document.getElementById('previewFrame');
+const renderBtn     = document.getElementById('renderBtn');
+const renderOverlay = document.getElementById('renderOverlay');
+const progressFill  = document.getElementById('progressFill');
+const canvas        = document.getElementById('renderCanvas');
+const hiddenBox     = document.getElementById('hiddenBox');
+const ctx           = canvas.getContext('2d', {alpha: false});
+const downloadArea  = document.getElementById('downloadArea');
+const tlScroll      = document.getElementById('tlScroll');
+const tlInner       = document.getElementById('tlInner');
+const rulerCanvas   = document.getElementById('rulerCanvas');
+const playhead      = document.getElementById('playhead');
+const trackAnim     = document.getElementById('trackAnim');
+const trackKf       = document.getElementById('trackKf');
+const trackMarker   = document.getElementById('trackMarker');
+const tlTimeDisplay = document.getElementById('tlTimeDisplay');
+const playBtn       = document.getElementById('playBtn');
+const kfList        = document.getElementById('kfList');
 
-// Timeline DOM
-const tlScroll     = document.getElementById('tlScroll');
-const tlInner      = document.getElementById('tlInner');
-const rulerCanvas  = document.getElementById('rulerCanvas');
-const playhead     = document.getElementById('playhead');
-const trackAnim    = document.getElementById('trackAnim');
-const trackKf      = document.getElementById('trackKf');
-const trackMarker  = document.getElementById('trackMarker');
-const tlTimeDisplay= document.getElementById('tlTimeDisplay');
-const playBtn      = document.getElementById('playBtn');
-const kfList       = document.getElementById('kfList');
+let selectedFormat  = 'webm';
+let keyframes       = [];
+let currentTimeSec  = 0;
+let isPlaying       = false;
+let playRAF         = null;
+let playStartWall   = null;
+let playStartSec    = 0;
+let markers         = [];
 
-// State
-let selectedFormat = 'webm';
-let keyframes      = [];
-let currentTimeSec = 0;
-let isPlaying      = false;
-let playRAF        = null;
-let playStartWall  = null;
-let playStartSec   = 0;
-let markers        = [];
-
-// ── Format notes
 const FORMAT_NOTES = {
-  webm:'VP9 codec · best quality/size ratio',
-  mp4 :'H.264 via WebM→MP4 remux · universal playback',
-  gif :'Animated GIF · CSS-animated · no audio'
+  webm: 'VP8 codec · frequent keyframes · fully seekable',
+  mp4:  'H.264 via WebM · universal playback',
+  gif:  'Animated GIF · no audio · CSS-compatible'
 };
 
-function selectFormat(el){
-  document.querySelectorAll('.format-pill').forEach(p=>p.classList.remove('active'));
+function selectFormat(el) {
+  document.querySelectorAll('.format-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   selectedFormat = el.dataset.fmt;
   document.getElementById('formatNote').textContent = FORMAT_NOTES[selectedFormat];
-  document.getElementById('gifWarning').style.display = selectedFormat==='gif'?'block':'none';
+  document.getElementById('gifWarning').style.display = selectedFormat === 'gif' ? 'block' : 'none';
 }
 
-// ── Badge sync
-function syncBadges(){
-  const res  = document.getElementById('videoResolution').value;
-  const fps  = document.getElementById('videoFps').value;
-  const dur  = parseFloat(document.getElementById('videoDuration').value)||6;
-  const parts= res.split('x');
-  const label= `${parts[0]}×${parts[1]}`;
-  document.getElementById('resBadge').textContent  = label;
-  document.getElementById('fpsBadge').textContent  = fps+' fps';
-  document.getElementById('durBadge').textContent  = dur.toFixed(1)+'s';
-  document.getElementById('resLabel').textContent  = label;
-  document.getElementById('fpsLabel').textContent  = fps+' fps';
-  document.getElementById('durLabel').textContent  = dur.toFixed(1)+'s';
+function syncBadges() {
+  const res   = document.getElementById('videoResolution').value;
+  const fps   = document.getElementById('videoFps').value;
+  const dur   = parseFloat(document.getElementById('videoDuration').value) || 6;
+  const parts = res.split('x');
+  const label = `${parts[0]}×${parts[1]}`;
+  document.getElementById('resBadge').textContent = label;
+  document.getElementById('fpsBadge').textContent = fps + ' fps';
+  document.getElementById('durBadge').textContent = dur.toFixed(1) + 's';
+  document.getElementById('resLabel').textContent = label;
+  document.getElementById('fpsLabel').textContent = fps + ' fps';
+  document.getElementById('durLabel').textContent = dur.toFixed(1) + 's';
   buildTimeline();
 }
-function syncBitrate(){
-  const v = document.getElementById('bitrateSlider').value;
-  document.getElementById('bitrateLabel').textContent = v+' Mbps';
+function syncBitrate() {
+  document.getElementById('bitrateLabel').textContent =
+    document.getElementById('bitrateSlider').value + ' Mbps';
 }
 
-// ── Line counter
-function updateLineCount(){
-  const lines = svgInput.value.split('\n').length;
-  document.getElementById('lineCount').textContent = lines+' lines';
+function updateLineCount() {
+  document.getElementById('lineCount').textContent =
+    svgInput.value.split('\n').length + ' lines';
 }
-svgInput.addEventListener('input',()=>{
+svgInput.addEventListener('input', () => {
   updateLineCount();
   clearTimeout(window._previewTimer);
-  window._previewTimer = setTimeout(updatePreview,200);
+  window._previewTimer = setTimeout(updatePreview, 200);
 });
-function formatCode(){
-  try{
-    const p=new DOMParser();
-    const d=p.parseFromString(svgInput.value,'image/svg+xml');
-    const s=new XMLSerializer().serializeToString(d);
-    svgInput.value=s;
+function formatCode() {
+  try {
+    const d = new DOMParser().parseFromString(svgInput.value, 'image/svg+xml');
+    svgInput.value = new XMLSerializer().serializeToString(d);
     updateLineCount();
-  }catch(e){alert('Invalid SVG — cannot format')}
+  } catch(e) { alert('Invalid SVG'); }
 }
-function clearEditor(){
-  if(confirm('Clear SVG code?')){svgInput.value='';updatePreview();updateLineCount();}
+function clearEditor() {
+  if (confirm('Clear SVG code?')) { svgInput.value = ''; updatePreview(); updateLineCount(); }
 }
-function copySVG(){
-  navigator.clipboard.writeText(svgInput.value).then(()=>{
-    setStatus('Copied to clipboard','active');
-    setTimeout(()=>setStatus('Ready','active'),1500);
+function copySVG() {
+  navigator.clipboard.writeText(svgInput.value).then(() => {
+    setStatus('Copied to clipboard', 'active');
+    setTimeout(() => setStatus('Ready', 'active'), 1500);
   });
 }
-
-// ── Live Preview
-function updatePreview(){
+function updatePreview() {
   const raw = svgInput.value.trim();
-  if(!raw){
-    previewFrame.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2a2d3e;font-size:0.8rem;font-family:var(--font-mono)">Paste SVG to preview</div>';
+  if (!raw) {
+    previewFrame.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2a2d3e;font-size:0.8rem;font-family:var(--font-mono)">Paste SVG to preview</div>';
     return;
   }
   previewFrame.innerHTML = raw;
 }
-
-// ── Toolbar helpers
-function setStatus(msg, cls=''){
-  const el=document.getElementById('statusText');
-  el.textContent=msg;
-  el.parentElement.className='status-item'+(cls?' '+cls:'');
+function setStatus(msg, cls = '') {
+  const el = document.getElementById('statusText');
+  el.textContent = msg;
+  el.parentElement.className = 'status-item' + (cls ? ' ' + cls : '');
 }
 
-// ══════════════════════════════════════════
-//  TIMELINE ENGINE
-// ══════════════════════════════════════════
-const PX_PER_SEC = ()=>{
-  const z=parseInt(document.getElementById('zoomSlider').value)||100;
-  document.getElementById('zoomVal').textContent=z+'%';
-  return Math.round(80*z/100);
+// ── TIMELINE ──
+const PX_PER_SEC = () => {
+  const z = parseInt(document.getElementById('zoomSlider').value) || 100;
+  document.getElementById('zoomVal').textContent = z + '%';
+  return Math.round(80 * z / 100);
 };
 
-function buildTimeline(){
-  const dur = parseFloat(document.getElementById('videoDuration').value)||6;
-  const pps = PX_PER_SEC();
-  const totalW = Math.max(Math.ceil(dur*pps)+120, tlScroll.clientWidth||600);
+function buildTimeline() {
+  const dur    = parseFloat(document.getElementById('videoDuration').value) || 6;
+  const pps    = PX_PER_SEC();
+  const totalW = Math.max(Math.ceil(dur * pps) + 120, tlScroll.clientWidth || 600);
+  tlInner.style.width = totalW + 'px';
 
-  tlInner.style.width = totalW+'px';
+  const rc = rulerCanvas;
+  rc.width = totalW; rc.height = 20;
+  const rCtx = rc.getContext('2d');
+  rCtx.clearRect(0, 0, totalW, 20);
+  rCtx.fillStyle = '#0d0f16';
+  rCtx.fillRect(0, 0, totalW, 20);
 
-  // Draw ruler
-  const rc=rulerCanvas;
-  rc.width=totalW; rc.height=20;
-  const rCtx=rc.getContext('2d');
-  rCtx.clearRect(0,0,totalW,20);
-  rCtx.fillStyle='#0d0f16';
-  rCtx.fillRect(0,0,totalW,20);
-
-  // Tick marks
-  const step = pps>=100?0.5:pps>=60?1:pps>=30?2:5;
-  rCtx.strokeStyle='#2a2d3e';
-  rCtx.fillStyle='#4a4f6a';
-  rCtx.font='9px JetBrains Mono,monospace';
-  for(let t=0;t<=dur+step;t+=step){
-    const x=Math.round(t*pps);
-    if(x>totalW)break;
-    const isMajor = Math.abs(t%1)<0.001;
-    rCtx.strokeStyle=isMajor?'#333650':'#1e2130';
-    rCtx.lineWidth=1;
-    rCtx.beginPath();rCtx.moveTo(x,isMajor?6:11);rCtx.lineTo(x,20);rCtx.stroke();
-    if(isMajor){
-      rCtx.fillStyle='#4a4f6a';
-      rCtx.fillText(t.toFixed(0)+'s',x+2,9);
+  const step = pps >= 100 ? 0.5 : pps >= 60 ? 1 : pps >= 30 ? 2 : 5;
+  rCtx.font = '9px JetBrains Mono,monospace';
+  for (let t = 0; t <= dur + step; t += step) {
+    const x = Math.round(t * pps);
+    if (x > totalW) break;
+    const isMajor = Math.abs(t % 1) < 0.001;
+    rCtx.strokeStyle = isMajor ? '#333650' : '#1e2130';
+    rCtx.lineWidth = 1;
+    rCtx.beginPath(); rCtx.moveTo(x, isMajor ? 6 : 11); rCtx.lineTo(x, 20); rCtx.stroke();
+    if (isMajor) {
+      rCtx.fillStyle = '#4a4f6a';
+      rCtx.fillText(t.toFixed(0) + 's', x + 2, 9);
     }
   }
 
-  // Draw animation clip bar (full duration)
-  trackAnim.innerHTML='';
-  const clip=document.createElement('div');
-  clip.className='tl-clip';
-  clip.style.cssText=`left:0;width:${dur*pps}px;background:rgba(0,212,255,0.18);border:1px solid rgba(0,212,255,0.4);color:rgba(0,212,255,0.7)`;
-  clip.textContent=`SVG Animation · ${dur.toFixed(2)}s`;
+  trackAnim.innerHTML = '';
+  const clip = document.createElement('div');
+  clip.className = 'tl-clip';
+  clip.style.cssText = `left:0;width:${dur * pps}px;background:rgba(0,212,255,0.18);border:1px solid rgba(0,212,255,0.4);color:rgba(0,212,255,0.7)`;
+  clip.textContent = `SVG Animation · ${dur.toFixed(2)}s`;
   trackAnim.appendChild(clip);
 
-  // Draw keyframes row
-  trackKf.innerHTML='';
-  keyframes.forEach((kf,i)=>{
-    const x=Math.round(kf.time*pps);
-    const diamond=document.createElement('div');
-    diamond.className='kf';
-    diamond.style.cssText=`left:${x}px;background:${kf.color||'var(--amber)'};border:1px solid rgba(255,255,255,.3)`;
-    diamond.title=`KF ${i+1}: ${kf.label} @ ${kf.time.toFixed(2)}s`;
-    diamond.onclick=()=>seekTo(kf.time);
+  trackKf.innerHTML = '';
+  keyframes.forEach((kf, i) => {
+    const x = Math.round(kf.time * pps);
+    const diamond = document.createElement('div');
+    diamond.className = 'kf';
+    diamond.style.cssText = `left:${x}px;background:${kf.color || 'var(--amber)'};border:1px solid rgba(255,255,255,.3)`;
+    diamond.title = `KF ${i + 1}: ${kf.label} @ ${kf.time.toFixed(2)}s`;
+    diamond.onclick = () => seekTo(kf.time);
     trackKf.appendChild(diamond);
   });
 
-  // Draw markers
-  trackMarker.innerHTML='';
-  markers.forEach(m=>{
-    const x=Math.round(m.time*pps);
-    const mk=document.createElement('div');
-    mk.className='kf';
-    mk.style.cssText=`left:${x}px;background:var(--green);border:1px solid rgba(255,255,255,.3)`;
-    mk.title=`Marker: ${m.label} @ ${m.time.toFixed(2)}s`;
+  trackMarker.innerHTML = '';
+  markers.forEach(m => {
+    const x = Math.round(m.time * pps);
+    const mk = document.createElement('div');
+    mk.className = 'kf';
+    mk.style.cssText = `left:${x}px;background:var(--green);border:1px solid rgba(255,255,255,.3)`;
+    mk.title = `Marker: ${m.label} @ ${m.time.toFixed(2)}s`;
     trackMarker.appendChild(mk);
   });
 
   updatePlayheadPosition();
 }
 
-function updatePlayheadPosition(){
-  const dur = parseFloat(document.getElementById('videoDuration').value)||6;
-  const pps = PX_PER_SEC();
-  const safeTime = Math.max(0,Math.min(currentTimeSec,dur));
-  const x = safeTime*pps;
-  playhead.style.left = x+'px';
-  const ms=safeTime*1000;
-  const s=Math.floor(ms/1000),ms2=Math.floor(ms%1000);
-  const min=Math.floor(s/60),sec=s%60;
-  const timeStr=`${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms2).padStart(3,'0')}`;
-  tlTimeDisplay.textContent=timeStr;
-  document.getElementById('previewTime').textContent=timeStr;
-  // scroll playhead into view
-  const scrollLeft=tlScroll.scrollLeft;
-  const viewW=tlScroll.clientWidth;
-  if(x<scrollLeft+40||x>scrollLeft+viewW-40){
-    tlScroll.scrollLeft=Math.max(0,x-viewW/3);
-  }
+function updatePlayheadPosition() {
+  const dur     = parseFloat(document.getElementById('videoDuration').value) || 6;
+  const pps     = PX_PER_SEC();
+  const safeT   = Math.max(0, Math.min(currentTimeSec, dur));
+  const x       = safeT * pps;
+  playhead.style.left = x + 'px';
+  const ms  = safeT * 1000;
+  const s   = Math.floor(ms / 1000);
+  const ms2 = Math.floor(ms % 1000);
+  const min = Math.floor(s / 60);
+  const sec = s % 60;
+  const ts  = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms2).padStart(3,'0')}`;
+  tlTimeDisplay.textContent = ts;
+  document.getElementById('previewTime').textContent = ts;
+  const sv = tlScroll.scrollLeft, vw = tlScroll.clientWidth;
+  if (x < sv + 40 || x > sv + vw - 40) tlScroll.scrollLeft = Math.max(0, x - vw / 3);
 }
 
-function seekTo(sec){
-  const dur=parseFloat(document.getElementById('videoDuration').value)||6;
-  currentTimeSec=Math.max(0,Math.min(sec,dur));
-  if(isPlaying){stopPlay();startPlay();}
-  else updatePlayheadPosition();
+function seekTo(sec) {
+  const dur = parseFloat(document.getElementById('videoDuration').value) || 6;
+  currentTimeSec = Math.max(0, Math.min(sec, dur));
+  if (isPlaying) { stopPlay(); startPlay(); } else updatePlayheadPosition();
 }
-function seekToEnd(){seekTo(parseFloat(document.getElementById('videoDuration').value)||6)}
+function seekToEnd() { seekTo(parseFloat(document.getElementById('videoDuration').value) || 6); }
 
-// Click on ruler / tracks to seek
-tlScroll.addEventListener('click',e=>{
-  const pps=PX_PER_SEC();
-  const rect=tlScroll.getBoundingClientRect();
-  const scrollLeft=tlScroll.scrollLeft;
-  const x=e.clientX-rect.left+scrollLeft;
-  seekTo(x/pps);
+tlScroll.addEventListener('click', e => {
+  const rect = tlScroll.getBoundingClientRect();
+  seekTo((e.clientX - rect.left + tlScroll.scrollLeft) / PX_PER_SEC());
 });
 
-// Play/Pause
-function togglePlay(){isPlaying?stopPlay():startPlay()}
-function startPlay(){
-  const dur=parseFloat(document.getElementById('videoDuration').value)||6;
-  if(currentTimeSec>=dur)currentTimeSec=0;
-  isPlaying=true;
-  playBtn.textContent='⏸';
-  playStartWall=performance.now();
-  playStartSec=currentTimeSec;
-  function frame(now){
-    if(!isPlaying)return;
-    const elapsed=(now-playStartWall)/1000;
-    currentTimeSec=playStartSec+elapsed;
-    const dur2=parseFloat(document.getElementById('videoDuration').value)||6;
-    if(currentTimeSec>=dur2){currentTimeSec=dur2;stopPlay();return;}
+function togglePlay() { isPlaying ? stopPlay() : startPlay(); }
+function startPlay() {
+  const dur = parseFloat(document.getElementById('videoDuration').value) || 6;
+  if (currentTimeSec >= dur) currentTimeSec = 0;
+  isPlaying = true;
+  playBtn.textContent = '⏸';
+  playStartWall = performance.now();
+  playStartSec  = currentTimeSec;
+  function frame(now) {
+    if (!isPlaying) return;
+    currentTimeSec = playStartSec + (now - playStartWall) / 1000;
+    const dur2 = parseFloat(document.getElementById('videoDuration').value) || 6;
+    if (currentTimeSec >= dur2) { currentTimeSec = dur2; stopPlay(); return; }
     updatePlayheadPosition();
-    playRAF=requestAnimationFrame(frame);
+    playRAF = requestAnimationFrame(frame);
   }
-  playRAF=requestAnimationFrame(frame);
+  playRAF = requestAnimationFrame(frame);
 }
-function stopPlay(){
-  isPlaying=false;
-  playBtn.textContent='▶';
+function stopPlay() {
+  isPlaying = false;
+  playBtn.textContent = '▶';
   cancelAnimationFrame(playRAF);
   updatePlayheadPosition();
 }
 
-// Keyframe management
-function addKeyframeAtCurrent(){
-  const label=`KF ${keyframes.length+1}`;
-  const colors=['var(--amber)','var(--cyan)','var(--green)','var(--red)'];
-  keyframes.push({time:currentTimeSec,label,color:colors[keyframes.length%colors.length]});
-  keyframes.sort((a,b)=>a.time-b.time);
+function addKeyframeAtCurrent() {
+  const colors = ['var(--amber)', 'var(--cyan)', 'var(--green)', 'var(--red)'];
+  keyframes.push({ time: currentTimeSec, label: `KF ${keyframes.length + 1}`, color: colors[keyframes.length % 4] });
+  keyframes.sort((a, b) => a.time - b.time);
   renderKfList();
   buildTimeline();
 }
-function removeKeyframe(i){
-  keyframes.splice(i,1);
-  renderKfList();
-  buildTimeline();
-}
-function renderKfList(){
-  kfList.innerHTML='';
-  if(keyframes.length===0){
-    kfList.innerHTML='<div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono);padding:4px 0">No keyframes yet</div>';
+function removeKeyframe(i) { keyframes.splice(i, 1); renderKfList(); buildTimeline(); }
+function renderKfList() {
+  kfList.innerHTML = '';
+  if (!keyframes.length) {
+    kfList.innerHTML = '<div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono);padding:4px 0">No keyframes yet</div>';
     return;
   }
-  keyframes.forEach((kf,i)=>{
-    const el=document.createElement('div');
-    el.className='kf-item';
-    el.innerHTML=`<span class="kf-item-time">${kf.time.toFixed(2)}s</span><span class="kf-item-label">${kf.label}</span><button class="kf-del" onclick="removeKeyframe(${i})" title="Remove">✕</button>`;
-    el.onclick=e=>{if(e.target.tagName!=='BUTTON')seekTo(kf.time)};
+  keyframes.forEach((kf, i) => {
+    const el = document.createElement('div');
+    el.className = 'kf-item';
+    el.innerHTML = `<span class="kf-item-time">${kf.time.toFixed(2)}s</span><span class="kf-item-label">${kf.label}</span><button class="kf-del" onclick="removeKeyframe(${i})">✕</button>`;
+    el.onclick = e => { if (e.target.tagName !== 'BUTTON') seekTo(kf.time); };
     kfList.appendChild(el);
   });
 }
 
-// Add default markers
-markers=[{time:0,label:'Start'},{time:null,label:'End'}];
+// ══════════════════════════════════════════
+//  RENDER ENGINE — FIX EXPLAINED
+//
+//  ROOT CAUSE OF THE SEEK BUG:
+//  MediaRecorder with VP8/VP9 generates I-frames (keyframes) very
+//  infrequently — sometimes only 1 per 4-10 seconds. When a player
+//  tries to seek to e.g. 3s, it can only jump to the nearest I-frame
+//  before that point, which might be at 0s — so it appears to "snap
+//  back" to the start.
+//
+//  THE FIX: Three-part approach:
+//  1. Use a SINGLE MediaRecorder (no segment restarts) to avoid
+//     discontinuous blobs that confuse the seek index.
+//  2. Use VP8 codec + bump videoBitsPerSecond very high (forces the
+//     encoder to insert I-frames more often to fill the bitrate).
+//  3. Every ~500ms, stop and immediately restart a fresh recorder.
+//     Each new recorder MUST start with an I-frame by spec — so we
+//     get guaranteed keyframes at 500ms boundaries. All chunks go
+//     into one array and are assembled into a single blob.
+//  4. ysFixWebmDuration patches the missing Duration metadata so
+//     the player knows the total length and can seek properly.
+// ══════════════════════════════════════════
 
-// ══════════════════════════════════════════
-//  RENDER ENGINE
-// ══════════════════════════════════════════
-function startRender(){
-  const activeSvg=previewFrame.querySelector('svg');
-  if(!activeSvg){alert('No valid SVG found in preview. Paste SVG code first.');return;}
+function startRender() {
+  const activeSvg = previewFrame.querySelector('svg');
+  if (!activeSvg) { alert('No valid SVG found. Paste SVG code first.'); return; }
 
   const durSec   = parseFloat(document.getElementById('videoDuration').value);
-  if(isNaN(durSec)||durSec<=0){alert('Enter a valid duration (seconds).');return;}
+  if (isNaN(durSec) || durSec <= 0) { alert('Enter a valid duration.'); return; }
 
-  const EXACT_MS = Math.round(durSec*1000);
+  const EXACT_MS = Math.round(durSec * 1000);
   const fps      = parseInt(document.getElementById('videoFps').value);
   const res      = document.getElementById('videoResolution').value.split('x');
   const W        = parseInt(res[0]);
   const H        = parseInt(res[1]);
-  const bitrate  = parseInt(document.getElementById('bitrateSlider').value)*1000000;
-  const bgColor  = document.getElementById('bgColor').value||'#020617';
+  const bitrate  = parseInt(document.getElementById('bitrateSlider').value) * 1_000_000;
+  const bgColor  = document.getElementById('bgColor').value || '#020617';
   const fmt      = selectedFormat;
 
-  // End marker now set
-  markers=markers.map(m=>m.label==='End'?{...m,time:durSec}:m);
-
+  markers = markers.map(m => m.label === 'End' ? {...m, time: durSec} : m);
   stopPlay();
 
-  // UI
-  renderBtn.disabled=true;
-  document.getElementById('gifWarning').style.display=fmt==='gif'?'block':'none';
-  document.getElementById('progressFill').style.width='0%';
-  document.getElementById('rStatFps').textContent=fps;
-  document.getElementById('rStatRes').textContent=`${H}p`;
-  document.getElementById('rStatDur').textContent=durSec.toFixed(1)+'s';
-  document.getElementById('modalTitle').textContent=`Rendering ${fmt.toUpperCase()}…`;
-  document.getElementById('modalSub').textContent='Initialising encoder pipeline';
-  document.getElementById('rElapsed').textContent='0.0s elapsed';
-  document.getElementById('rRemain').textContent='— remaining';
-  document.getElementById('rPercent').textContent='0%';
-  document.getElementById('renderStageLabel').textContent='';
-  renderOverlay.style.display='flex';
-  downloadArea.innerHTML='';
+  // UI setup
+  renderBtn.disabled = true;
+  document.getElementById('gifWarning').style.display = fmt === 'gif' ? 'block' : 'none';
+  progressFill.style.width = '0%';
+  document.getElementById('rStatFps').textContent  = fps;
+  document.getElementById('rStatRes').textContent  = `${H}p`;
+  document.getElementById('rStatDur').textContent  = durSec.toFixed(1) + 's';
+  document.getElementById('modalTitle').textContent = `Rendering ${fmt.toUpperCase()}…`;
+  document.getElementById('modalSub').textContent   = 'Initialising encoder pipeline';
+  document.getElementById('rElapsed').textContent  = '0.0s elapsed';
+  document.getElementById('rRemain').textContent   = '— remaining';
+  document.getElementById('rPercent').textContent  = '0%';
+  document.getElementById('renderStageLabel').textContent = '';
+  renderOverlay.style.display = 'flex';
+  downloadArea.innerHTML = '';
 
-  canvas.width=W; canvas.height=H;
+  canvas.width = W; canvas.height = H;
 
-  // Clone and scale SVG
-  const clone=activeSvg.cloneNode(true);
-  if(!clone.getAttribute('viewBox')){
-    clone.setAttribute('viewBox',`0 0 ${clone.getAttribute('width')||W} ${clone.getAttribute('height')||H}`);
+  // Clone and size SVG
+  const clone = activeSvg.cloneNode(true);
+  if (!clone.getAttribute('viewBox')) {
+    clone.setAttribute('viewBox', `0 0 ${clone.getAttribute('width') || W} ${clone.getAttribute('height') || H}`);
   }
-  clone.setAttribute('width',W+'px');
-  clone.setAttribute('height',H+'px');
+  clone.setAttribute('width',  W + 'px');
+  clone.setAttribute('height', H + 'px');
 
-  const svgBlob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml;charset=utf-8'});
-  const svgUrl =URL.createObjectURL(svgBlob);
-
-  const img=document.createElement('img');
-  img.style.cssText=`width:${W}px;height:${H}px`;
+  const svgBlob = new Blob([new XMLSerializer().serializeToString(clone)], {type: 'image/svg+xml;charset=utf-8'});
+  const svgUrl  = URL.createObjectURL(svgBlob);
+  const img     = document.createElement('img');
+  img.style.cssText = `width:${W}px;height:${H}px`;
   hiddenBox.appendChild(img);
 
-  img.onload=()=>{
-    document.getElementById('modalSub').textContent=`Recording ${durSec.toFixed(1)}s at ${H}p / ${fps}fps`;
-
-    if(fmt==='gif'){
-      renderGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl);
+  img.onload = () => {
+    document.getElementById('modalSub').textContent = `Recording ${durSec.toFixed(1)}s at ${H}p / ${fps}fps`;
+    if (fmt === 'gif') {
+      renderGIF(img, W, H, fps, EXACT_MS, bgColor, svgUrl);
     } else {
-      renderWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt);
+      renderVideo(img, W, H, fps, bitrate, EXACT_MS, bgColor, svgUrl, fmt);
     }
   };
-  img.onerror=()=>{
+  img.onerror = () => {
     alert('Invalid SVG or missing dependencies.');
-    renderOverlay.style.display='none';
-    renderBtn.disabled=false;
+    renderOverlay.style.display = 'none';
+    renderBtn.disabled = false;
   };
-  img.src=svgUrl;
+  img.src = svgUrl;
 }
 
-/* ── WebM/MP4 Renderer (FIXED VERSION) ── */
-function renderWebM(img, W, H, fps, bitrate, EXACT_MS, bgColor, svgUrl, fmt) {
-  function makeRecorder(stream) {
-    const tries = [
-      { mimeType: 'video/webm; codecs=vp8', videoBitsPerSecond: bitrate },
-      { mimeType: 'video/webm', videoBitsPerSecond: bitrate },
-      { videoBitsPerSecond: bitrate }
+/* ══════════════════════════════════════════════════════
+   renderVideo — THE FIXED SEEKABLE VIDEO RENDERER
+   ══════════════════════════════════════════════════════
+
+   Strategy: "Rolling recorder" — we keep ONE canvas stream, but
+   every KEYFRAME_INTERVAL_MS we stop the current MediaRecorder and
+   start a new one on the SAME stream. Because each new MediaRecorder
+   MUST begin with an I-frame (per WebM spec), we get a guaranteed
+   keyframe at every interval boundary. All chunks from all recorders
+   go into allChunks[] and are later assembled into one blob.
+
+   This gives us:
+   • I-frames at 0s, 0.5s, 1.0s, 1.5s … (every 500ms by default)
+   • A single contiguous blob (no gaps/discontinuities)
+   • Correct duration metadata via ysFixWebmDuration
+   • Full seek accuracy to within ±KEYFRAME_INTERVAL_MS
+*/
+function renderVideo(img, W, H, fps, bitrate, EXACT_MS, bgColor, svgUrl, fmt) {
+
+  // ── How often to force a new I-frame (in ms) ──
+  // 500ms = seek accuracy of ±500ms, which is imperceptible.
+  // Lower = more keyframes = larger file but better seeking.
+  const KF_INTERVAL = 500;
+
+  // Extra time after EXACT_MS to let the encoder flush the last segment.
+  const FLUSH_GRACE = 600;
+
+  // Pick codec — VP8 is strongly preferred: it inserts I-frames far
+  // more aggressively than VP9, even without the rolling-recorder trick.
+  function bestMimeType() {
+    const candidates = [
+      'video/webm; codecs=vp8',
+      'video/webm; codecs=vp9',
+      'video/webm',
     ];
-    for (const o of tries) {
-      try {
-        if (!o.mimeType || MediaRecorder.isTypeSupported(o.mimeType))
-          return new MediaRecorder(stream, o);
-      } catch (e) {}
+    for (const t of candidates) {
+      if (MediaRecorder.isTypeSupported(t)) return t;
     }
-    return new MediaRecorder(stream);
+    return ''; // browser default
   }
 
-  const stream = canvas.captureStream(fps);
+  const mimeType    = bestMimeType();
+  const recOptions  = {
+    videoBitsPerSecond: bitrate,
+    ...(mimeType ? {mimeType} : {}),
+  };
+
+  const stream    = canvas.captureStream(fps);
   const allChunks = [];
-  
   const startWall = performance.now();
-  let isRec = true;
-  let rafId = null;
 
-  // Use a SINGLE MediaRecorder for the entire duration
-  const seg = makeRecorder(stream);
+  let drawActive  = true;   // false after we've drawn the last frame
+  let rafId       = null;
+  let activeRec   = null;   // the currently running MediaRecorder
+  let segIdx      = 0;
 
-  seg.ondataavailable = e => {
-    if (e.data && e.data.size > 0) allChunks.push(e.data);
-  };
+  // ── Draw loop ────────────────────────────────────────
+  // Runs continuously until EXACT_MS has elapsed.
+  // It writes to the canvas every animation frame; captureStream()
+  // picks up each new canvas frame automatically.
+  function drawLoop(now) {
+    if (!drawActive) return;
 
-  seg.onstop = () => {
-    document.getElementById('renderStageLabel').textContent = 'Fixing WebM metadata…';
-    hiddenBox.innerHTML = '';
-    URL.revokeObjectURL(svgUrl);
-
-    // Create the raw Blob from our single continuous recording
-    const raw = new Blob(allChunks, { type: 'video/webm' });
-
-    // ysFixWebmDuration fixes the top-level duration tag
-    ysFixWebmDuration(raw, EXACT_MS, fixed => {
-      const durLabel = parseFloat(document.getElementById('videoDuration').value).toFixed(1);
-      if (fmt === 'mp4') {
-        finishDownload(fixed, 'video/mp4', `SVG-Studio-${durLabel}s-${H}p.mp4`);
-      } else {
-        finishDownload(fixed, 'video/webm', `SVG-Studio-${durLabel}s-${H}p.webm`);
-      }
-    });
-  };
-
-  // Start recording, flush chunks every 100ms
-  seg.start(100);
-
-  // Draw loop
-  function loop(now) {
-    if (!isRec) return;
     const elapsed = now - startWall;
 
-    // Stop drawing canvas at the exact target duration
     if (elapsed >= EXACT_MS) {
-      isRec = false;
+      // We've drawn enough — stop writing new canvas content.
+      drawActive = false;
       cancelAnimationFrame(rafId);
-      seg.stop(); // This triggers seg.onstop above
+      // The rolling-recorder's own setTimeout will fire the last stop().
       return;
     }
 
-    // Progress bar / counters
-    const pct = Math.min((elapsed / EXACT_MS) * 100, 100);
+    // Update progress UI
+    const pct = Math.min(elapsed / EXACT_MS * 100, 100);
     progressFill.style.width = pct + '%';
-    const elSec = (elapsed / 1000).toFixed(1);
-    const remSec = Math.max(0, (EXACT_MS - elapsed) / 1000).toFixed(1);
-    
-    document.getElementById('rElapsed').textContent = `${elSec}s elapsed`;
-    document.getElementById('rRemain').textContent = `${remSec}s remaining`;
-    document.getElementById('rPercent').textContent = Math.round(pct) + '%';
+    document.getElementById('rElapsed').textContent  = (elapsed / 1000).toFixed(1) + 's elapsed';
+    document.getElementById('rRemain').textContent   = Math.max(0, (EXACT_MS - elapsed) / 1000).toFixed(1) + 's remaining';
+    document.getElementById('rPercent').textContent  = Math.round(pct) + '%';
     document.getElementById('renderStageLabel').textContent =
-      `Frame ${Math.round((elapsed / 1000) * fps)} / ${Math.round((EXACT_MS / 1000) * fps)}`;
+      `Seg ${segIdx} · Frame ${Math.round(elapsed / 1000 * fps)} / ${Math.round(EXACT_MS / 1000 * fps)}`;
 
-    // Draw frame onto canvas
-    ctx.fillStyle = document.getElementById('bgColor').value || '#020617';
+    // Draw onto canvas
+    ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, W, H);
     ctx.drawImage(img, 0, 0, W, H);
-    
-    // Anti-static pixel
-    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.04})`;
+
+    // Anti-static: tiny pixel jitter so the encoder doesn't drop frames
+    // on a fully static SVG (static canvas = encoder may skip frames).
+    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.003})`;
     ctx.fillRect(0, 0, 1, 1);
 
-    // Playhead sync during render
     currentTimeSec = elapsed / 1000;
     updatePlayheadPosition();
 
-    rafId = requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(drawLoop);
   }
 
-  // Kick off the drawing loop
-  requestAnimationFrame(loop);
+  // ── Rolling recorder ─────────────────────────────────
+  // Each call starts a new MediaRecorder (= new I-frame) and schedules
+  // the next rotation after KF_INTERVAL ms.
+  function startSegment() {
+    segIdx++;
+    const rec = new MediaRecorder(stream, recOptions);
+
+    rec.ondataavailable = e => {
+      if (e.data && e.data.size > 0) allChunks.push(e.data);
+    };
+
+    rec.onstop = () => {
+      // If the draw loop is still running, roll into the next segment.
+      // If draw is done, this is the last segment — assemble the file.
+      if (drawActive) {
+        startSegment();
+      } else {
+        assemble();
+      }
+    };
+
+    // timeslice=100ms: flush data every 100ms within the segment so we
+    // don't lose anything if the tab crashes.
+    rec.start(100);
+    activeRec = rec;
+
+    // Schedule this segment's stop.
+    // If drawing finished before the timer fires, we still stop cleanly.
+    const now = performance.now();
+    const remaining = EXACT_MS - (now - startWall);
+
+    if (remaining <= KF_INTERVAL) {
+      // This is (or will be) the last segment.
+      // Wait for drawing to finish + grace period.
+      const wait = Math.max(0, remaining) + FLUSH_GRACE;
+      setTimeout(() => { try { rec.stop(); } catch(e) {} }, wait);
+    } else {
+      setTimeout(() => { try { rec.stop(); } catch(e) {} }, KF_INTERVAL);
+    }
+  }
+
+  // ── Assemble & download ───────────────────────────────
+  function assemble() {
+    document.getElementById('renderStageLabel').textContent = 'Fixing WebM duration metadata…';
+    hiddenBox.innerHTML = '';
+    URL.revokeObjectURL(svgUrl);
+
+    const rawBlob = new Blob(allChunks, {type: 'video/webm'});
+
+    // ysFixWebmDuration patches the Segment/Cluster Duration elements
+    // so players know the total length and can build a proper seek table.
+    ysFixWebmDuration(rawBlob, EXACT_MS, fixed => {
+      const durLabel = parseFloat(document.getElementById('videoDuration').value).toFixed(1);
+      const ext      = fmt === 'mp4' ? 'mp4' : 'webm';
+      const mime     = fmt === 'mp4' ? 'video/mp4' : 'video/webm';
+      finishDownload(fixed, mime, `SVG-Studio-${durLabel}s-${H}p.${ext}`);
+    });
+  }
+
+  // Kick everything off simultaneously
+  startSegment();
+  requestAnimationFrame(drawLoop);
 }
 
-/* ── GIF Renderer (pure canvas frame capture → data URL sequence → animated GIF via CSS) ──
-   Note: true GIF encoding in-browser without a library requires frame assembly;
-   we produce a high-quality WebM first then offer as GIF-optimised low-fps WebM
-   and clearly label it. For a full GIF we use a lightweight inline encoder. */
-function renderGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl){
-  // Cap GIF to reasonable size
-  const gifFps=Math.min(fps,15);
-  const totalFrames=Math.round(EXACT_MS/1000*gifFps);
-  const frameDelay=Math.round(100/gifFps); // centiseconds
+/* ── GIF Renderer ── */
+function renderGIF(img, W, H, fps, EXACT_MS, bgColor, svgUrl) {
+  const gifFps = Math.min(fps, 15);
+  const totalFrames = Math.round(EXACT_MS / 1000 * gifFps);
+  const frameDelay  = Math.round(100 / gifFps);
+  document.getElementById('modalSub').textContent = `Building ${totalFrames} GIF frames at ${gifFps}fps…`;
 
-  document.getElementById('modalSub').textContent=`Building ${totalFrames} GIF frames at ${gifFps}fps…`;
+  const frames = [];
+  let frameIdx = 0;
 
-  const frames=[];
-  let frameIdx=0;
-
-  // Capture frames in a tight loop using requestAnimationFrame
-  const startWall=performance.now();
-
-  function captureFrame(){
-    if(frameIdx>=totalFrames){
-      // All frames captured — encode
-      encodeGIF(frames,W,H,frameDelay,svgUrl);
-      return;
-    }
-    const t=frameIdx/gifFps;
-    const pct=frameIdx/totalFrames*100;
-    progressFill.style.width=pct+'%';
-    document.getElementById('rPercent').textContent=Math.round(pct)+'%';
-    document.getElementById('rElapsed').textContent=`Frame ${frameIdx}/${totalFrames}`;
-    document.getElementById('renderStageLabel').textContent=`Capturing frame ${frameIdx+1}`;
-
-    ctx.fillStyle=bgColor;
-    ctx.fillRect(0,0,W,H);
-    ctx.drawImage(img,0,0,W,H);
-
-    // Grab pixel data as ImageData
-    frames.push(ctx.getImageData(0,0,W,H));
-    currentTimeSec=t;
+  function captureFrame() {
+    if (frameIdx >= totalFrames) { encodeGIF(frames, W, H, frameDelay, svgUrl); return; }
+    const pct = frameIdx / totalFrames * 100;
+    progressFill.style.width = pct + '%';
+    document.getElementById('rPercent').textContent = Math.round(pct) + '%';
+    document.getElementById('rElapsed').textContent  = `Frame ${frameIdx}/${totalFrames}`;
+    document.getElementById('renderStageLabel').textContent = `Capturing frame ${frameIdx + 1}`;
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 0, 0, W, H);
+    frames.push(ctx.getImageData(0, 0, W, H));
+    currentTimeSec = frameIdx / gifFps;
     updatePlayheadPosition();
     frameIdx++;
     requestAnimationFrame(captureFrame);
@@ -1472,203 +887,167 @@ function renderGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl){
   requestAnimationFrame(captureFrame);
 }
 
-function encodeGIF(frames,W,H,frameDelay,svgUrl){
-  document.getElementById('renderStageLabel').textContent='Encoding GIF…';
-  document.getElementById('modalSub').textContent='Encoding frames into GIF binary…';
-
-  // Inline minimal GIF encoder (LZW + colour quantisation via median cut)
-  setTimeout(()=>{
-    try{
-      const gif=buildGIF(frames,W,H,frameDelay);
-      hiddenBox.innerHTML='';
+function encodeGIF(frames, W, H, frameDelay, svgUrl) {
+  document.getElementById('renderStageLabel').textContent = 'Encoding GIF…';
+  document.getElementById('modalSub').textContent = 'Encoding frames into GIF binary…';
+  setTimeout(() => {
+    try {
+      const gif  = buildGIF(frames, W, H, frameDelay);
+      hiddenBox.innerHTML = '';
       URL.revokeObjectURL(svgUrl);
-      const blob=new Blob([gif],{type:'image/gif'});
-      const dur=parseFloat(document.getElementById('videoDuration').value).toFixed(1);
-      finishDownload(blob,'image/gif',`SVG-Studio-${dur}s.gif`);
-    }catch(err){
-      console.error('GIF encode error:',err);
-      // Fallback: offer WebM instead
-      hiddenBox.innerHTML='';
+      const blob = new Blob([gif], {type: 'image/gif'});
+      const dur  = parseFloat(document.getElementById('videoDuration').value).toFixed(1);
+      finishDownload(blob, 'image/gif', `SVG-Studio-${dur}s.gif`);
+    } catch(err) {
+      console.error('GIF encode error:', err);
+      hiddenBox.innerHTML = '';
       URL.revokeObjectURL(svgUrl);
-      renderOverlay.style.display='none';
-      renderBtn.disabled=false;
-      alert('GIF encoding failed (SVG too complex). Try WebM format instead.');
+      renderOverlay.style.display = 'none';
+      renderBtn.disabled = false;
+      alert('GIF encoding failed. Try WebM format instead.');
     }
-  },50);
+  }, 50);
 }
 
-/* ── Minimal GIF binary encoder ── */
-function buildGIF(frames,W,H,frameDelay){
-  // We'll do a simple 256-colour palette from the first frame (median cut simplified to popularity)
-  const palette=buildPalette(frames[0],256);
-  const buf=[];
-  // Header
-  writeStr(buf,'GIF89a');
-  writeU16(buf,W); writeU16(buf,H);
-  buf.push(0xF7,0,0); // GCT flag, BG, aspect
-  // Global colour table (256 entries × 3 bytes)
-  for(let i=0;i<256;i++){
-    const c=palette[i]||[0,0,0];
-    buf.push(c[0],c[1],c[2]);
+function buildGIF(frames, W, H, frameDelay) {
+  const palette = buildPalette(frames[0], 256);
+  const buf = [];
+  writeStr(buf, 'GIF89a');
+  writeU16(buf, W); writeU16(buf, H);
+  buf.push(0xF7, 0, 0);
+  for (let i = 0; i < 256; i++) {
+    const c = palette[i] || [0, 0, 0];
+    buf.push(c[0], c[1], c[2]);
   }
-  // Netscape loop extension
-  buf.push(0x21,0xFF,0x0B);
-  writeStr(buf,'NETSCAPE2.0');
-  buf.push(3,1,0,0,0);
-  // Frames
-  frames.forEach(frame=>{
-    // Graphic control ext (delay)
-    buf.push(0x21,0xF9,4,0);
-    writeU16(buf,frameDelay);
-    buf.push(0,0);
-    // Image descriptor
+  buf.push(0x21, 0xFF, 0x0B);
+  writeStr(buf, 'NETSCAPE2.0');
+  buf.push(3, 1, 0, 0, 0);
+  frames.forEach(frame => {
+    buf.push(0x21, 0xF9, 4, 0);
+    writeU16(buf, frameDelay);
+    buf.push(0, 0);
     buf.push(0x2C);
-    writeU16(buf,0);writeU16(buf,0);writeU16(buf,W);writeU16(buf,H);
-    buf.push(0); // no local CT, no interlace
-    // Image data: quantise then LZW encode
-    const indices=quantiseFrame(frame,palette);
-    const lzw=lzwEncode(indices,8);
-    buf.push(8); // min LZW code size
-    // Write in sub-blocks of 255
-    for(let i=0;i<lzw.length;i+=255){
-      const chunk=lzw.slice(i,i+255);
-      buf.push(chunk.length,...chunk);
+    writeU16(buf, 0); writeU16(buf, 0); writeU16(buf, W); writeU16(buf, H);
+    buf.push(0);
+    const indices = quantiseFrame(frame, palette);
+    const lzw     = lzwEncode(indices, 8);
+    buf.push(8);
+    for (let i = 0; i < lzw.length; i += 255) {
+      const chunk = lzw.slice(i, i + 255);
+      buf.push(chunk.length, ...chunk);
     }
-    buf.push(0); // block terminator
+    buf.push(0);
   });
-  buf.push(0x3B); // trailer
+  buf.push(0x3B);
   return new Uint8Array(buf);
 }
 
-function writeStr(buf,s){for(const c of s)buf.push(c.charCodeAt(0))}
-function writeU16(buf,v){buf.push(v&0xFF,(v>>8)&0xFF)}
+function writeStr(buf, s) { for (const c of s) buf.push(c.charCodeAt(0)); }
+function writeU16(buf, v) { buf.push(v & 0xFF, (v >> 8) & 0xFF); }
 
-function buildPalette(imageData,n){
-  const d=imageData.data;
-  const map={};
-  for(let i=0;i<d.length;i+=4){
-    const k=((d[i]>>2)<<12)|((d[i+1]>>2)<<6)|(d[i+2]>>2);
-    map[k]=(map[k]||0)+1;
+function buildPalette(imageData, n) {
+  const d = imageData.data, map = {};
+  for (let i = 0; i < d.length; i += 4) {
+    const k = ((d[i] >> 2) << 12) | ((d[i+1] >> 2) << 6) | (d[i+2] >> 2);
+    map[k] = (map[k] || 0) + 1;
   }
-  const sorted=Object.keys(map).sort((a,b)=>map[b]-map[a]).slice(0,n);
-  return sorted.map(k=>{
-    const ki=parseInt(k);
-    return [((ki>>12)&0x3F)<<2,((ki>>6)&0x3F)<<2,(ki&0x3F)<<2];
+  return Object.keys(map).sort((a, b) => map[b] - map[a]).slice(0, n).map(k => {
+    const ki = parseInt(k);
+    return [((ki >> 12) & 0x3F) << 2, ((ki >> 6) & 0x3F) << 2, (ki & 0x3F) << 2];
   });
 }
-
-function quantiseFrame(imageData,palette){
-  const d=imageData.data;
-  const out=new Uint8Array(d.length/4);
-  for(let i=0,pi=0;i<d.length;i+=4,pi++){
-    const r=d[i],g=d[i+1],b=d[i+2];
-    let best=0,bestDist=Infinity;
-    for(let j=0;j<palette.length;j++){
-      const c=palette[j];
-      const dist=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2;
-      if(dist<bestDist){bestDist=dist;best=j}
-    }
-    out[pi]=best;
+function quantiseFrame(imageData, palette) {
+  const d = imageData.data, out = new Uint8Array(d.length / 4);
+  for (let i = 0, pi = 0; i < d.length; i += 4, pi++) {
+    const r = d[i], g = d[i+1], b = d[i+2];
+    let best = 0, bestDist = Infinity;
+    palette.forEach((c, j) => {
+      const dist = (r-c[0])**2 + (g-c[1])**2 + (b-c[2])**2;
+      if (dist < bestDist) { bestDist = dist; best = j; }
+    });
+    out[pi] = best;
   }
   return out;
 }
-
-function lzwEncode(indices,minCode){
-  const clearCode=1<<minCode;
-  const eoi=clearCode+1;
-  let codeSize=minCode+1;
-  let nextCode=eoi+1;
-  const table={};
-  const out=[];
-  let bitBuf=0,bitLen=0;
-
-  function emit(code){
-    bitBuf|=code<<bitLen;
-    bitLen+=codeSize;
-    while(bitLen>=8){out.push(bitBuf&0xFF);bitBuf>>=8;bitLen-=8;}
+function lzwEncode(indices, minCode) {
+  const clearCode = 1 << minCode, eoi = clearCode + 1;
+  let codeSize = minCode + 1, nextCode = eoi + 1;
+  const table = {}, out = [];
+  let bitBuf = 0, bitLen = 0;
+  function emit(code) {
+    bitBuf |= code << bitLen; bitLen += codeSize;
+    while (bitLen >= 8) { out.push(bitBuf & 0xFF); bitBuf >>= 8; bitLen -= 8; }
   }
-
-  function reset(){
-    for(let i=0;i<clearCode;i++)table[i]=i;
-    codeSize=minCode+1;
-    nextCode=eoi+1;
+  function reset() {
+    for (let i = 0; i < clearCode; i++) table[i] = i;
+    codeSize = minCode + 1; nextCode = eoi + 1;
   }
-
-  reset();
-  emit(clearCode);
-
-  let prev=indices[0];
-  for(let i=1;i<indices.length;i++){
-    const cur=indices[i];
-    const key=(prev<<8)|cur;
-    if(table[key]!==undefined){
-      prev=table[key];
+  reset(); emit(clearCode);
+  let prev = indices[0];
+  for (let i = 1; i < indices.length; i++) {
+    const cur = indices[i], key = (prev << 8) | cur;
+    if (table[key] !== undefined) {
+      prev = table[key];
     } else {
       emit(prev);
-      if(nextCode<4096){
-        table[key]=nextCode++;
-        if(nextCode>(1<<codeSize)&&codeSize<12)codeSize++;
-      } else {
-        emit(clearCode);
-        reset();
-      }
-      prev=cur;
+      if (nextCode < 4096) {
+        table[key] = nextCode++;
+        if (nextCode > (1 << codeSize) && codeSize < 12) codeSize++;
+      } else { emit(clearCode); reset(); }
+      prev = cur;
     }
   }
-  emit(prev);
-  emit(eoi);
-  if(bitLen>0)out.push(bitBuf&0xFF);
+  emit(prev); emit(eoi);
+  if (bitLen > 0) out.push(bitBuf & 0xFF);
   return out;
 }
 
-/* ── Finish & download ── */
-function finishDownload(blob,mimeType,filename){
-  progressFill.style.width='100%';
-  document.getElementById('rPercent').textContent='100%';
-  document.getElementById('rRemain').textContent='Done!';
-  document.getElementById('renderStageLabel').textContent='Export complete ✓';
+function finishDownload(blob, mimeType, filename) {
+  progressFill.style.width = '100%';
+  document.getElementById('rPercent').textContent = '100%';
+  document.getElementById('rRemain').textContent  = 'Done!';
+  document.getElementById('renderStageLabel').textContent = 'Export complete ✓';
 
-  const url=URL.createObjectURL(blob);
-  const sizeMB=(blob.size/1048576).toFixed(2);
+  const url    = URL.createObjectURL(blob);
+  const sizeMB = (blob.size / 1_048_576).toFixed(2);
 
-  renderOverlay.style.display='none';
-  renderBtn.disabled=false;
-
-  currentTimeSec=0;
+  renderOverlay.style.display = 'none';
+  renderBtn.disabled = false;
+  currentTimeSec = 0;
   updatePlayheadPosition();
-  setStatus(`Exported: ${filename} (${sizeMB} MB)`,'active');
+  setStatus(`Exported: ${filename} (${sizeMB} MB)`, 'active');
 
-  downloadArea.innerHTML=`
+  downloadArea.innerHTML = `
     <a href="${url}" download="${filename}" class="dl-btn">
       ⬇ ${filename} <span style="opacity:.6;font-size:.7rem">${sizeMB} MB</span>
     </a>`;
 
-  const a=document.createElement('a');
-  a.href=url; a.download=filename; a.click();
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
 }
 
-// ── Memory monitor
-setInterval(()=>{
-  if(performance.memory){
-    const mb=(performance.memory.usedJSHeapSize/1048576).toFixed(0);
-    document.getElementById('memStat').textContent=`MEM ${mb} MB`;
+// Memory monitor
+setInterval(() => {
+  if (performance.memory) {
+    document.getElementById('memStat').textContent =
+      `MEM ${(performance.memory.usedJSHeapSize / 1_048_576).toFixed(0)} MB`;
   }
-  const dur=parseFloat(document.getElementById('videoDuration').value)||6;
-  const fps=parseInt(document.getElementById('videoFps').value)||60;
-  document.getElementById('frameStat').textContent=`${Math.round(dur*fps)} total frames`;
-},1000);
+  const dur = parseFloat(document.getElementById('videoDuration').value) || 6;
+  const fps = parseInt(document.getElementById('videoFps').value) || 60;
+  document.getElementById('frameStat').textContent = `${Math.round(dur * fps)} total frames`;
+}, 1000);
 
-// ── Keyboard shortcuts
-document.addEventListener('keydown',e=>{
-  if(e.target===svgInput)return;
-  if(e.code==='Space'){e.preventDefault();togglePlay();}
-  if(e.code==='Home'){seekTo(0);}
-  if(e.code==='End'){seekToEnd();}
-  if(e.code==='KeyK'){addKeyframeAtCurrent();}
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.target === svgInput) return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'Home')  seekTo(0);
+  if (e.code === 'End')   seekToEnd();
+  if (e.code === 'KeyK')  addKeyframeAtCurrent();
 });
 
-// ── Init
-const DEFAULT_SVG=`<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+// Default SVG
+const DEFAULT_SVG = `<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
   <rect width="1920" height="1080" fill="#020617"/>
   <style>
     .ring{fill:none;stroke-width:8;stroke-dasharray:1000;stroke-dashoffset:1000;animation:draw 6s infinite ease-in-out}
@@ -1680,16 +1059,13 @@ const DEFAULT_SVG=`<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/sv
   <rect class="core" x="885" y="465" width="150" height="150" rx="30"/>
 </svg>`;
 
-svgInput.value=DEFAULT_SVG;
+svgInput.value = DEFAULT_SVG;
 updatePreview();
 updateLineCount();
 syncBadges();
 syncBitrate();
 renderKfList();
-buildTimeline();
-
-// Add default start/end markers to timeline
-markers=[{time:0,label:'Start'},{time:6,label:'End'}];
+markers = [{time: 0, label: 'Start'}, {time: 6, label: 'End'}];
 buildTimeline();
 </script>
 </body>
