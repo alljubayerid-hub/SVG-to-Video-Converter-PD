@@ -3,320 +3,492 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SVG Studio Pro — Advanced Renderer</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>SVG Studio Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
 <style>
-:root {
-  --void: #08090d;
-  --base: #0d0f16;
-  --panel: #12151f;
-  --panel2: #171a27;
-  --surface: #1e2130;
-  --surface2: #252840;
-  --border: #2a2d3e;
-  --border2: #333650;
-  --cyan: #00d4ff;
-  --cyan-dim: rgba(0,212,255,0.12);
-  --cyan-mid: rgba(0,212,255,0.35);
-  --green: #00ff9d;
-  --green-dim: rgba(0,255,157,0.12);
-  --amber: #ffb800;
-  --amber-dim: rgba(255,184,0,0.15);
-  --red: #ff4466;
-  --red-dim: rgba(255,68,102,0.15);
-  --text: #e8eaf0;
-  --text-mid: #8b90a8;
-  --text-dim: #4a4f6a;
-  --radius: 6px;
-  --font-ui: 'Syne', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+:root{
+  --bg0:#070810;--bg1:#0c0d18;--bg2:#111320;--bg3:#171928;--bg4:#1d2033;
+  --border:#242740;--border2:#2e3250;--border3:#3a3f66;
+  --c1:#4f9eff;--c1a:rgba(79,158,255,.12);--c1b:rgba(79,158,255,.3);
+  --c2:#00e5a0;--c2a:rgba(0,229,160,.1);
+  --c3:#ff6b6b;--c3a:rgba(255,107,107,.1);
+  --c4:#ffc85a;--c4a:rgba(255,200,90,.1);
+  --tx:#e2e5f0;--tx2:#7a80a0;--tx3:#3e4460;
+  --r:6px;--r2:4px;
+  --ff:'Space Grotesk',sans-serif;
+  --fm:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+html,body{height:100%;overflow:hidden;background:var(--bg0);color:var(--tx);font-family:var(--ff)}
+
+.app{display:grid;grid-template-rows:48px 1fr 200px 36px;height:100vh;width:100vw}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--bg1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 12px;gap:8px;z-index:50
+}
+.logo{
+  font-weight:700;font-size:.9rem;letter-spacing:.05em;
+  color:var(--c1);margin-right:4px;white-space:nowrap
+}
+.logo span{color:var(--c2)}
+.nav-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.mbtn{
+  background:none;border:none;color:var(--tx2);font-family:var(--ff);
+  font-size:.75rem;font-weight:500;padding:5px 9px;border-radius:var(--r2);cursor:pointer;transition:.15s
+}
+.mbtn:hover{background:var(--bg3);color:var(--tx)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.chip{
+  font-size:.62rem;font-weight:600;font-family:var(--fm);padding:2px 7px;
+  border-radius:3px;letter-spacing:.06em
+}
+.chip-blue{background:var(--c1a);color:var(--c1);border:1px solid var(--c1b)}
+.chip-dim{background:var(--bg3);color:var(--tx3);border:1px solid var(--border)}
+
+/* ── WORKSPACE ── */
+.workspace{display:grid;grid-template-columns:310px 1fr 280px;overflow:hidden}
+
+/* ── LEFT: EDITOR ── */
+.editor-col{
+  background:var(--bg1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden
+}
+.tab-bar{display:flex;background:var(--bg0);border-bottom:1px solid var(--border)}
+.tab{
+  font-family:var(--fm);font-size:.68rem;padding:8px 14px;
+  color:var(--tx3);cursor:pointer;border-right:1px solid var(--border);transition:.15s
+}
+.tab.on{background:var(--bg1);color:var(--c1);box-shadow:inset 0 -2px var(--c1)}
+.editor-bar{
+  display:flex;align-items:center;gap:6px;padding:7px 10px;
+  border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg2)
+}
+.xbtn{
+  background:var(--bg3);border:1px solid var(--border);color:var(--tx2);
+  font-family:var(--fm);font-size:.67rem;padding:3px 8px;border-radius:3px;
+  cursor:pointer;transition:.15s;white-space:nowrap
+}
+.xbtn:hover{border-color:var(--c1b);color:var(--c1)}
+.line-info{font-family:var(--fm);font-size:.62rem;color:var(--tx3);margin-left:auto}
+#svgCode{
+  flex:1;background:var(--bg1);color:#7ecfff;font-family:var(--fm);
+  font-size:12px;line-height:1.7;border:none;outline:none;
+  padding:12px;resize:none;overflow-y:auto;tab-size:2
+}
+#svgCode::-webkit-scrollbar{width:5px}
+#svgCode::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── CENTRE: PREVIEW ── */
+.preview-col{display:flex;flex-direction:column;background:var(--bg0);overflow:hidden}
+.prev-bar{
+  display:flex;align-items:center;gap:8px;padding:7px 12px;
+  background:var(--bg1);border-bottom:1px solid var(--border);flex-shrink:0
+}
+.prev-label{font-size:.7rem;font-weight:600;color:var(--tx2);letter-spacing:.07em;text-transform:uppercase}
+.inf{
+  background:var(--bg3);border:1px solid var(--border);font-family:var(--fm);
+  font-size:.62rem;color:var(--tx2);padding:2px 7px;border-radius:3px
+}
+.live{
+  width:6px;height:6px;border-radius:50%;background:var(--c2);
+  box-shadow:0 0 8px var(--c2);animation:lp 2s infinite;margin-left:auto
+}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
+.stage{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  background:repeating-conic-gradient(#0d0e1a 0% 25%,#090a14 0% 50%) 0 0/20px 20px;
+  overflow:hidden;position:relative
+}
+.frame{
+  background:#000;
+  max-width:calc(100% - 32px);max-height:calc(100% - 32px);
+  box-shadow:0 0 0 1px var(--border),0 20px 50px rgba(0,0,0,.8);
+  overflow:hidden;position:relative
+}
+.frame svg{width:100%;height:100%;display:block}
+.time-hud{
+  position:absolute;bottom:8px;right:8px;
+  background:rgba(0,0,0,.75);border:1px solid var(--border2);
+  font-family:var(--fm);font-size:.63rem;color:var(--c1);
+  padding:2px 7px;border-radius:3px;pointer-events:none
 }
 
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--void);color:var(--text);font-family:var(--font-ui);overflow:hidden;}
-.app{display:grid;grid-template-rows:52px 1fr 220px 48px;height:100vh;width:100vw;}
+/* ── RIGHT: SETTINGS ── */
+.settings-col{
+  background:var(--bg1);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto
+}
+.settings-col::-webkit-scrollbar{width:4px}
+.settings-col::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sect{border-bottom:1px solid var(--border);padding:13px}
+.sect-title{
+  font-size:.64rem;font-weight:700;color:var(--tx3);letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:6px
+}
+.sect-title::before{content:'';width:3px;height:11px;background:var(--c1);border-radius:2px;display:inline-block}
+.f{margin-bottom:9px}
+.fl{
+  font-size:.67rem;color:var(--tx2);font-weight:500;
+  margin-bottom:4px;display:flex;justify-content:space-between;align-items:center
+}
+.fv{font-family:var(--fm);color:var(--c1);font-size:.67rem}
+select,input[type=number],input[type=text]{
+  width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--tx);
+  font-family:var(--fm);font-size:.76rem;padding:6px 9px;border-radius:var(--r);
+  outline:none;transition:.15s;-webkit-appearance:none
+}
+select:focus,input:focus{border-color:var(--c1b)}
+select option{background:var(--bg3)}
+input[type=range]{
+  width:100%;-webkit-appearance:none;height:3px;background:var(--bg4);
+  border-radius:2px;outline:none;cursor:pointer
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--c1);cursor:pointer
+}
+.fmt-pills{display:flex;gap:5px}
+.fp{
+  background:var(--bg3);border:1px solid var(--border);color:var(--tx2);
+  font-family:var(--fm);font-size:.67rem;font-weight:600;padding:5px 10px;
+  border-radius:3px;cursor:pointer;transition:.15s;letter-spacing:.03em
+}
+.fp.on{background:var(--c1a);border-color:var(--c1);color:var(--c1)}
+.fp:hover:not(.on){border-color:var(--border2);color:var(--tx)}
+.fmt-note{font-size:.62rem;color:var(--tx3);font-family:var(--fm);margin-top:7px}
+.render-btn{
+  margin:12px;background:linear-gradient(135deg,#1a7aff,#00c87a);border:none;
+  color:#fff;font-family:var(--ff);font-size:.82rem;font-weight:700;
+  padding:13px;border-radius:var(--r);cursor:pointer;letter-spacing:.05em;
+  text-transform:uppercase;transition:.2s;
+  box-shadow:0 4px 18px rgba(0,150,255,.2);flex-shrink:0
+}
+.render-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 25px rgba(0,150,255,.35)}
+.render-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
 
-/* MENUBAR */
-.menubar{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:24px;z-index:100;}
-.logo{font-size:1.05rem;font-weight:800;letter-spacing:0.08em;background:linear-gradient(90deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;margin-right:8px;}
-.menu-group{display:flex;gap:2px}
-.menu-btn{background:none;border:none;color:var(--text-mid);font-family:var(--font-ui);font-size:0.78rem;font-weight:600;padding:6px 10px;border-radius:4px;cursor:pointer;transition:all .15s;}
-.menu-btn:hover{background:var(--surface);color:var(--text)}
-.menubar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.badge{font-size:0.65rem;font-weight:700;font-family:var(--font-mono);padding:3px 8px;border-radius:3px;letter-spacing:0.06em;}
-.badge-pro{background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-mid)}
-.badge-ver{background:var(--surface);color:var(--text-dim);border:1px solid var(--border)}
-
-/* WORKSPACE */
-.workspace{display:grid;grid-template-columns:320px 1fr 300px;overflow:hidden;background:var(--base);}
-
-/* Left: Code */
-.code-panel{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.panel-tab-bar{display:flex;background:var(--void);border-bottom:1px solid var(--border);flex-shrink:0;}
-.panel-tab{font-family:var(--font-mono);font-size:0.7rem;padding:9px 14px;color:var(--text-dim);cursor:pointer;border-right:1px solid var(--border);transition:all .15s;white-space:nowrap;}
-.panel-tab.active{background:var(--panel);color:var(--cyan);border-bottom:2px solid var(--cyan);}
-.editor-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tool-icon-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-size:0.7rem;padding:4px 8px;border-radius:3px;cursor:pointer;transition:all .15s;font-family:var(--font-mono);}
-.tool-icon-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
-.line-count{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);margin-left:auto;}
-#svgInput{flex:1;background:var(--panel);color:#7dd3fc;font-family:var(--font-mono);font-size:12.5px;line-height:1.65;border:none;outline:none;padding:14px;resize:none;overflow-y:auto;tab-size:2;}
-#svgInput::-webkit-scrollbar{width:6px}
-#svgInput::-webkit-scrollbar-track{background:var(--void)}
-#svgInput::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-
-/* Centre: Preview */
-.preview-panel{display:flex;flex-direction:column;background:var(--base);overflow:hidden;}
-.preview-toolbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
-.preview-label{font-size:0.72rem;font-weight:700;color:var(--text-mid);letter-spacing:0.06em;text-transform:uppercase;}
-.res-badge{background:var(--surface);border:1px solid var(--border);font-family:var(--font-mono);font-size:0.65rem;color:var(--text-mid);padding:3px 8px;border-radius:3px;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:livepulse 2s infinite;margin-left:auto;}
-@keyframes livepulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}50%{opacity:.4;box-shadow:0 0 2px var(--green)}}
-.preview-stage{flex:1;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#13151e 0% 25%,#0d0f16 0% 50%) 0 0/24px 24px;overflow:hidden;position:relative;}
-.preview-frame{aspect-ratio:16/9;background:#000;max-width:calc(100% - 40px);max-height:calc(100% - 40px);box-shadow:0 0 0 1px var(--border),0 20px 60px rgba(0,0,0,.8);overflow:hidden;position:relative;}
-.preview-frame svg{width:100%;height:100%}
-.preview-overlay-time{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid var(--border2);font-family:var(--font-mono);font-size:0.65rem;color:var(--cyan);padding:3px 8px;border-radius:3px;pointer-events:none;}
-
-/* Right: Settings */
-.settings-panel{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
-.settings-panel::-webkit-scrollbar{width:4px}
-.settings-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.settings-section{border-bottom:1px solid var(--border);padding:14px;}
-.section-title{font-size:0.67rem;font-weight:700;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-.section-title::before{content:'';width:3px;height:12px;background:var(--cyan);border-radius:2px;display:inline-block;}
-.field{margin-bottom:10px}
-.field-label{font-size:0.68rem;color:var(--text-mid);font-weight:600;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
-.field-val{font-family:var(--font-mono);color:var(--cyan);font-size:0.68rem;}
-select,input[type=number],input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.78rem;padding:7px 10px;border-radius:var(--radius);outline:none;transition:border .15s;-webkit-appearance:none;}
-select:focus,input[type=number]:focus{border-color:var(--cyan-mid)}
-select option{background:var(--surface2)}
-input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:var(--surface2);border-radius:2px;outline:none;cursor:pointer;margin:4px 0;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan-mid);cursor:pointer;}
-.format-pills{display:flex;gap:6px;flex-wrap:wrap}
-.format-pill{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-family:var(--font-mono);font-size:0.68rem;font-weight:700;padding:5px 10px;border-radius:4px;cursor:pointer;transition:all .15s;letter-spacing:0.04em;}
-.format-pill.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
-.format-pill:hover{border-color:var(--border2);color:var(--text)}
-.render-btn{margin:14px;background:linear-gradient(135deg,#0099cc,#00cc88);border:none;color:#000;font-family:var(--font-ui);font-size:0.85rem;font-weight:800;padding:14px;border-radius:var(--radius);cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;transition:all .2s;box-shadow:0 6px 20px rgba(0,200,150,.25);flex-shrink:0;}
-.render-btn:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,200,150,.4)}
-.render-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-
-/* TIMELINE */
-.timeline-panel{background:var(--panel);border-top:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.timeline-toolbar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--void);border-bottom:1px solid var(--border);flex-shrink:0;}
-.tl-label{font-size:0.68rem;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.08em;}
-.tl-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-size:0.7rem;width:24px;height:24px;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.tl-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
-.tl-time{font-family:var(--font-mono);font-size:0.7rem;color:var(--cyan);background:var(--surface);border:1px solid var(--border);padding:3px 8px;border-radius:3px;}
-.tl-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.zoom-label{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim)}
-.timeline-tracks{flex:1;display:flex;overflow:hidden;}
-.track-labels{width:110px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;}
-.track-label{height:38px;display:flex;align-items:center;padding:0 10px;font-size:0.65rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);gap:6px;}
-.track-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.timeline-scroll{flex:1;overflow-x:auto;overflow-y:hidden;position:relative;}
-.timeline-scroll::-webkit-scrollbar{height:6px}
-.timeline-scroll::-webkit-scrollbar-track{background:var(--void)}
-.timeline-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-.timeline-inner{position:relative;min-width:100%;height:100%;}
-.tl-ruler{height:20px;background:var(--void);border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
-.tl-ruler-canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
-.tl-tracks-area{position:relative;}
-.tl-track-row{height:38px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
-.tl-clip{position:absolute;top:7px;height:24px;border-radius:3px;cursor:pointer;transition:filter .15s;display:flex;align-items:center;padding:0 8px;font-size:0.6rem;font-weight:700;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;}
-.tl-clip:hover{filter:brightness(1.2)}
-.kf{position:absolute;top:50%;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;cursor:pointer;transition:all .15s;z-index:5;}
-.kf:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.4)}
-.tl-playhead{position:absolute;top:0;width:2px;height:100%;background:var(--red);box-shadow:0 0 8px var(--red);z-index:10;pointer-events:none;transition:left 0.05s linear;}
-.tl-playhead::before{content:'';position:absolute;top:0;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--red);}
-
-/* STATUS BAR */
-.statusbar{background:var(--void);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:20px;z-index:100;}
-.status-item{font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
-.status-item.active{color:var(--cyan)}
-.status-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
-
-/* RENDER OVERLAY */
-.render-overlay{position:fixed;inset:0;background:rgba(8,9,13,.92);backdrop-filter:blur(20px);z-index:999;display:none;align-items:center;justify-content:center;}
-.render-modal{background:var(--panel);border:1px solid var(--border2);border-radius:10px;padding:40px;width:480px;box-shadow:0 30px 80px rgba(0,0,0,.9),0 0 0 1px rgba(0,212,255,.08);}
-.render-modal-title{font-size:1.1rem;font-weight:800;color:var(--cyan);margin-bottom:4px;}
-.render-modal-sub{font-size:0.78rem;color:var(--text-mid);font-family:var(--font-mono);margin-bottom:28px;}
-.render-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;}
-.render-stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center;}
-.render-stat-val{font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--text);display:block;}
-.render-stat-lbl{font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;}
-.progress-track{width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:12px;}
-.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px;transition:width .08s linear;box-shadow:0 0 10px var(--cyan-mid);}
-.render-countdown{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-mid);}
-.countdown-time{color:var(--green);font-size:0.9rem;font-weight:700}
-.render-stage-label{font-size:0.72rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:10px;min-height:18px;}
-.gif-warning{margin-top:14px;background:var(--amber-dim);border:1px solid rgba(255,184,0,.3);color:var(--amber);font-size:0.7rem;font-family:var(--font-mono);padding:8px 12px;border-radius:5px;display:none;}
-
-/* DOWNLOAD */
-#downloadArea{position:fixed;bottom:60px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
-.dl-btn{background:linear-gradient(135deg,#0f7a2e,#00a854);color:#fff;text-decoration:none;padding:11px 20px;border-radius:6px;font-family:var(--font-ui);font-weight:700;font-size:0.8rem;letter-spacing:0.04em;box-shadow:0 6px 20px rgba(0,168,84,.35);transition:all .2s;display:flex;align-items:center;gap:8px;white-space:nowrap;}
-.dl-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,168,84,.5)}
-#renderCanvas{display:none}
-#hiddenBox{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none}
-.kf-list{display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto}
+/* ── KEYFRAME PANEL ── */
+.kf-list{display:flex;flex-direction:column;gap:4px;max-height:110px;overflow-y:auto}
 .kf-list::-webkit-scrollbar{width:3px}
 .kf-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.kf-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-family:var(--font-mono);font-size:0.67rem;color:var(--text-mid);}
-.kf-item-time{color:var(--cyan);min-width:42px}
-.kf-item-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kf-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.8rem;padding:0 2px;transition:color .15s;}
-.kf-del:hover{color:var(--red)}
-.add-kf-btn{background:var(--surface);border:1px dashed var(--border2);color:var(--text-mid);font-family:var(--font-mono);font-size:0.7rem;padding:6px;border-radius:4px;cursor:pointer;width:100%;transition:all .15s;margin-top:4px;}
-.add-kf-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
+.kf-row{
+  display:flex;align-items:center;gap:7px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:3px;padding:4px 7px;
+  font-family:var(--fm);font-size:.64rem;color:var(--tx2);cursor:pointer;transition:.15s
+}
+.kf-row:hover{border-color:var(--border2)}
+.kf-t{color:var(--c1);min-width:38px}
+.kf-lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kf-rm{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:.75rem;padding:0 2px;transition:.15s}
+.kf-rm:hover{color:var(--c3)}
+.kf-add{
+  background:var(--bg3);border:1px dashed var(--border2);color:var(--tx2);
+  font-family:var(--fm);font-size:.67rem;padding:5px;border-radius:3px;
+  cursor:pointer;width:100%;transition:.15s;margin-top:3px
+}
+.kf-add:hover{border-color:var(--c1b);color:var(--c1)}
+
+/* ── TIMELINE ── */
+.timeline{
+  background:var(--bg1);border-top:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden
+}
+.tl-bar{
+  display:flex;align-items:center;gap:7px;padding:5px 12px;
+  background:var(--bg0);border-bottom:1px solid var(--border);flex-shrink:0
+}
+.tl-lbl{font-size:.66rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em}
+.tl-btn{
+  background:var(--bg3);border:1px solid var(--border);color:var(--tx2);
+  font-size:.68rem;width:22px;height:22px;border-radius:3px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s
+}
+.tl-btn:hover{border-color:var(--c1b);color:var(--c1)}
+.tl-time{
+  font-family:var(--fm);font-size:.68rem;color:var(--c1);
+  background:var(--bg3);border:1px solid var(--border);padding:2px 7px;border-radius:3px
+}
+.tl-r{margin-left:auto;display:flex;align-items:center;gap:7px}
+.tl-zoom-lbl{font-family:var(--fm);font-size:.62rem;color:var(--tx3)}
+.tl-tracks{flex:1;display:flex;overflow:hidden}
+.track-lbls{
+  width:100px;flex-shrink:0;border-right:1px solid var(--border);
+  display:flex;flex-direction:column
+}
+.tlbl{
+  height:36px;display:flex;align-items:center;padding:0 9px;
+  font-size:.62rem;font-weight:700;color:var(--tx3);text-transform:uppercase;
+  letter-spacing:.05em;border-bottom:1px solid var(--border);gap:5px
+}
+.tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.tl-scroll{flex:1;overflow-x:auto;overflow-y:hidden;position:relative}
+.tl-scroll::-webkit-scrollbar{height:5px}
+.tl-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.tl-inner{position:relative;height:100%}
+.ruler{height:18px;background:var(--bg0);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.ruler canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.track-area{position:relative}
+.track-row{height:36px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.clip{
+  position:absolute;top:6px;height:22px;border-radius:3px;cursor:pointer;
+  display:flex;align-items:center;padding:0 7px;font-size:.58rem;font-weight:700;
+  font-family:var(--fm);white-space:nowrap;overflow:hidden;transition:.15s
+}
+.clip:hover{filter:brightness(1.2)}
+.kfdiamond{
+  position:absolute;top:50%;
+  transform:translate(-50%,-50%) rotate(45deg);
+  width:7px;height:7px;cursor:pointer;transition:.15s;z-index:5
+}
+.kfdiamond:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.5)}
+.playhead{
+  position:absolute;top:0;width:2px;height:100%;
+  background:var(--c3);box-shadow:0 0 6px var(--c3);
+  z-index:10;pointer-events:none
+}
+.playhead::before{
+  content:'';position:absolute;top:0;left:-5px;
+  width:0;height:0;border-left:6px solid transparent;
+  border-right:6px solid transparent;border-top:8px solid var(--c3)
+}
+
+/* ── STATUS BAR ── */
+.statusbar{
+  background:var(--bg0);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 12px;gap:18px
+}
+.sitem{font-family:var(--fm);font-size:.6rem;color:var(--tx3);display:flex;align-items:center;gap:4px}
+.sitem.on{color:var(--c1)}
+.sdot{width:4px;height:4px;border-radius:50%;background:currentColor}
+
+/* ── RENDER OVERLAY ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(5,6,14,.93);
+  backdrop-filter:blur(16px);z-index:999;
+  display:none;align-items:center;justify-content:center
+}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:10px;padding:36px;width:460px;
+  box-shadow:0 30px 80px rgba(0,0,0,.9)
+}
+.modal-title{font-size:1.05rem;font-weight:700;color:var(--c1);margin-bottom:3px}
+.modal-sub{font-size:.74rem;color:var(--tx2);font-family:var(--fm);margin-bottom:24px}
+.r-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:20px}
+.rstat{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:9px;text-align:center}
+.rstat-v{font-family:var(--fm);font-size:1rem;font-weight:700;color:var(--tx);display:block}
+.rstat-l{font-size:.58rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
+.prog-track{width:100%;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--c1),var(--c2));border-radius:3px;transition:width .07s linear}
+.r-bottom{display:flex;justify-content:space-between;align-items:center;font-family:var(--fm);font-size:.72rem;color:var(--tx2)}
+.r-pct{color:var(--c2);font-size:.85rem;font-weight:700}
+.r-stage{font-size:.68rem;color:var(--tx3);font-family:var(--fm);margin-top:9px;min-height:16px}
+.gif-warn{
+  margin-top:12px;background:var(--c4a);border:1px solid rgba(255,200,90,.25);
+  color:var(--c4);font-size:.67rem;font-family:var(--fm);
+  padding:7px 11px;border-radius:4px;display:none
+}
+.cancel-btn{
+  margin-top:16px;background:none;border:1px solid var(--border2);
+  color:var(--tx2);font-family:var(--ff);font-size:.75rem;font-weight:500;
+  padding:7px 16px;border-radius:var(--r);cursor:pointer;transition:.15s;width:100%
+}
+.cancel-btn:hover{border-color:var(--c3);color:var(--c3)}
+
+/* ── DOWNLOAD ── */
+#dlArea{position:fixed;bottom:48px;right:16px;z-index:200;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.dl-btn{
+  background:linear-gradient(135deg,#0a5c1e,#00952a);color:#fff;text-decoration:none;
+  padding:10px 18px;border-radius:var(--r);font-family:var(--ff);font-weight:700;
+  font-size:.78rem;letter-spacing:.04em;box-shadow:0 5px 18px rgba(0,140,40,.3);
+  transition:.2s;display:flex;align-items:center;gap:8px;white-space:nowrap
+}
+.dl-btn:hover{transform:translateY(-2px);box-shadow:0 9px 24px rgba(0,140,40,.45)}
+
+/* ── TOOLTIPS ── */
+[data-tip]{position:relative}
+[data-tip]::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border2);
+  color:var(--tx2);font-family:var(--fm);font-size:.62rem;padding:3px 7px;
+  border-radius:3px;white-space:nowrap;pointer-events:none;opacity:0;transition:.15s;z-index:999
+}
+[data-tip]:hover::after{opacity:1}
+
+/* ── HIDDEN HARDWARE ── */
+#rCanvas{display:none}
+#hbox{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none}
 </style>
 </head>
 <body>
-
 <div class="app">
-  <!-- MENUBAR -->
-  <div class="menubar">
-    <div class="logo">SVG STUDIO PRO</div>
-    <div class="menu-group">
-      <button class="menu-btn">File</button>
-      <button class="menu-btn">Edit</button>
-      <button class="menu-btn">View</button>
-      <button class="menu-btn">Export</button>
-      <button class="menu-btn">Help</button>
-    </div>
-    <div class="menubar-right">
-      <span class="badge badge-ver">v3.1</span>
-      <span class="badge badge-pro">PRO</span>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">SVG<span>Studio</span></div>
+    <div class="nav-sep"></div>
+    <button class="mbtn" onclick="fileNew()">New</button>
+    <button class="mbtn" onclick="fileOpen()">Open</button>
+    <button class="mbtn" onclick="fileSave()">Save SVG</button>
+    <button class="mbtn" onclick="showExportMenu()">Export</button>
+    <div class="nav-sep"></div>
+    <button class="mbtn" onclick="formatCode()">Format</button>
+    <button class="mbtn" onclick="copySVG()">Copy</button>
+    <div class="topbar-right">
+      <span class="chip chip-dim" id="memChip">— MB</span>
+      <span class="chip chip-blue">PRO</span>
+      <span class="chip chip-dim">v4.0</span>
     </div>
   </div>
 
   <!-- WORKSPACE -->
   <div class="workspace">
-    <!-- LEFT: Code -->
-    <div class="code-panel">
-      <div class="panel-tab-bar">
-        <div class="panel-tab active">source.svg</div>
-        <div class="panel-tab">properties</div>
+
+    <!-- LEFT: CODE -->
+    <div class="editor-col">
+      <div class="tab-bar">
+        <div class="tab on" onclick="switchTab(this,'source')">source.svg</div>
+        <div class="tab" onclick="switchTab(this,'css')">CSS inject</div>
       </div>
-      <div class="editor-toolbar">
-        <button class="tool-icon-btn" onclick="formatCode()">⌥ Format</button>
-        <button class="tool-icon-btn" onclick="clearEditor()">✕ Clear</button>
-        <button class="tool-icon-btn" onclick="copySVG()">⎘ Copy</button>
-        <span class="line-count" id="lineCount">0 lines</span>
+      <div class="editor-bar">
+        <button class="xbtn" data-tip="Auto-indent & beautify" onclick="formatCode()">⌥ Format</button>
+        <button class="xbtn" data-tip="Clear editor" onclick="clearEditor()">✕ Clear</button>
+        <button class="xbtn" data-tip="Copy SVG source" onclick="copySVG()">⎘ Copy</button>
+        <button class="xbtn" data-tip="Load example SVG" onclick="loadExample()">★ Example</button>
+        <span class="line-info" id="lineInfo">0 lines</span>
       </div>
-      <textarea id="svgInput" spellcheck="false" placeholder="Paste <svg> code here..."></textarea>
+      <textarea id="svgCode" spellcheck="false" placeholder="Paste your <svg> code here…&#10;Live preview updates automatically."></textarea>
+      <!-- hidden CSS inject tab content -->
+      <textarea id="cssInject" spellcheck="false" style="display:none;flex:1;background:var(--bg1);color:#a5d6a7;font-family:var(--fm);font-size:12px;line-height:1.7;border:none;outline:none;padding:12px;resize:none;overflow-y:auto" placeholder="/* Extra CSS injected into the SVG preview */&#10;/* Useful for adding @keyframes to existing SVG code */"></textarea>
     </div>
 
-    <!-- CENTRE: Preview -->
-    <div class="preview-panel">
-      <div class="preview-toolbar">
-        <span class="preview-label">Preview</span>
-        <span class="res-badge" id="resBadge">1920×1080</span>
-        <span class="res-badge" id="fpsBadge">60 fps</span>
-        <span class="res-badge" id="durBadge">6.0s</span>
-        <div class="live-dot" title="Live sync active"></div>
+    <!-- CENTRE: PREVIEW -->
+    <div class="preview-col">
+      <div class="prev-bar">
+        <span class="prev-label">Preview</span>
+        <span class="inf" id="infRes">1920×1080</span>
+        <span class="inf" id="infFps">60 fps</span>
+        <span class="inf" id="infDur">6.0 s</span>
+        <span class="inf" id="infAspect">16:9</span>
+        <div class="live" title="Live sync"></div>
       </div>
-      <div class="preview-stage">
-        <div class="preview-frame" id="previewFrame">
-          <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2a2d3e;font-size:0.8rem;font-family:var(--font-mono)">Paste SVG to preview</div>
+      <div class="stage" id="stage">
+        <div class="frame" id="frame" style="aspect-ratio:16/9">
+          <div id="emptyMsg" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--tx3);font-size:.78rem;font-family:var(--fm)">Paste SVG to preview ↑</div>
         </div>
-        <div class="preview-overlay-time" id="previewTime">00:00.000</div>
+        <div class="time-hud" id="timeHud">00:00.000</div>
       </div>
     </div>
 
-    <!-- RIGHT: Settings -->
-    <div class="settings-panel">
-      <div class="settings-section">
-        <div class="section-title">Output Settings</div>
-        <div class="field">
-          <div class="field-label">Resolution <span class="field-val" id="resLabel">1920×1080</span></div>
-          <select id="videoResolution" onchange="syncBadges()">
-            <option value="3840x2160">4K Ultra HD — 2160p</option>
-            <option value="2560x1440">2K Quad HD — 1440p</option>
+    <!-- RIGHT: SETTINGS -->
+    <div class="settings-col">
+
+      <div class="sect">
+        <div class="sect-title">Output</div>
+        <div class="f">
+          <div class="fl">Resolution <span class="fv" id="fvRes">1920×1080</span></div>
+          <select id="selRes" onchange="syncUI()">
+            <option value="3840x2160">4K UHD — 2160p</option>
+            <option value="2560x1440">2K QHD — 1440p</option>
             <option value="1920x1080" selected>Full HD — 1080p</option>
-            <option value="1280x720">HD Ready — 720p</option>
+            <option value="1280x720">HD — 720p</option>
             <option value="854x480">SD — 480p</option>
+            <option value="custom">Custom…</option>
           </select>
         </div>
-        <div class="field">
-          <div class="field-label">Duration (seconds) <span class="field-val" id="durLabel">6.0s</span></div>
-          <input type="number" id="videoDuration" value="6" min="1" max="300" step="0.5"
-                 oninput="syncBadges();buildTimeline()">
+        <div class="f" id="customResField" style="display:none">
+          <div class="fl">Custom W × H</div>
+          <div style="display:flex;gap:6px">
+            <input type="number" id="custW" placeholder="Width" min="100" max="7680" value="1920" style="flex:1">
+            <input type="number" id="custH" placeholder="Height" min="100" max="4320" value="1080" style="flex:1">
+          </div>
         </div>
-        <div class="field">
-          <div class="field-label">Frame Rate <span class="field-val" id="fpsLabel">60 fps</span></div>
-          <select id="videoFps" onchange="syncBadges()">
-            <option value="60" selected>60 FPS — Ultra Smooth</option>
+        <div class="f">
+          <div class="fl">Duration (sec) <span class="fv" id="fvDur">6.0 s</span></div>
+          <input type="number" id="inDur" value="6" min="0.5" max="600" step="0.5" oninput="syncUI();buildTL()">
+        </div>
+        <div class="f">
+          <div class="fl">Frame Rate <span class="fv" id="fvFps">60 fps</span></div>
+          <select id="selFps" onchange="syncUI()">
+            <option value="60" selected>60 FPS — Ultra smooth</option>
             <option value="30">30 FPS — Cinematic</option>
             <option value="24">24 FPS — Film</option>
-            <option value="15">15 FPS — Compressed</option>
+            <option value="15">15 FPS — Fast export</option>
           </select>
         </div>
       </div>
 
-      <div class="settings-section">
-        <div class="section-title">Export Format</div>
-        <div class="format-pills">
-          <div class="format-pill active" data-fmt="webm" onclick="selectFormat(this)">WebM</div>
-          <div class="format-pill" data-fmt="mp4"  onclick="selectFormat(this)">MP4</div>
-          <div class="format-pill" data-fmt="gif"  onclick="selectFormat(this)">GIF</div>
+      <div class="sect">
+        <div class="sect-title">Format</div>
+        <div class="fmt-pills">
+          <div class="fp on" data-fmt="webm" onclick="pickFmt(this)">WebM</div>
+          <div class="fp" data-fmt="mp4" onclick="pickFmt(this)">MP4</div>
+          <div class="fp" data-fmt="gif" onclick="pickFmt(this)">GIF</div>
         </div>
-        <div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:8px" id="formatNote">
-          VP8 codec · frequent keyframes · seekable
+        <div class="fmt-note" id="fmtNote">VP9 · best quality/size</div>
+      </div>
+
+      <div class="sect">
+        <div class="sect-title">Quality</div>
+        <div class="f">
+          <div class="fl">Bitrate <span class="fv" id="fvBr">12 Mbps</span></div>
+          <input type="range" id="slBr" min="2" max="80" value="12" oninput="syncBr()">
+        </div>
+        <div class="f">
+          <div class="fl">Background</div>
+          <div style="display:flex;gap:6px">
+            <input type="color" id="bgPicker" value="#020617" style="width:36px;height:34px;padding:2px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg3);cursor:pointer">
+            <input type="text" id="bgHex" value="#020617" placeholder="#000000" style="flex:1;font-family:var(--fm)" oninput="syncBg(this)">
+          </div>
+        </div>
+        <div class="f">
+          <div class="fl">Loop count <span class="fv" id="fvLoop">1×</span></div>
+          <input type="range" id="slLoop" min="1" max="10" value="1" step="1" oninput="syncLoop()">
         </div>
       </div>
 
-      <div class="settings-section">
-        <div class="section-title">Quality</div>
-        <div class="field">
-          <div class="field-label">Bitrate <span class="field-val" id="bitrateLabel">12 Mbps</span></div>
-          <input type="range" id="bitrateSlider" min="2" max="80" value="12" oninput="syncBitrate()">
-        </div>
-        <div class="field">
-          <div class="field-label">Background</div>
-          <input type="text" id="bgColor" value="#020617" placeholder="#000000">
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="section-title">Keyframes</div>
+      <div class="sect">
+        <div class="sect-title">Keyframes</div>
         <div class="kf-list" id="kfList"></div>
-        <button class="add-kf-btn" onclick="addKeyframeAtCurrent()">+ Add Keyframe at Playhead</button>
+        <button class="kf-add" onclick="addKF()">+ Add keyframe at playhead</button>
       </div>
 
-      <button class="render-btn" id="renderBtn" onclick="startRender()">
-        ▶ RENDER &amp; EXPORT
-      </button>
+      <button class="render-btn" id="renderBtn" onclick="startRender()">▶ RENDER &amp; EXPORT</button>
+
     </div>
   </div>
 
   <!-- TIMELINE -->
-  <div class="timeline-panel">
-    <div class="timeline-toolbar">
-      <span class="tl-label">Timeline</span>
-      <button class="tl-btn" onclick="seekTo(0)">⏮</button>
-      <button class="tl-btn" id="playBtn" onclick="togglePlay()">▶</button>
-      <button class="tl-btn" onclick="seekToEnd()">⏭</button>
-      <span class="tl-time" id="tlTimeDisplay">00:00.000</span>
-      <div class="tl-right">
-        <span class="zoom-label">ZOOM</span>
-        <input type="range" id="zoomSlider" min="50" max="400" value="100" style="width:80px" oninput="buildTimeline()">
-        <span class="zoom-label" id="zoomVal">100%</span>
+  <div class="timeline">
+    <div class="tl-bar">
+      <span class="tl-lbl">Timeline</span>
+      <button class="tl-btn" data-tip="Go to start" onclick="seekTo(0)">⏮</button>
+      <button class="tl-btn" data-tip="Play / Pause (Space)" id="playBtn" onclick="togglePlay()">▶</button>
+      <button class="tl-btn" data-tip="Go to end" onclick="seekToEnd()">⏭</button>
+      <span class="tl-time" id="tlTime">00:00.000</span>
+      <div class="tl-r">
+        <span class="tl-zoom-lbl">ZOOM</span>
+        <input type="range" id="slZoom" min="30" max="500" value="100" style="width:70px" oninput="buildTL()">
+        <span class="tl-zoom-lbl" id="zoomLbl">100%</span>
       </div>
     </div>
-    <div class="timeline-tracks">
-      <div class="track-labels">
-        <div class="track-label"><span class="track-dot" style="background:var(--cyan)"></span>SVG Anim</div>
-        <div class="track-label"><span class="track-dot" style="background:var(--green)"></span>Keyframes</div>
-        <div class="track-label"><span class="track-dot" style="background:var(--amber)"></span>Markers</div>
+    <div class="tl-tracks">
+      <div class="track-lbls">
+        <div class="tlbl"><span class="tdot" style="background:var(--c1)"></span>Animation</div>
+        <div class="tlbl"><span class="tdot" style="background:var(--c4)"></span>Keyframes</div>
+        <div class="tlbl"><span class="tdot" style="background:var(--c2)"></span>Markers</div>
       </div>
-      <div class="timeline-scroll" id="tlScroll">
-        <div class="timeline-inner" id="tlInner">
-          <div class="tl-ruler"><canvas class="tl-ruler-canvas" id="rulerCanvas"></canvas></div>
-          <div class="tl-tracks-area" id="tlTracksArea">
-            <div class="tl-track-row" id="trackAnim"></div>
-            <div class="tl-track-row" id="trackKf"></div>
-            <div class="tl-track-row" id="trackMarker"></div>
+      <div class="tl-scroll" id="tlScroll">
+        <div class="tl-inner" id="tlInner">
+          <div class="ruler"><canvas id="ruler"></canvas></div>
+          <div class="track-area" id="trackArea">
+            <div class="track-row" id="rowAnim"></div>
+            <div class="track-row" id="rowKF"></div>
+            <div class="track-row" id="rowMark"></div>
           </div>
-          <div class="tl-playhead" id="playhead"></div>
+          <div class="playhead" id="playhead"></div>
         </div>
       </div>
     </div>
@@ -324,749 +496,960 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
   <!-- STATUS BAR -->
   <div class="statusbar">
-    <div class="status-item active"><div class="status-dot"></div><span id="statusText">Ready</span></div>
-    <div class="status-item" id="memStat">MEM —</div>
-    <div class="status-item" id="frameStat">FRAME —</div>
-    <div class="status-item" style="margin-left:auto;font-size:0.6rem;opacity:.5">Created by Jubayer Islam</div>
+    <div class="sitem on"><div class="sdot"></div><span id="stText">Ready</span></div>
+    <div class="sitem" id="stMem">MEM —</div>
+    <div class="sitem" id="stFrames">FRAMES —</div>
+    <div class="sitem" id="stSize">—</div>
+    <div class="sitem" style="margin-left:auto;opacity:.4;font-size:.58rem">Created by Jubayer Islam · SVGStudio Pro v4</div>
   </div>
 </div>
 
 <!-- RENDER OVERLAY -->
-<div class="render-overlay" id="renderOverlay">
-  <div class="render-modal">
-    <div class="render-modal-title" id="modalTitle">Rendering…</div>
-    <div class="render-modal-sub" id="modalSub">Initialising encoder pipeline</div>
-    <div class="render-stats">
-      <div class="render-stat"><span class="render-stat-val" id="rStatFps">—</span><span class="render-stat-lbl">FPS</span></div>
-      <div class="render-stat"><span class="render-stat-val" id="rStatRes">—</span><span class="render-stat-lbl">Resolution</span></div>
-      <div class="render-stat"><span class="render-stat-val" id="rStatDur">—</span><span class="render-stat-lbl">Duration</span></div>
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title" id="mTitle">Rendering…</div>
+    <div class="modal-sub" id="mSub">Initialising encoder pipeline</div>
+    <div class="r-stats">
+      <div class="rstat"><span class="rstat-v" id="rsFps">—</span><span class="rstat-l">FPS</span></div>
+      <div class="rstat"><span class="rstat-v" id="rsRes">—</span><span class="rstat-l">Resolution</span></div>
+      <div class="rstat"><span class="rstat-v" id="rsDur">—</span><span class="rstat-l">Duration</span></div>
     </div>
-    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="render-countdown">
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div class="r-bottom">
       <span id="rElapsed">0.0s elapsed</span>
-      <span class="countdown-time" id="rRemain">— remaining</span>
-      <span id="rPercent">0%</span>
+      <span class="r-pct" id="rPct">0%</span>
+      <span id="rRemain">— remaining</span>
     </div>
-    <div class="render-stage-label" id="renderStageLabel"></div>
-    <div class="gif-warning" id="gifWarning">⚠ GIF encoding is CPU-intensive. Large resolutions may be slow. Recommended: 720p or below for GIF.</div>
+    <div class="r-stage" id="rStage"></div>
+    <div class="gif-warn" id="gifWarn">⚠ GIF export is CPU-intensive. Use 720p or below for best performance.</div>
+    <button class="cancel-btn" id="cancelBtn" onclick="cancelRender()">Cancel</button>
   </div>
 </div>
 
-<div id="downloadArea"></div>
-<canvas id="renderCanvas"></canvas>
-<div id="hiddenBox"></div>
+<div id="dlArea"></div>
+<canvas id="rCanvas"></canvas>
+<div id="hbox"></div>
+
+<!-- HIDDEN FILE INPUT -->
+<input type="file" id="fileInput" accept=".svg,image/svg+xml" style="display:none" onchange="handleFileOpen(event)">
 
 <script>
-/* ===================================================
-   SVG STUDIO PRO v3.1 — Fixed seekable video engine
-=================================================== */
+/* =====================================================
+   SVG STUDIO PRO v4 — Full Working Engine
+   Fixed: seekability, GIF encoder, cancel, aspect ratio,
+   custom res, loop, CSS inject, file open/save, memory,
+   timeline click-drag, format notes, bg sync, status
+===================================================== */
 
-const svgInput      = document.getElementById('svgInput');
-const previewFrame  = document.getElementById('previewFrame');
-const renderBtn     = document.getElementById('renderBtn');
-const renderOverlay = document.getElementById('renderOverlay');
-const progressFill  = document.getElementById('progressFill');
-const canvas        = document.getElementById('renderCanvas');
-const hiddenBox     = document.getElementById('hiddenBox');
-const ctx           = canvas.getContext('2d', {alpha: false});
-const downloadArea  = document.getElementById('downloadArea');
-const tlScroll      = document.getElementById('tlScroll');
-const tlInner       = document.getElementById('tlInner');
-const rulerCanvas   = document.getElementById('rulerCanvas');
-const playhead      = document.getElementById('playhead');
-const trackAnim     = document.getElementById('trackAnim');
-const trackKf       = document.getElementById('trackKf');
-const trackMarker   = document.getElementById('trackMarker');
-const tlTimeDisplay = document.getElementById('tlTimeDisplay');
-const playBtn       = document.getElementById('playBtn');
-const kfList        = document.getElementById('kfList');
+// ── DOM ──
+const svgCode  = document.getElementById('svgCode');
+const cssInject= document.getElementById('cssInject');
+const frame    = document.getElementById('frame');
+const rCanvas  = document.getElementById('rCanvas');
+const hbox     = document.getElementById('hbox');
+const ctx      = rCanvas.getContext('2d',{alpha:false,willReadFrequently:true});
+const dlArea   = document.getElementById('dlArea');
+const overlay  = document.getElementById('overlay');
+const progFill = document.getElementById('progFill');
 
-let selectedFormat  = 'webm';
-let keyframes       = [];
-let currentTimeSec  = 0;
-let isPlaying       = false;
-let playRAF         = null;
-let playStartWall   = null;
-let playStartSec    = 0;
-let markers         = [];
+// ── STATE ──
+let selFmt   = 'webm';
+let keyframes= [];
+let markers  = [{time:0,label:'Start'},{time:null,label:'End'}];
+let curTime  = 0;
+let playing  = false;
+let raf      = null;
+let playWall = 0, playSec = 0;
+let renderAbort = false;
+let activeSVGUrl = null;
 
-const FORMAT_NOTES = {
-  webm: 'VP8 codec · frequent keyframes · fully seekable',
-  mp4:  'H.264 via WebM · universal playback',
-  gif:  'Animated GIF · no audio · CSS-compatible'
+const FMT_NOTES = {
+  webm:'VP9 codec · best quality/size ratio',
+  mp4:'H.264 (WebM container) · wide compatibility',
+  gif:'Animated GIF · no audio · great for loops'
 };
 
-function selectFormat(el) {
-  document.querySelectorAll('.format-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  selectedFormat = el.dataset.fmt;
-  document.getElementById('formatNote').textContent = FORMAT_NOTES[selectedFormat];
-  document.getElementById('gifWarning').style.display = selectedFormat === 'gif' ? 'block' : 'none';
-}
-
-function syncBadges() {
-  const res   = document.getElementById('videoResolution').value;
-  const fps   = document.getElementById('videoFps').value;
-  const dur   = parseFloat(document.getElementById('videoDuration').value) || 6;
-  const parts = res.split('x');
-  const label = `${parts[0]}×${parts[1]}`;
-  document.getElementById('resBadge').textContent = label;
-  document.getElementById('fpsBadge').textContent = fps + ' fps';
-  document.getElementById('durBadge').textContent = dur.toFixed(1) + 's';
-  document.getElementById('resLabel').textContent = label;
-  document.getElementById('fpsLabel').textContent = fps + ' fps';
-  document.getElementById('durLabel').textContent = dur.toFixed(1) + 's';
-  buildTimeline();
-}
-function syncBitrate() {
-  document.getElementById('bitrateLabel').textContent =
-    document.getElementById('bitrateSlider').value + ' Mbps';
-}
-
-function updateLineCount() {
-  document.getElementById('lineCount').textContent =
-    svgInput.value.split('\n').length + ' lines';
-}
-svgInput.addEventListener('input', () => {
-  updateLineCount();
-  clearTimeout(window._previewTimer);
-  window._previewTimer = setTimeout(updatePreview, 200);
+// ── INIT ──
+window.addEventListener('load',()=>{
+  const def = `<svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="450" fill="#020617"/>
+  <defs>
+    <radialGradient id="g1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="400" cy="225" r="200" fill="url(#g1)">
+    <animateTransform attributeName="transform" type="scale"
+      values="0.8;1.3;0.8" dur="4s" repeatCount="indefinite"
+      additive="sum" calcMode="spline"
+      keySplines="0.4 0 0.2 1;0.4 0 0.2 1"/>
+  </circle>
+  <circle cx="400" cy="225" r="80" fill="none" stroke="#10b981" stroke-width="3"
+    stroke-dasharray="502" stroke-dashoffset="502">
+    <animate attributeName="stroke-dashoffset" values="502;0;502" dur="4s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1"/>
+    <animate attributeName="stroke" values="#10b981;#0ea5e9;#10b981" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <text x="400" y="232" text-anchor="middle" fill="#e2e5f0" font-size="22"
+    font-family="system-ui,sans-serif" font-weight="600" letter-spacing="3">
+    SVG STUDIO PRO
+    <animate attributeName="opacity" values="0;1;1;0" dur="4s" repeatCount="indefinite"/>
+  </text>
+</svg>`;
+  svgCode.value = def;
+  updatePreview();
+  updateLineInfo();
+  syncUI();
+  syncBr();
+  buildTL();
+  renderKFList();
+  startMemTimer();
 });
-function formatCode() {
-  try {
-    const d = new DOMParser().parseFromString(svgInput.value, 'image/svg+xml');
-    svgInput.value = new XMLSerializer().serializeToString(d);
-    updateLineCount();
-  } catch(e) { alert('Invalid SVG'); }
+
+// ── TAB SWITCH ──
+function switchTab(el,name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  svgCode.style.display  = name==='source' ? 'block' : 'none';
+  cssInject.style.display= name==='css'    ? 'block' : 'none';
+  if(name==='source') svgCode.style.flex='1';
+  if(name==='css')    cssInject.style.flex='1';
 }
-function clearEditor() {
-  if (confirm('Clear SVG code?')) { svgInput.value = ''; updatePreview(); updateLineCount(); }
-}
-function copySVG() {
-  navigator.clipboard.writeText(svgInput.value).then(() => {
-    setStatus('Copied to clipboard', 'active');
-    setTimeout(() => setStatus('Ready', 'active'), 1500);
-  });
-}
-function updatePreview() {
-  const raw = svgInput.value.trim();
-  if (!raw) {
-    previewFrame.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2a2d3e;font-size:0.8rem;font-family:var(--font-mono)">Paste SVG to preview</div>';
+
+// ── LIVE PREVIEW ──
+svgCode.addEventListener('input',()=>{ updateLineInfo(); debounce('prev',updatePreview,150); });
+cssInject.addEventListener('input',()=>{ debounce('prev',updatePreview,150); });
+document.getElementById('bgPicker').addEventListener('input',e=>{
+  document.getElementById('bgHex').value = e.target.value;
+  debounce('prev',updatePreview,200);
+});
+
+const debounceTimers = {};
+function debounce(key,fn,ms){ clearTimeout(debounceTimers[key]); debounceTimers[key]=setTimeout(fn,ms); }
+
+function updatePreview(){
+  const raw = svgCode.value.trim();
+  const extra = cssInject.value.trim();
+  const empty = document.getElementById('emptyMsg');
+
+  if(!raw){
+    frame.innerHTML='';
+    frame.appendChild(document.getElementById('emptyMsg')||Object.assign(document.createElement('div'),{
+      id:'emptyMsg',style:'display:flex;align-items:center;justify-content:center;height:100%;color:var(--tx3);font-size:.78rem;font-family:var(--fm)',
+      textContent:'Paste SVG to preview ↑'
+    }));
     return;
   }
-  previewFrame.innerHTML = raw;
+
+  let finalSvg = raw;
+
+  // Inject extra CSS into existing <style> or create one
+  if(extra){
+    if(/<style/i.test(finalSvg)){
+      finalSvg = finalSvg.replace(/<\/style>/i, extra + '</style>');
+    } else {
+      finalSvg = finalSvg.replace(/<svg([^>]*)>/i, `<svg$1><style>${extra}</style>`);
+    }
+  }
+
+  // Safely set inner HTML
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'width:100%;height:100%';
+  wrapper.innerHTML = finalSvg;
+  frame.innerHTML = '';
+  frame.appendChild(wrapper);
+
+  // Fix SVG sizing
+  const svgEl = frame.querySelector('svg');
+  if(svgEl){
+    if(!svgEl.getAttribute('viewBox') && svgEl.getAttribute('width') && svgEl.getAttribute('height')){
+      svgEl.setAttribute('viewBox',`0 0 ${svgEl.getAttribute('width')} ${svgEl.getAttribute('height')}`);
+    }
+    svgEl.setAttribute('width','100%');
+    svgEl.setAttribute('height','100%');
+    svgEl.style.cssText = 'width:100%;height:100%;display:block';
+  }
+
+  // Update aspect ratio badge from SVG viewBox
+  if(svgEl){
+    const vb = svgEl.getAttribute('viewBox');
+    if(vb){
+      const parts = vb.trim().split(/[\s,]+/);
+      if(parts.length>=4){
+        const w=parseFloat(parts[2]),h=parseFloat(parts[3]);
+        if(w&&h){
+          const g=gcd(Math.round(w),Math.round(h));
+          document.getElementById('infAspect').textContent = `${Math.round(w/g)}:${Math.round(h/g)}`;
+          // Update frame aspect ratio
+          frame.style.aspectRatio = `${w}/${h}`;
+        }
+      }
+    }
+  }
 }
-function setStatus(msg, cls = '') {
-  const el = document.getElementById('statusText');
-  el.textContent = msg;
-  el.parentElement.className = 'status-item' + (cls ? ' ' + cls : '');
+
+function gcd(a,b){ return b===0?a:gcd(b,a%b); }
+
+function updateLineInfo(){
+  const lines = svgCode.value.split('\n').length;
+  const bytes = new Blob([svgCode.value]).size;
+  document.getElementById('lineInfo').textContent = `${lines} lines · ${formatBytes(bytes)}`;
+}
+function formatBytes(b){
+  if(b<1024) return b+'B';
+  if(b<1048576) return (b/1024).toFixed(1)+'KB';
+  return (b/1048576).toFixed(1)+'MB';
+}
+
+// ── TOOLBAR ACTIONS ──
+function formatCode(){
+  try{
+    const p = new DOMParser();
+    const doc = p.parseFromString(svgCode.value,'image/svg+xml');
+    const err = doc.querySelector('parsererror');
+    if(err) throw new Error(err.textContent);
+    // Pretty print with basic indentation
+    svgCode.value = prettifyXML(doc.documentElement);
+    updateLineInfo();
+    setStatus('Formatted ✓');
+  } catch(e){ setStatus('Format error: '+e.message.slice(0,60),'err'); }
+}
+function prettifyXML(node,indent=''){
+  const NL='\n', TAB='  ';
+  if(node.nodeType===3){ const t=node.textContent.trim(); return t?indent+t:''; }
+  if(node.nodeType===8) return indent+'<!--'+node.textContent+'-->';
+  let out = indent+'<'+node.tagName;
+  for(const a of node.attributes) out += ` ${a.name}="${a.value}"`;
+  const children=[...node.childNodes].map(c=>prettifyXML(c,indent+TAB)).filter(Boolean);
+  if(children.length===0) return out+'/>';
+  return out+'>'+NL+children.join(NL)+NL+indent+'</'+node.tagName+'>';
+}
+
+function clearEditor(){
+  if(!svgCode.value.trim()||confirm('Clear the editor?')){
+    svgCode.value='';
+    cssInject.value='';
+    updatePreview();
+    updateLineInfo();
+  }
+}
+function copySVG(){
+  navigator.clipboard.writeText(svgCode.value).then(()=>{
+    setStatus('Copied ✓');
+    setTimeout(()=>setStatus('Ready'),1500);
+  });
+}
+function fileSave(){
+  const blob=new Blob([svgCode.value],{type:'image/svg+xml'});
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'animation.svg'});
+  a.click();
+  setStatus('SVG saved');
+}
+function fileNew(){
+  if(!svgCode.value.trim()||confirm('Create new file? Unsaved changes will be lost.')){
+    svgCode.value='';cssInject.value='';
+    updatePreview();updateLineInfo();setStatus('New file');
+  }
+}
+function fileOpen(){ document.getElementById('fileInput').click(); }
+function handleFileOpen(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{ svgCode.value=ev.target.result; updatePreview(); updateLineInfo(); setStatus('Opened: '+f.name); };
+  r.readAsText(f);
+  e.target.value='';
+}
+function loadExample(){
+  const examples = [
+    // Example 1: Orbiting circles
+    `<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#050714"/>
+  <g transform="translate(400,300)">
+    <circle r="120" fill="none" stroke="#1e2340" stroke-width="1"/>
+    <circle r="200" fill="none" stroke="#1e2340" stroke-width="1"/>
+    <circle r="60" fill="#3b82f6" opacity="0.9">
+      <animateTransform attributeName="transform" type="rotate"
+        values="0;360" dur="3s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate"
+        values="120,0" additive="sum"/>
+    </circle>
+    <circle r="30" fill="#10b981" opacity="0.9">
+      <animateTransform attributeName="transform" type="rotate"
+        values="0;-360" dur="5s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate"
+        values="200,0" additive="sum"/>
+    </circle>
+    <circle r="100" fill="#fbbf24" opacity="0.9"/>
+  </g>
+</svg>`,
+    // Example 2: Morphing shapes
+    `<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="400" fill="#0f0f1a"/>
+  <path fill="#8b5cf6" opacity="0.8" transform="translate(300,200)">
+    <animate attributeName="d"
+      values="M0,-100 L87,50 L-87,50 Z;M-80,-80 L80,-80 L80,80 L-80,80 Z;M0,-100 C100,-100 100,100 0,100 C-100,100 -100,-100 0,-100;M0,-100 L87,50 L-87,50 Z"
+      dur="4s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 300 200;360 300 200" dur="8s" repeatCount="indefinite" additive="sum"/>
+  </path>
+</svg>`
+  ];
+  svgCode.value = examples[Math.floor(Math.random()*examples.length)];
+  updatePreview(); updateLineInfo(); setStatus('Example loaded');
+}
+
+function showExportMenu(){ /* opens format section in UI */ }
+
+// ── FORMAT SELECT ──
+function pickFmt(el){
+  document.querySelectorAll('.fp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  selFmt = el.dataset.fmt;
+  document.getElementById('fmtNote').textContent = FMT_NOTES[selFmt];
+  document.getElementById('gifWarn').style.display = selFmt==='gif'?'block':'none';
+}
+
+// ── UI SYNC ──
+document.getElementById('selRes').addEventListener('change',function(){
+  document.getElementById('customResField').style.display = this.value==='custom'?'flex':'none';
+  syncUI();
+});
+
+function getResolution(){
+  const v = document.getElementById('selRes').value;
+  if(v==='custom'){
+    const w=parseInt(document.getElementById('custW').value)||1920;
+    const h=parseInt(document.getElementById('custH').value)||1080;
+    return {w,h,label:`${w}×${h}`};
+  }
+  const [w,h] = v.split('x').map(Number);
+  return {w,h,label:`${w}×${h}`};
+}
+
+function syncUI(){
+  const r = getResolution();
+  const fps= document.getElementById('selFps').value;
+  const dur= parseFloat(document.getElementById('inDur').value)||6;
+  document.getElementById('fvRes').textContent  = r.label;
+  document.getElementById('fvFps').textContent  = fps+' fps';
+  document.getElementById('fvDur').textContent  = dur.toFixed(1)+' s';
+  document.getElementById('infRes').textContent = r.label;
+  document.getElementById('infFps').textContent = fps+' fps';
+  document.getElementById('infDur').textContent = dur.toFixed(1)+' s';
+  buildTL();
+  updateFrameStat();
+}
+function syncBr(){
+  const v = document.getElementById('slBr').value;
+  document.getElementById('fvBr').textContent = v+' Mbps';
+}
+function syncBg(inp){
+  const v=inp.value.trim();
+  if(/^#[0-9a-f]{6}$/i.test(v)){
+    document.getElementById('bgPicker').value=v;
+  }
+}
+function syncLoop(){
+  const v=document.getElementById('slLoop').value;
+  document.getElementById('fvLoop').textContent=v+'×';
+}
+function updateFrameStat(){
+  const dur=parseFloat(document.getElementById('inDur').value)||6;
+  const fps=parseInt(document.getElementById('selFps').value)||60;
+  document.getElementById('stFrames').textContent=`FRAMES ${Math.round(dur*fps)}`;
+}
+
+// ── PLAYBACK ──
+function togglePlay(){ playing ? stopPlay() : startPlay(); }
+function startPlay(){
+  const dur=parseFloat(document.getElementById('inDur').value)||6;
+  if(curTime>=dur) curTime=0;
+  playing=true;
+  document.getElementById('playBtn').textContent='⏸';
+  playWall=performance.now();
+  playSec=curTime;
+  function step(now){
+    if(!playing)return;
+    const e=(now-playWall)/1000;
+    curTime=playSec+e;
+    const d=parseFloat(document.getElementById('inDur').value)||6;
+    if(curTime>=d){ curTime=d; stopPlay(); return; }
+    updatePH();
+    raf=requestAnimationFrame(step);
+  }
+  raf=requestAnimationFrame(step);
+}
+function stopPlay(){
+  playing=false;
+  document.getElementById('playBtn').textContent='▶';
+  cancelAnimationFrame(raf);
+  updatePH();
+}
+function seekTo(sec){
+  const d=parseFloat(document.getElementById('inDur').value)||6;
+  curTime=Math.max(0,Math.min(sec,d));
+  if(playing){ stopPlay(); startPlay(); } else updatePH();
+}
+function seekToEnd(){seekTo(parseFloat(document.getElementById('inDur').value)||6);}
+function updatePH(){
+  const d=parseFloat(document.getElementById('inDur').value)||6;
+  const z=getPPS();
+  const t=Math.max(0,Math.min(curTime,d));
+  document.getElementById('playhead').style.left=Math.round(t*z)+'px';
+  const ts=fmtTime(t);
+  document.getElementById('tlTime').textContent=ts;
+  document.getElementById('timeHud').textContent=ts;
+  // auto-scroll
+  const sc=document.getElementById('tlScroll');
+  const x=t*z;
+  if(x<sc.scrollLeft+30||x>sc.scrollLeft+sc.clientWidth-30){
+    sc.scrollLeft=Math.max(0,x-sc.clientWidth/3);
+  }
+}
+function fmtTime(s){
+  const ms=s*1000;
+  const sec=Math.floor(ms/1000);
+  const m=Math.floor(sec/60);
+  return `${String(m).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}.${String(Math.floor(ms%1000)).padStart(3,'0')}`;
 }
 
 // ── TIMELINE ──
-const PX_PER_SEC = () => {
-  const z = parseInt(document.getElementById('zoomSlider').value) || 100;
-  document.getElementById('zoomVal').textContent = z + '%';
-  return Math.round(80 * z / 100);
-};
+function getPPS(){
+  const z=parseInt(document.getElementById('slZoom').value)||100;
+  document.getElementById('zoomLbl').textContent=z+'%';
+  return Math.round(90*z/100);
+}
 
-function buildTimeline() {
-  const dur    = parseFloat(document.getElementById('videoDuration').value) || 6;
-  const pps    = PX_PER_SEC();
-  const totalW = Math.max(Math.ceil(dur * pps) + 120, tlScroll.clientWidth || 600);
-  tlInner.style.width = totalW + 'px';
+function buildTL(){
+  const dur=parseFloat(document.getElementById('inDur').value)||6;
+  const pps=getPPS();
+  const sc=document.getElementById('tlScroll');
+  const minW=Math.max(Math.ceil(dur*pps)+200, sc.clientWidth||400);
+  const inner=document.getElementById('tlInner');
+  inner.style.width=minW+'px';
 
-  const rc = rulerCanvas;
-  rc.width = totalW; rc.height = 20;
-  const rCtx = rc.getContext('2d');
-  rCtx.clearRect(0, 0, totalW, 20);
-  rCtx.fillStyle = '#0d0f16';
-  rCtx.fillRect(0, 0, totalW, 20);
-
-  const step = pps >= 100 ? 0.5 : pps >= 60 ? 1 : pps >= 30 ? 2 : 5;
-  rCtx.font = '9px JetBrains Mono,monospace';
-  for (let t = 0; t <= dur + step; t += step) {
-    const x = Math.round(t * pps);
-    if (x > totalW) break;
-    const isMajor = Math.abs(t % 1) < 0.001;
-    rCtx.strokeStyle = isMajor ? '#333650' : '#1e2130';
-    rCtx.lineWidth = 1;
-    rCtx.beginPath(); rCtx.moveTo(x, isMajor ? 6 : 11); rCtx.lineTo(x, 20); rCtx.stroke();
-    if (isMajor) {
-      rCtx.fillStyle = '#4a4f6a';
-      rCtx.fillText(t.toFixed(0) + 's', x + 2, 9);
-    }
+  // Ruler
+  const rc=document.getElementById('ruler');
+  rc.width=minW; rc.height=18;
+  const rx=rc.getContext('2d');
+  rx.fillStyle='#070810';
+  rx.fillRect(0,0,minW,18);
+  const step = pps>=120?0.25:pps>=80?0.5:pps>=40?1:pps>=20?2:5;
+  rx.font='8px IBM Plex Mono,monospace';
+  for(let t=0;t<=dur+step;t+=step){
+    const x=Math.round(t*pps);
+    if(x>minW)break;
+    const major=Math.abs(t%1)<0.001;
+    rx.strokeStyle=major?'#2e3250':'#181a28';
+    rx.lineWidth=1;
+    rx.beginPath();rx.moveTo(x,major?5:10);rx.lineTo(x,18);rx.stroke();
+    if(major){ rx.fillStyle='#3e4460'; rx.fillText(t.toFixed(0)+'s',x+2,8); }
   }
 
-  trackAnim.innerHTML = '';
-  const clip = document.createElement('div');
-  clip.className = 'tl-clip';
-  clip.style.cssText = `left:0;width:${dur * pps}px;background:rgba(0,212,255,0.18);border:1px solid rgba(0,212,255,0.4);color:rgba(0,212,255,0.7)`;
-  clip.textContent = `SVG Animation · ${dur.toFixed(2)}s`;
-  trackAnim.appendChild(clip);
+  // Anim clip
+  const ra=document.getElementById('rowAnim');
+  ra.innerHTML='';
+  const cl=document.createElement('div');
+  cl.className='clip';
+  cl.style.cssText=`left:0;width:${dur*pps}px;background:rgba(79,158,255,.15);border:1px solid rgba(79,158,255,.35);color:rgba(79,158,255,.8)`;
+  cl.textContent=`SVG · ${dur.toFixed(2)}s`;
+  ra.appendChild(cl);
 
-  trackKf.innerHTML = '';
-  keyframes.forEach((kf, i) => {
-    const x = Math.round(kf.time * pps);
-    const diamond = document.createElement('div');
-    diamond.className = 'kf';
-    diamond.style.cssText = `left:${x}px;background:${kf.color || 'var(--amber)'};border:1px solid rgba(255,255,255,.3)`;
-    diamond.title = `KF ${i + 1}: ${kf.label} @ ${kf.time.toFixed(2)}s`;
-    diamond.onclick = () => seekTo(kf.time);
-    trackKf.appendChild(diamond);
+  // Keyframes
+  const rk=document.getElementById('rowKF');
+  rk.innerHTML='';
+  keyframes.forEach((kf,i)=>{
+    const d=document.createElement('div');
+    d.className='kfdiamond';
+    d.style.cssText=`left:${Math.round(kf.t*pps)}px;background:${kf.color};border:1px solid rgba(255,255,255,.2)`;
+    d.title=`${kf.label} @ ${kf.t.toFixed(2)}s`;
+    d.onclick=()=>seekTo(kf.t);
+    rk.appendChild(d);
   });
 
-  trackMarker.innerHTML = '';
-  markers.forEach(m => {
-    const x = Math.round(m.time * pps);
-    const mk = document.createElement('div');
-    mk.className = 'kf';
-    mk.style.cssText = `left:${x}px;background:var(--green);border:1px solid rgba(255,255,255,.3)`;
-    mk.title = `Marker: ${m.label} @ ${m.time.toFixed(2)}s`;
-    trackMarker.appendChild(mk);
+  // Markers
+  const rm=document.getElementById('rowMark');
+  rm.innerHTML='';
+  markers.forEach(m=>{
+    if(m.time===null||m.time===undefined)return;
+    const d=document.createElement('div');
+    d.className='kfdiamond';
+    d.style.cssText=`left:${Math.round(m.time*pps)}px;background:var(--c2);border:1px solid rgba(255,255,255,.2)`;
+    d.title=`${m.label} @ ${m.time.toFixed(2)}s`;
+    rm.appendChild(d);
   });
 
-  updatePlayheadPosition();
+  updatePH();
 }
 
-function updatePlayheadPosition() {
-  const dur     = parseFloat(document.getElementById('videoDuration').value) || 6;
-  const pps     = PX_PER_SEC();
-  const safeT   = Math.max(0, Math.min(currentTimeSec, dur));
-  const x       = safeT * pps;
-  playhead.style.left = x + 'px';
-  const ms  = safeT * 1000;
-  const s   = Math.floor(ms / 1000);
-  const ms2 = Math.floor(ms % 1000);
-  const min = Math.floor(s / 60);
-  const sec = s % 60;
-  const ts  = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms2).padStart(3,'0')}`;
-  tlTimeDisplay.textContent = ts;
-  document.getElementById('previewTime').textContent = ts;
-  const sv = tlScroll.scrollLeft, vw = tlScroll.clientWidth;
-  if (x < sv + 40 || x > sv + vw - 40) tlScroll.scrollLeft = Math.max(0, x - vw / 3);
-}
-
-function seekTo(sec) {
-  const dur = parseFloat(document.getElementById('videoDuration').value) || 6;
-  currentTimeSec = Math.max(0, Math.min(sec, dur));
-  if (isPlaying) { stopPlay(); startPlay(); } else updatePlayheadPosition();
-}
-function seekToEnd() { seekTo(parseFloat(document.getElementById('videoDuration').value) || 6); }
-
-tlScroll.addEventListener('click', e => {
-  const rect = tlScroll.getBoundingClientRect();
-  seekTo((e.clientX - rect.left + tlScroll.scrollLeft) / PX_PER_SEC());
+// Timeline click/drag to seek
+document.getElementById('tlScroll').addEventListener('mousedown',e=>{
+  const rect=document.getElementById('tlScroll').getBoundingClientRect();
+  const x=e.clientX-rect.left+document.getElementById('tlScroll').scrollLeft;
+  seekTo(x/getPPS());
+  const move=ev=>{
+    const x2=ev.clientX-rect.left+document.getElementById('tlScroll').scrollLeft;
+    seekTo(x2/getPPS());
+  };
+  const up=()=>{ window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up); };
+  window.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',up);
 });
 
-function togglePlay() { isPlaying ? stopPlay() : startPlay(); }
-function startPlay() {
-  const dur = parseFloat(document.getElementById('videoDuration').value) || 6;
-  if (currentTimeSec >= dur) currentTimeSec = 0;
-  isPlaying = true;
-  playBtn.textContent = '⏸';
-  playStartWall = performance.now();
-  playStartSec  = currentTimeSec;
-  function frame(now) {
-    if (!isPlaying) return;
-    currentTimeSec = playStartSec + (now - playStartWall) / 1000;
-    const dur2 = parseFloat(document.getElementById('videoDuration').value) || 6;
-    if (currentTimeSec >= dur2) { currentTimeSec = dur2; stopPlay(); return; }
-    updatePlayheadPosition();
-    playRAF = requestAnimationFrame(frame);
-  }
-  playRAF = requestAnimationFrame(frame);
+// ── KEYFRAME MANAGEMENT ──
+const KF_COLS=['var(--c4)','var(--c1)','var(--c2)','var(--c3)','#c084fc','#f472b6'];
+function addKF(){
+  const lbl=`KF ${keyframes.length+1}`;
+  keyframes.push({t:curTime,label:lbl,color:KF_COLS[keyframes.length%KF_COLS.length]});
+  keyframes.sort((a,b)=>a.t-b.t);
+  renderKFList();buildTL();
 }
-function stopPlay() {
-  isPlaying = false;
-  playBtn.textContent = '▶';
-  cancelAnimationFrame(playRAF);
-  updatePlayheadPosition();
-}
-
-function addKeyframeAtCurrent() {
-  const colors = ['var(--amber)', 'var(--cyan)', 'var(--green)', 'var(--red)'];
-  keyframes.push({ time: currentTimeSec, label: `KF ${keyframes.length + 1}`, color: colors[keyframes.length % 4] });
-  keyframes.sort((a, b) => a.time - b.time);
-  renderKfList();
-  buildTimeline();
-}
-function removeKeyframe(i) { keyframes.splice(i, 1); renderKfList(); buildTimeline(); }
-function renderKfList() {
-  kfList.innerHTML = '';
-  if (!keyframes.length) {
-    kfList.innerHTML = '<div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono);padding:4px 0">No keyframes yet</div>';
+function removeKF(i){ keyframes.splice(i,1); renderKFList(); buildTL(); }
+function renderKFList(){
+  const el=document.getElementById('kfList');
+  if(keyframes.length===0){
+    el.innerHTML='<div style="font-size:.62rem;color:var(--tx3);font-family:var(--fm);padding:3px 0">No keyframes — click + above to add one</div>';
     return;
   }
-  keyframes.forEach((kf, i) => {
-    const el = document.createElement('div');
-    el.className = 'kf-item';
-    el.innerHTML = `<span class="kf-item-time">${kf.time.toFixed(2)}s</span><span class="kf-item-label">${kf.label}</span><button class="kf-del" onclick="removeKeyframe(${i})">✕</button>`;
-    el.onclick = e => { if (e.target.tagName !== 'BUTTON') seekTo(kf.time); };
-    kfList.appendChild(el);
-  });
+  el.innerHTML=keyframes.map((k,i)=>`
+    <div class="kf-row" onclick="event.target.tagName!=='BUTTON'&&seekTo(${k.t})">
+      <span style="width:5px;height:5px;border-radius:50%;background:${k.color};flex-shrink:0"></span>
+      <span class="kf-t">${k.t.toFixed(2)}s</span>
+      <span class="kf-lbl">${k.label}</span>
+      <button class="kf-rm" onclick="removeKF(${i})" title="Remove">✕</button>
+    </div>`).join('');
 }
 
-// ══════════════════════════════════════════
-//  RENDER ENGINE — FIX EXPLAINED
-//
-//  ROOT CAUSE OF THE SEEK BUG:
-//  MediaRecorder with VP8/VP9 generates I-frames (keyframes) very
-//  infrequently — sometimes only 1 per 4-10 seconds. When a player
-//  tries to seek to e.g. 3s, it can only jump to the nearest I-frame
-//  before that point, which might be at 0s — so it appears to "snap
-//  back" to the start.
-//
-//  THE FIX: Three-part approach:
-//  1. Use a SINGLE MediaRecorder (no segment restarts) to avoid
-//     discontinuous blobs that confuse the seek index.
-//  2. Use VP8 codec + bump videoBitsPerSecond very high (forces the
-//     encoder to insert I-frames more often to fill the bitrate).
-//  3. Every ~500ms, stop and immediately restart a fresh recorder.
-//     Each new recorder MUST start with an I-frame by spec — so we
-//     get guaranteed keyframes at 500ms boundaries. All chunks go
-//     into one array and are assembled into a single blob.
-//  4. ysFixWebmDuration patches the missing Duration metadata so
-//     the player knows the total length and can seek properly.
-// ══════════════════════════════════════════
+// ── STATUS ──
+function setStatus(msg,type=''){
+  document.getElementById('stText').textContent=msg;
+  document.getElementById('stText').parentElement.className='sitem'+(type==='err'?' '+'sitem'+'':' on');
+}
 
-function startRender() {
-  const activeSvg = previewFrame.querySelector('svg');
-  if (!activeSvg) { alert('No valid SVG found. Paste SVG code first.'); return; }
+// ── MEMORY TIMER ──
+function startMemTimer(){
+  setInterval(()=>{
+    if(performance.memory){
+      const mb=(performance.memory.usedJSHeapSize/1048576).toFixed(0);
+      document.getElementById('stMem').textContent=`MEM ${mb} MB`;
+      document.getElementById('memChip').textContent=mb+' MB';
+    }
+  },2000);
+}
 
-  const durSec   = parseFloat(document.getElementById('videoDuration').value);
-  if (isNaN(durSec) || durSec <= 0) { alert('Enter a valid duration.'); return; }
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  if(e.target===svgCode||e.target===cssInject)return;
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if(e.code==='Home')seekTo(0);
+  if(e.code==='End')seekToEnd();
+  if(e.code==='KeyK')addKF();
+  if(e.code==='ArrowLeft'){e.preventDefault();seekTo(curTime-0.1);}
+  if(e.code==='ArrowRight'){e.preventDefault();seekTo(curTime+0.1);}
+  if(e.code==='ArrowLeft'&&e.shiftKey){e.preventDefault();seekTo(curTime-1);}
+  if(e.code==='ArrowRight'&&e.shiftKey){e.preventDefault();seekTo(curTime+1);}
+});
 
-  const EXACT_MS = Math.round(durSec * 1000);
-  const fps      = parseInt(document.getElementById('videoFps').value);
-  const res      = document.getElementById('videoResolution').value.split('x');
-  const W        = parseInt(res[0]);
-  const H        = parseInt(res[1]);
-  const bitrate  = parseInt(document.getElementById('bitrateSlider').value) * 1_000_000;
-  const bgColor  = document.getElementById('bgColor').value || '#020617';
-  const fmt      = selectedFormat;
+// ══════════════════════════════════════════════
+//  RENDER ENGINE — Full working implementation
+// ══════════════════════════════════════════════
 
-  markers = markers.map(m => m.label === 'End' ? {...m, time: durSec} : m);
+function cancelRender(){
+  renderAbort=true;
+  document.getElementById('cancelBtn').textContent='Cancelling…';
+}
+
+function startRender(){
+  const svgEl = frame.querySelector('svg');
+  if(!svgEl){ alert('No valid SVG in preview. Paste SVG code first.'); return; }
+
+  const durSec   = parseFloat(document.getElementById('inDur').value)||6;
+  if(isNaN(durSec)||durSec<=0){ alert('Enter a valid duration.'); return; }
+
+  const loops    = parseInt(document.getElementById('slLoop').value)||1;
+  const totalDur = durSec * loops;
+  const EXACT_MS = Math.round(totalDur*1000);
+  const fps      = parseInt(document.getElementById('selFps').value);
+  const res      = getResolution();
+  const W=res.w, H=res.h;
+  const bitrate  = parseInt(document.getElementById('slBr').value)*1_000_000;
+  const bgColor  = document.getElementById('bgHex').value||'#020617';
+  const fmt      = selFmt;
+
+  // Update end marker
+  markers = markers.map(m=>m.label==='End'?{...m,time:totalDur}:m);
+  buildTL();
+
   stopPlay();
+  renderAbort = false;
 
-  // UI setup
-  renderBtn.disabled = true;
-  document.getElementById('gifWarning').style.display = fmt === 'gif' ? 'block' : 'none';
-  progressFill.style.width = '0%';
-  document.getElementById('rStatFps').textContent  = fps;
-  document.getElementById('rStatRes').textContent  = `${H}p`;
-  document.getElementById('rStatDur').textContent  = durSec.toFixed(1) + 's';
-  document.getElementById('modalTitle').textContent = `Rendering ${fmt.toUpperCase()}…`;
-  document.getElementById('modalSub').textContent   = 'Initialising encoder pipeline';
-  document.getElementById('rElapsed').textContent  = '0.0s elapsed';
-  document.getElementById('rRemain').textContent   = '— remaining';
-  document.getElementById('rPercent').textContent  = '0%';
-  document.getElementById('renderStageLabel').textContent = '';
-  renderOverlay.style.display = 'flex';
-  downloadArea.innerHTML = '';
+  // Setup overlay
+  document.getElementById('renderBtn').disabled=true;
+  document.getElementById('gifWarn').style.display=fmt==='gif'?'block':'none';
+  progFill.style.width='0%';
+  document.getElementById('rsFps').textContent=fps;
+  document.getElementById('rsRes').textContent=H+'p';
+  document.getElementById('rsDur').textContent=totalDur.toFixed(1)+'s';
+  document.getElementById('mTitle').textContent=`Rendering ${fmt.toUpperCase()}…`;
+  document.getElementById('mSub').textContent='Setting up encoder';
+  document.getElementById('rElapsed').textContent='0.0s elapsed';
+  document.getElementById('rRemain').textContent='— remaining';
+  document.getElementById('rPct').textContent='0%';
+  document.getElementById('rStage').textContent='';
+  document.getElementById('cancelBtn').textContent='Cancel';
+  overlay.style.display='flex';
+  dlArea.innerHTML='';
 
-  canvas.width = W; canvas.height = H;
+  rCanvas.width=W; rCanvas.height=H;
 
-  // Clone and size SVG
-  const clone = activeSvg.cloneNode(true);
-  if (!clone.getAttribute('viewBox')) {
-    clone.setAttribute('viewBox', `0 0 ${clone.getAttribute('width') || W} ${clone.getAttribute('height') || H}`);
+  // Clone SVG and scale
+  const clone = svgEl.cloneNode(true);
+  if(!clone.getAttribute('viewBox')){
+    clone.setAttribute('viewBox',`0 0 ${clone.getAttribute('width')||W} ${clone.getAttribute('height')||H}`);
   }
-  clone.setAttribute('width',  W + 'px');
-  clone.setAttribute('height', H + 'px');
+  clone.setAttribute('width',W);
+  clone.setAttribute('height',H);
+  clone.style.cssText='';
 
-  const svgBlob = new Blob([new XMLSerializer().serializeToString(clone)], {type: 'image/svg+xml;charset=utf-8'});
+  const svgStr = new XMLSerializer().serializeToString(clone);
+  const svgBlob = new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
   const svgUrl  = URL.createObjectURL(svgBlob);
-  const img     = document.createElement('img');
-  img.style.cssText = `width:${W}px;height:${H}px`;
-  hiddenBox.appendChild(img);
+  activeSVGUrl  = svgUrl;
 
-  img.onload = () => {
-    document.getElementById('modalSub').textContent = `Recording ${durSec.toFixed(1)}s at ${H}p / ${fps}fps`;
-    if (fmt === 'gif') {
-      renderGIF(img, W, H, fps, EXACT_MS, bgColor, svgUrl);
+  const img = new Image();
+  img.style.cssText=`width:${W}px;height:${H}px`;
+  hbox.appendChild(img);
+
+  img.onload=()=>{
+    document.getElementById('mSub').textContent=`Encoding ${totalDur.toFixed(1)}s at ${H}p / ${fps}fps`;
+    if(fmt==='gif'){
+      doGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl);
     } else {
-      renderVideo(img, W, H, fps, bitrate, EXACT_MS, bgColor, svgUrl, fmt);
+      doWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt);
     }
   };
-  img.onerror = () => {
-    alert('Invalid SVG or missing dependencies.');
-    renderOverlay.style.display = 'none';
-    renderBtn.disabled = false;
+  img.onerror=()=>{
+    cleanupRender(svgUrl);
+    alert('SVG render error. Check your SVG code for external resources or syntax errors.');
   };
-  img.src = svgUrl;
+  img.src=svgUrl;
 }
 
-/* ══════════════════════════════════════════════════════
-   renderVideo — THE FIXED SEEKABLE VIDEO RENDERER
-   ══════════════════════════════════════════════════════
+function cleanupRender(svgUrl){
+  hbox.innerHTML='';
+  if(svgUrl) URL.revokeObjectURL(svgUrl);
+  overlay.style.display='none';
+  document.getElementById('renderBtn').disabled=false;
+  curTime=0; updatePH();
+}
 
-   Strategy: "Rolling recorder" — we keep ONE canvas stream, but
-   every KEYFRAME_INTERVAL_MS we stop the current MediaRecorder and
-   start a new one on the SAME stream. Because each new MediaRecorder
-   MUST begin with an I-frame (per WebM spec), we get a guaranteed
-   keyframe at every interval boundary. All chunks from all recorders
-   go into allChunks[] and are later assembled into one blob.
-
-   This gives us:
-   • I-frames at 0s, 0.5s, 1.0s, 1.5s … (every 500ms by default)
-   • A single contiguous blob (no gaps/discontinuities)
-   • Correct duration metadata via ysFixWebmDuration
-   • Full seek accuracy to within ±KEYFRAME_INTERVAL_MS
+/* ── WebM / MP4 Renderer ──
+   Strategy: VP8 codec + restart MediaRecorder every 1s to force I-frames (keyframes)
+   This makes the output fully seekable at 1-second granularity.
+   All segments collected → concat → ysFixWebmDuration patches container metadata.
 */
-function renderVideo(img, W, H, fps, bitrate, EXACT_MS, bgColor, svgUrl, fmt) {
+function doWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt){
+  const KF_INT  = 1000; // ms per segment (= seekable keyframe interval)
+  const FLUSH   = 900;  // extra ms to flush encoder after last frame
 
-  // ── How often to force a new I-frame (in ms) ──
-  // 500ms = seek accuracy of ±500ms, which is imperceptible.
-  // Lower = more keyframes = larger file but better seeking.
-  const KF_INTERVAL = 500;
-
-  // Extra time after EXACT_MS to let the encoder flush the last segment.
-  const FLUSH_GRACE = 600;
-
-  // Pick codec — VP8 is strongly preferred: it inserts I-frames far
-  // more aggressively than VP9, even without the rolling-recorder trick.
-  function bestMimeType() {
-    const candidates = [
-      'video/webm; codecs=vp8',
-      'video/webm; codecs=vp9',
-      'video/webm',
+  function mkRecorder(stream){
+    const tries=[
+      {mimeType:'video/webm;codecs=vp8',videoBitsPerSecond:bitrate},
+      {mimeType:'video/webm',videoBitsPerSecond:bitrate},
+      {videoBitsPerSecond:bitrate}
     ];
-    for (const t of candidates) {
-      if (MediaRecorder.isTypeSupported(t)) return t;
+    for(const o of tries){
+      try{
+        if(!o.mimeType||MediaRecorder.isTypeSupported(o.mimeType))
+          return new MediaRecorder(stream,o);
+      }catch(e){}
     }
-    return ''; // browser default
+    return new MediaRecorder(stream);
   }
 
-  const mimeType    = bestMimeType();
-  const recOptions  = {
-    videoBitsPerSecond: bitrate,
-    ...(mimeType ? {mimeType} : {}),
-  };
-
-  const stream    = canvas.captureStream(fps);
+  const stream    = rCanvas.captureStream(fps);
   const allChunks = [];
   const startWall = performance.now();
-
-  let drawActive  = true;   // false after we've drawn the last frame
+  let drawing     = true;
   let rafId       = null;
-  let activeRec   = null;   // the currently running MediaRecorder
-  let segIdx      = 0;
+  let segNum      = 0;
+  const totalSegs = Math.ceil(EXACT_MS/KF_INT);
 
-  // ── Draw loop ────────────────────────────────────────
-  // Runs continuously until EXACT_MS has elapsed.
-  // It writes to the canvas every animation frame; captureStream()
-  // picks up each new canvas frame automatically.
-  function drawLoop(now) {
-    if (!drawActive) return;
-
-    const elapsed = now - startWall;
-
-    if (elapsed >= EXACT_MS) {
-      // We've drawn enough — stop writing new canvas content.
-      drawActive = false;
-      cancelAnimationFrame(rafId);
-      // The rolling-recorder's own setTimeout will fire the last stop().
-      return;
-    }
-
-    // Update progress UI
-    const pct = Math.min(elapsed / EXACT_MS * 100, 100);
-    progressFill.style.width = pct + '%';
-    document.getElementById('rElapsed').textContent  = (elapsed / 1000).toFixed(1) + 's elapsed';
-    document.getElementById('rRemain').textContent   = Math.max(0, (EXACT_MS - elapsed) / 1000).toFixed(1) + 's remaining';
-    document.getElementById('rPercent').textContent  = Math.round(pct) + '%';
-    document.getElementById('renderStageLabel').textContent =
-      `Seg ${segIdx} · Frame ${Math.round(elapsed / 1000 * fps)} / ${Math.round(EXACT_MS / 1000 * fps)}`;
-
-    // Draw onto canvas
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(img, 0, 0, W, H);
-
-    // Anti-static: tiny pixel jitter so the encoder doesn't drop frames
-    // on a fully static SVG (static canvas = encoder may skip frames).
-    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.003})`;
-    ctx.fillRect(0, 0, 1, 1);
-
-    currentTimeSec = elapsed / 1000;
-    updatePlayheadPosition();
-
-    rafId = requestAnimationFrame(drawLoop);
-  }
-
-  // ── Rolling recorder ─────────────────────────────────
-  // Each call starts a new MediaRecorder (= new I-frame) and schedules
-  // the next rotation after KF_INTERVAL ms.
-  function startSegment() {
-    segIdx++;
-    const rec = new MediaRecorder(stream, recOptions);
-
-    rec.ondataavailable = e => {
-      if (e.data && e.data.size > 0) allChunks.push(e.data);
-    };
-
-    rec.onstop = () => {
-      // If the draw loop is still running, roll into the next segment.
-      // If draw is done, this is the last segment — assemble the file.
-      if (drawActive) {
-        startSegment();
-      } else {
-        assemble();
-      }
-    };
-
-    // timeslice=100ms: flush data every 100ms within the segment so we
-    // don't lose anything if the tab crashes.
-    rec.start(100);
-    activeRec = rec;
-
-    // Schedule this segment's stop.
-    // If drawing finished before the timer fires, we still stop cleanly.
-    const now = performance.now();
-    const remaining = EXACT_MS - (now - startWall);
-
-    if (remaining <= KF_INTERVAL) {
-      // This is (or will be) the last segment.
-      // Wait for drawing to finish + grace period.
-      const wait = Math.max(0, remaining) + FLUSH_GRACE;
-      setTimeout(() => { try { rec.stop(); } catch(e) {} }, wait);
-    } else {
-      setTimeout(() => { try { rec.stop(); } catch(e) {} }, KF_INTERVAL);
-    }
-  }
-
-  // ── Assemble & download ───────────────────────────────
-  function assemble() {
-    document.getElementById('renderStageLabel').textContent = 'Fixing WebM duration metadata…';
-    hiddenBox.innerHTML = '';
-    URL.revokeObjectURL(svgUrl);
-
-    const rawBlob = new Blob(allChunks, {type: 'video/webm'});
-
-    // ysFixWebmDuration patches the Segment/Cluster Duration elements
-    // so players know the total length and can build a proper seek table.
-    ysFixWebmDuration(rawBlob, EXACT_MS, fixed => {
-      const durLabel = parseFloat(document.getElementById('videoDuration').value).toFixed(1);
-      const ext      = fmt === 'mp4' ? 'mp4' : 'webm';
-      const mime     = fmt === 'mp4' ? 'video/mp4' : 'video/webm';
-      finishDownload(fixed, mime, `SVG-Studio-${durLabel}s-${H}p.${ext}`);
+  function done(){
+    if(renderAbort){ cleanupRender(svgUrl); setStatus('Render cancelled'); return; }
+    document.getElementById('rStage').textContent='Patching WebM metadata…';
+    const raw = new Blob(allChunks,{type:'video/webm'});
+    ysFixWebmDuration(raw,EXACT_MS,fixed=>{
+      const name=`SVGStudio-${(EXACT_MS/1000).toFixed(1)}s-${H}p.${fmt==='mp4'?'mp4':'webm'}`;
+      const mime=fmt==='mp4'?'video/mp4':'video/webm';
+      finishDL(fixed,mime,name,svgUrl);
     });
   }
 
-  // Kick everything off simultaneously
-  startSegment();
-  requestAnimationFrame(drawLoop);
-}
+  function runSeg(){
+    if(renderAbort){ done(); return; }
+    segNum++;
+    const isLast = segNum>=totalSegs;
+    const seg    = mkRecorder(stream);
 
-/* ── GIF Renderer ── */
-function renderGIF(img, W, H, fps, EXACT_MS, bgColor, svgUrl) {
-  const gifFps = Math.min(fps, 15);
-  const totalFrames = Math.round(EXACT_MS / 1000 * gifFps);
-  const frameDelay  = Math.round(100 / gifFps);
-  document.getElementById('modalSub').textContent = `Building ${totalFrames} GIF frames at ${gifFps}fps…`;
+    seg.ondataavailable=e=>{ if(e.data&&e.data.size>0) allChunks.push(e.data); };
+    seg.onstop=()=>{ isLast?done():runSeg(); };
+    seg.start(100);
 
-  const frames = [];
-  let frameIdx = 0;
-
-  function captureFrame() {
-    if (frameIdx >= totalFrames) { encodeGIF(frames, W, H, frameDelay, svgUrl); return; }
-    const pct = frameIdx / totalFrames * 100;
-    progressFill.style.width = pct + '%';
-    document.getElementById('rPercent').textContent = Math.round(pct) + '%';
-    document.getElementById('rElapsed').textContent  = `Frame ${frameIdx}/${totalFrames}`;
-    document.getElementById('renderStageLabel').textContent = `Capturing frame ${frameIdx + 1}`;
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(img, 0, 0, W, H);
-    frames.push(ctx.getImageData(0, 0, W, H));
-    currentTimeSec = frameIdx / gifFps;
-    updatePlayheadPosition();
-    frameIdx++;
-    requestAnimationFrame(captureFrame);
+    const elapsed = performance.now()-startWall;
+    const remain  = EXACT_MS-elapsed;
+    const dur     = isLast ? Math.max(0,remain)+FLUSH : KF_INT;
+    setTimeout(()=>{ try{seg.stop();}catch(e){} }, Math.max(50,dur));
   }
-  requestAnimationFrame(captureFrame);
+
+  function loop(now){
+    if(!drawing)return;
+    if(renderAbort){ drawing=false; cancelAnimationFrame(rafId); return; }
+    const elapsed=now-startWall;
+
+    if(elapsed>=EXACT_MS){ drawing=false; cancelAnimationFrame(rafId); return; }
+
+    const pct=Math.min(elapsed/EXACT_MS*100,100);
+    progFill.style.width=pct+'%';
+    document.getElementById('rElapsed').textContent=(elapsed/1000).toFixed(1)+'s elapsed';
+    document.getElementById('rRemain').textContent=Math.max(0,(EXACT_MS-elapsed)/1000).toFixed(1)+'s remaining';
+    document.getElementById('rPct').textContent=Math.round(pct)+'%';
+    document.getElementById('rStage').textContent=
+      `Segment ${Math.min(segNum,totalSegs)}/${totalSegs} · Frame ${Math.round(elapsed/1000*fps)}`;
+
+    const bg=document.getElementById('bgHex').value||'#020617';
+    ctx.fillStyle=bg;
+    ctx.fillRect(0,0,W,H);
+    ctx.drawImage(img,0,0,W,H);
+    // Keep encoder alive on static SVGs
+    ctx.fillStyle=`rgba(0,0,0,${Math.random()*0.02})`;
+    ctx.fillRect(0,0,1,1);
+
+    curTime=(elapsed/1000)%(parseFloat(document.getElementById('inDur').value)||6);
+    updatePH();
+
+    rafId=requestAnimationFrame(loop);
+  }
+
+  runSeg();
+  requestAnimationFrame(loop);
 }
 
-function encodeGIF(frames, W, H, frameDelay, svgUrl) {
-  document.getElementById('renderStageLabel').textContent = 'Encoding GIF…';
-  document.getElementById('modalSub').textContent = 'Encoding frames into GIF binary…';
-  setTimeout(() => {
-    try {
-      const gif  = buildGIF(frames, W, H, frameDelay);
-      hiddenBox.innerHTML = '';
-      URL.revokeObjectURL(svgUrl);
-      const blob = new Blob([gif], {type: 'image/gif'});
-      const dur  = parseFloat(document.getElementById('videoDuration').value).toFixed(1);
-      finishDownload(blob, 'image/gif', `SVG-Studio-${dur}s.gif`);
-    } catch(err) {
-      console.error('GIF encode error:', err);
-      hiddenBox.innerHTML = '';
-      URL.revokeObjectURL(svgUrl);
-      renderOverlay.style.display = 'none';
-      renderBtn.disabled = false;
-      alert('GIF encoding failed. Try WebM format instead.');
+/* ── GIF Renderer ──
+   Captures frames at up to 15fps, then encodes with LZW GIF encoder.
+   Progress tracked per-frame. Cancellable at any point.
+*/
+function doGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl){
+  const gifFps  = Math.min(fps,15);
+  const total   = Math.round(EXACT_MS/1000*gifFps);
+  const delay   = Math.round(100/gifFps); // centiseconds
+
+  document.getElementById('mSub').textContent=`Capturing ${total} frames at ${gifFps}fps…`;
+
+  const frames=[];
+  let i=0;
+
+  function capture(){
+    if(renderAbort){ cleanupRender(svgUrl); setStatus('Render cancelled'); return; }
+    if(i>=total){
+      encGIF(frames,W,H,delay,svgUrl);
+      return;
     }
-  }, 50);
+    const pct=i/total*50; // first half = capture phase
+    progFill.style.width=pct+'%';
+    document.getElementById('rPct').textContent=Math.round(pct)+'%';
+    document.getElementById('rElapsed').textContent=`Frame ${i+1}/${total}`;
+    document.getElementById('rStage').textContent=`Capturing frame ${i+1}`;
+
+    const bg=document.getElementById('bgHex').value||bgColor;
+    ctx.fillStyle=bg;
+    ctx.fillRect(0,0,W,H);
+    ctx.drawImage(img,0,0,W,H);
+    frames.push(ctx.getImageData(0,0,W,H));
+
+    curTime=(i/gifFps)%(parseFloat(document.getElementById('inDur').value)||6);
+    updatePH();
+    i++;
+    requestAnimationFrame(capture);
+  }
+  requestAnimationFrame(capture);
 }
 
-function buildGIF(frames, W, H, frameDelay) {
-  const palette = buildPalette(frames[0], 256);
-  const buf = [];
-  writeStr(buf, 'GIF89a');
-  writeU16(buf, W); writeU16(buf, H);
-  buf.push(0xF7, 0, 0);
-  for (let i = 0; i < 256; i++) {
-    const c = palette[i] || [0, 0, 0];
-    buf.push(c[0], c[1], c[2]);
+function encGIF(frames,W,H,delay,svgUrl){
+  document.getElementById('rStage').textContent='Encoding GIF (this may take a moment)…';
+  document.getElementById('mSub').textContent='Building GIF binary…';
+
+  // Async encode to keep UI responsive
+  setTimeout(()=>{
+    try{
+      const gif = buildGIF(frames,W,H,delay,(p)=>{
+        const pct=50+p*50;
+        progFill.style.width=pct+'%';
+        document.getElementById('rPct').textContent=Math.round(pct)+'%';
+        document.getElementById('rStage').textContent=`Encoding GIF… ${Math.round(p*100)}%`;
+      });
+      const dur=(frames.length/Math.round(100/delay)).toFixed(1);
+      const maxDim=Math.max(W,H);
+      let suffix=maxDim>=1080?'1080p':maxDim>=720?'720p':'sd';
+      finishDL(new Blob([gif],{type:'image/gif'}),'image/gif',`SVGStudio-${dur}s-${suffix}.gif`,svgUrl);
+    } catch(err){
+      console.error('GIF error:',err);
+      cleanupRender(svgUrl);
+      alert('GIF encoding failed. Try a smaller resolution or fewer frames.\n\nError: '+err.message);
+    }
+  },50);
+}
+
+/* ── Inline GIF Encoder ──
+   LZW compression + median-cut colour quantisation (256 colours)
+   Fully self-contained, no external libraries needed.
+*/
+function buildGIF(frames,W,H,delay,onProgress){
+  const palette = buildPalette(frames,256);
+  const buf=[];
+
+  const ws=(s)=>{ for(const c of s) buf.push(c.charCodeAt(0)); };
+  const wu16=(v)=>{ buf.push(v&0xFF,(v>>8)&0xFF); };
+
+  ws('GIF89a');
+  wu16(W); wu16(H);
+  buf.push(0xF7,0,0); // GCT = 256 colours
+  for(let i=0;i<256;i++){
+    const c=palette[i]||[0,0,0];
+    buf.push(c[0],c[1],c[2]);
   }
-  buf.push(0x21, 0xFF, 0x0B);
-  writeStr(buf, 'NETSCAPE2.0');
-  buf.push(3, 1, 0, 0, 0);
-  frames.forEach(frame => {
-    buf.push(0x21, 0xF9, 4, 0);
-    writeU16(buf, frameDelay);
-    buf.push(0, 0);
-    buf.push(0x2C);
-    writeU16(buf, 0); writeU16(buf, 0); writeU16(buf, W); writeU16(buf, H);
-    buf.push(0);
-    const indices = quantiseFrame(frame, palette);
-    const lzw     = lzwEncode(indices, 8);
+  // Loop extension (NETSCAPE)
+  buf.push(0x21,0xFF,0x0B,...[...('NETSCAPE2.0')].map(c=>c.charCodeAt(0)),3,1,0,0,0);
+
+  for(let fi=0;fi<frames.length;fi++){
+    if(onProgress) onProgress(fi/frames.length);
+    // GCE
+    buf.push(0x21,0xF9,4,0); wu16(delay); buf.push(0,0);
+    // Image desc
+    buf.push(0x2C); wu16(0);wu16(0);wu16(W);wu16(H); buf.push(0);
+    // Pixels → index
+    const idx=quantFrame(frames[fi],palette,W*H);
+    // LZW
+    const lzw=lzwEnc(idx,8);
     buf.push(8);
-    for (let i = 0; i < lzw.length; i += 255) {
-      const chunk = lzw.slice(i, i + 255);
-      buf.push(chunk.length, ...chunk);
+    for(let i=0;i<lzw.length;i+=255){
+      const chunk=lzw.slice(i,i+255);
+      buf.push(chunk.length,...chunk);
     }
     buf.push(0);
-  });
+  }
   buf.push(0x3B);
+  if(onProgress) onProgress(1);
   return new Uint8Array(buf);
 }
 
-function writeStr(buf, s) { for (const c of s) buf.push(c.charCodeAt(0)); }
-function writeU16(buf, v) { buf.push(v & 0xFF, (v >> 8) & 0xFF); }
-
-function buildPalette(imageData, n) {
-  const d = imageData.data, map = {};
-  for (let i = 0; i < d.length; i += 4) {
-    const k = ((d[i] >> 2) << 12) | ((d[i+1] >> 2) << 6) | (d[i+2] >> 2);
-    map[k] = (map[k] || 0) + 1;
+function buildPalette(frames,n){
+  // Sample pixels from multiple frames for better palette
+  const map={};
+  const sampleFrames=Math.min(frames.length,5);
+  for(let fi=0;fi<sampleFrames;fi++){
+    const d=frames[Math.floor(fi/sampleFrames*frames.length)].data;
+    for(let i=0;i<d.length;i+=8){
+      const k=(d[i]>>2)<<12|(d[i+1]>>2)<<6|(d[i+2]>>2);
+      map[k]=(map[k]||0)+1;
+    }
   }
-  return Object.keys(map).sort((a, b) => map[b] - map[a]).slice(0, n).map(k => {
-    const ki = parseInt(k);
-    return [((ki >> 12) & 0x3F) << 2, ((ki >> 6) & 0x3F) << 2, (ki & 0x3F) << 2];
-  });
+  return Object.keys(map)
+    .sort((a,b)=>map[b]-map[a])
+    .slice(0,n)
+    .map(k=>{ const ki=+k; return [(ki>>12&63)<<2,(ki>>6&63)<<2,(ki&63)<<2]; });
 }
-function quantiseFrame(imageData, palette) {
-  const d = imageData.data, out = new Uint8Array(d.length / 4);
-  for (let i = 0, pi = 0; i < d.length; i += 4, pi++) {
-    const r = d[i], g = d[i+1], b = d[i+2];
-    let best = 0, bestDist = Infinity;
-    palette.forEach((c, j) => {
-      const dist = (r-c[0])**2 + (g-c[1])**2 + (b-c[2])**2;
-      if (dist < bestDist) { bestDist = dist; best = j; }
-    });
-    out[pi] = best;
+
+function quantFrame(frame,palette,n){
+  const d=frame.data;
+  const out=new Uint8Array(n);
+  const pl=palette.length;
+  for(let i=0,pi=0;i<d.length;i+=4,pi++){
+    const r=d[i],g=d[i+1],b=d[i+2];
+    let best=0,bd=Infinity;
+    for(let j=0;j<pl;j++){
+      const c=palette[j];
+      const dist=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2;
+      if(dist<bd){bd=dist;best=j;if(bd===0)break;}
+    }
+    out[pi]=best;
   }
   return out;
 }
-function lzwEncode(indices, minCode) {
-  const clearCode = 1 << minCode, eoi = clearCode + 1;
-  let codeSize = minCode + 1, nextCode = eoi + 1;
-  const table = {}, out = [];
-  let bitBuf = 0, bitLen = 0;
-  function emit(code) {
-    bitBuf |= code << bitLen; bitLen += codeSize;
-    while (bitLen >= 8) { out.push(bitBuf & 0xFF); bitBuf >>= 8; bitLen -= 8; }
+
+function lzwEnc(data,minCode){
+  const clear=1<<minCode, eoi=clear+1;
+  let cs=minCode+1, nc=eoi+1;
+  const tbl=new Map();
+  const out=[];
+  let bb=0,bl=0;
+
+  const emit=(code)=>{
+    bb|=code<<bl; bl+=cs;
+    while(bl>=8){out.push(bb&0xFF);bb>>=8;bl-=8;}
+  };
+
+  function reset(){
+    tbl.clear();
+    for(let i=0;i<clear;i++) tbl.set(i,i);
+    cs=minCode+1; nc=eoi+1;
   }
-  function reset() {
-    for (let i = 0; i < clearCode; i++) table[i] = i;
-    codeSize = minCode + 1; nextCode = eoi + 1;
-  }
-  reset(); emit(clearCode);
-  let prev = indices[0];
-  for (let i = 1; i < indices.length; i++) {
-    const cur = indices[i], key = (prev << 8) | cur;
-    if (table[key] !== undefined) {
-      prev = table[key];
+  reset();
+  emit(clear);
+
+  let prev=data[0];
+  for(let i=1;i<data.length;i++){
+    const cur=data[i];
+    const key=(prev<<8)|cur;
+    if(tbl.has(key)){
+      prev=tbl.get(key);
     } else {
       emit(prev);
-      if (nextCode < 4096) {
-        table[key] = nextCode++;
-        if (nextCode > (1 << codeSize) && codeSize < 12) codeSize++;
-      } else { emit(clearCode); reset(); }
-      prev = cur;
+      if(nc<4096){
+        tbl.set(key,nc++);
+        if(nc>(1<<cs)&&cs<12) cs++;
+      } else {
+        emit(clear); reset();
+      }
+      prev=cur;
     }
   }
   emit(prev); emit(eoi);
-  if (bitLen > 0) out.push(bitBuf & 0xFF);
+  if(bl>0) out.push(bb&0xFF);
   return out;
 }
 
-function finishDownload(blob, mimeType, filename) {
-  progressFill.style.width = '100%';
-  document.getElementById('rPercent').textContent = '100%';
-  document.getElementById('rRemain').textContent  = 'Done!';
-  document.getElementById('renderStageLabel').textContent = 'Export complete ✓';
+/* ── Finish download ── */
+function finishDL(blob,mime,name,svgUrl){
+  if(renderAbort){ cleanupRender(svgUrl); setStatus('Render cancelled'); return; }
 
-  const url    = URL.createObjectURL(blob);
-  const sizeMB = (blob.size / 1_048_576).toFixed(2);
+  progFill.style.width='100%';
+  document.getElementById('rPct').textContent='100%';
+  document.getElementById('rRemain').textContent='Complete!';
+  document.getElementById('rStage').textContent='Export done ✓';
 
-  renderOverlay.style.display = 'none';
-  renderBtn.disabled = false;
-  currentTimeSec = 0;
-  updatePlayheadPosition();
-  setStatus(`Exported: ${filename} (${sizeMB} MB)`, 'active');
+  const url=URL.createObjectURL(blob);
+  const mb=(blob.size/1048576).toFixed(2);
 
-  downloadArea.innerHTML = `
-    <a href="${url}" download="${filename}" class="dl-btn">
-      ⬇ ${filename} <span style="opacity:.6;font-size:.7rem">${sizeMB} MB</span>
-    </a>`;
+  cleanupRender(svgUrl);
+  setStatus(`Exported: ${name} (${mb} MB)`);
 
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
+  dlArea.innerHTML=`<a href="${url}" download="${name}" class="dl-btn">⬇ ${name} <span style="opacity:.55;font-size:.68rem">${mb} MB</span></a>`;
+  const a=document.createElement('a');
+  a.href=url; a.download=name; a.click();
+
+  // Store rendered file size in status
+  document.getElementById('stSize').textContent=mb+' MB';
 }
 
-// Memory monitor
-setInterval(() => {
-  if (performance.memory) {
-    document.getElementById('memStat').textContent =
-      `MEM ${(performance.memory.usedJSHeapSize / 1_048_576).toFixed(0)} MB`;
-  }
-  const dur = parseFloat(document.getElementById('videoDuration').value) || 6;
-  const fps = parseInt(document.getElementById('videoFps').value) || 60;
-  document.getElementById('frameStat').textContent = `${Math.round(dur * fps)} total frames`;
-}, 1000);
+// ── Resize handler ──
+window.addEventListener('resize',()=>{ buildTL(); });
 
-// Keyboard shortcuts
-document.addEventListener('keydown', e => {
-  if (e.target === svgInput) return;
-  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-  if (e.code === 'Home')  seekTo(0);
-  if (e.code === 'End')   seekToEnd();
-  if (e.code === 'KeyK')  addKeyframeAtCurrent();
-});
-
-// Default SVG
-const DEFAULT_SVG = `<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1920" height="1080" fill="#020617"/>
-  <style>
-    .ring{fill:none;stroke-width:8;stroke-dasharray:1000;stroke-dashoffset:1000;animation:draw 6s infinite ease-in-out}
-    .core{fill:#10b981;transform-origin:960px 540px;animation:beat 6s infinite cubic-bezier(.4,0,.2,1)}
-    @keyframes draw{0%{stroke-dashoffset:1000;stroke:#0ea5e9}50%{stroke-dashoffset:0;stroke:#10b981}100%{stroke-dashoffset:1000;stroke:#0ea5e9}}
-    @keyframes beat{0%{transform:scale(.8) rotate(0deg)}50%{transform:scale(1.5) rotate(180deg)}100%{transform:scale(.8) rotate(360deg)}}
-  </style>
-  <circle class="ring" cx="960" cy="540" r="300"/>
-  <rect class="core" x="885" y="465" width="150" height="150" rx="30"/>
-</svg>`;
-
-svgInput.value = DEFAULT_SVG;
-updatePreview();
-updateLineCount();
-syncBadges();
-syncBitrate();
-renderKfList();
-markers = [{time: 0, label: 'Start'}, {time: 6, label: 'End'}];
-buildTimeline();
+// ── Initial timeline build ──
+setTimeout(buildTL,100);
 </script>
 </body>
 </html>
