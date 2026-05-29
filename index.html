@@ -1,1351 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SVG → Video Converter | Advanced Studio</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <script src="https://unpkg.com/fix-webm-duration"></script>
-  <style>
-    :root {
-      --primary: #6c63ff;
-      --secondary: #f50057;
-      --accent: #00e5ff;
-      --bg-dark: #0a0a1a;
-      --bg-card: #12122a;
-      --bg-panel: #1a1a35;
-      --border: rgba(108, 99, 255, 0.3);
-      --glow: 0 0 20px rgba(108, 99, 255, 0.4);
-      --glow-accent: 0 0 20px rgba(0, 229, 255, 0.3);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      background: var(--bg-dark);
-      color: #e0e0ff;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* Animated background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse at 20% 20%, rgba(108, 99, 255, 0.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 80%, rgba(0, 229, 255, 0.06) 0%, transparent 60%),
-        radial-gradient(ellipse at 50% 50%, rgba(245, 0, 87, 0.04) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .glass {
-      background: rgba(18, 18, 42, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      box-shadow: var(--glow), inset 0 1px 0 rgba(255,255,255,0.05);
-    }
-
-    .glass-light {
-      background: rgba(26, 26, 53, 0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(108, 99, 255, 0.2);
-    }
-
-    /* Gradient text */
-    .grad-text {
-      background: linear-gradient(135deg, #6c63ff, #00e5ff, #f50057);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .grad-btn {
-      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .grad-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, #8b5cf6, #6c63ff);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .grad-btn:hover::before { opacity: 1; }
-    .grad-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,99,255,0.5); }
-    .grad-btn:active { transform: translateY(0); }
-
-    .btn-danger {
-      background: linear-gradient(135deg, #f50057, #ff4081);
-    }
-    .btn-success {
-      background: linear-gradient(135deg, #00c853, #00e676);
-    }
-    .btn-accent {
-      background: linear-gradient(135deg, #00b8d4, #00e5ff);
-    }
-
-    /* Drop zone */
-    .drop-zone {
-      border: 2px dashed rgba(108, 99, 255, 0.5);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .drop-zone::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(108,99,255,0.05), rgba(0,229,255,0.03));
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .drop-zone.drag-over {
-      border-color: var(--accent);
-      box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
-    }
-    .drop-zone.drag-over::before { opacity: 1; }
-    .drop-zone.has-file {
-      border-color: #00c853;
-      box-shadow: 0 0 20px rgba(0, 200, 83, 0.2);
-    }
-
-    /* Preview canvas */
-    #previewCanvas {
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(108,99,255,0.3);
-    }
-
-    /* Video player */
-    #outputVideo {
-      border-radius: 12px;
-      width: 100%;
-      box-shadow: 0 0 30px rgba(0,229,255,0.3);
-    }
-
-    /* Progress bar */
-    .progress-bar-wrap {
-      background: rgba(255,255,255,0.07);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .progress-bar-fill {
-      height: 8px;
-      border-radius: 99px;
-      background: linear-gradient(90deg, #6c63ff, #00e5ff, #f50057);
-      background-size: 200% 100%;
-      animation: progressShine 2s linear infinite;
-      transition: width 0.3s ease;
-    }
-    @keyframes progressShine {
-      0% { background-position: 200% center; }
-      100% { background-position: -200% center; }
-    }
-
-    /* Tabs */
-    .tab-btn {
-      transition: all 0.2s;
-      border-bottom: 2px solid transparent;
-      padding-bottom: 8px;
-    }
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    /* Range input */
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.1);
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6c63ff, #00e5ff);
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(108,99,255,0.5);
-      transition: transform 0.2s;
-    }
-    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-    /* Select */
-    select {
-      background: rgba(26,26,53,0.8);
-      border: 1px solid var(--border);
-      color: #e0e0ff;
-      border-radius: 8px;
-      padding: 8px 12px;
-      outline: none;
-      transition: border-color 0.2s;
-      -webkit-appearance: none;
-      cursor: pointer;
-    }
-    select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,99,255,0.2); }
-
-    /* Code editor / textarea */
-    #svgCodeEditor {
-      background: rgba(5, 5, 20, 0.9);
-      color: #a0f0a0;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      resize: vertical;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    #svgCodeEditor:focus { border-color: var(--primary); }
-
-    /* Floating particles */
-    .particle {
-      position: fixed;
-      border-radius: 50%;
-      pointer-events: none;
-      animation: floatParticle linear infinite;
-      z-index: 0;
-    }
-    @keyframes floatParticle {
-      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.6; }
-      90% { opacity: 0.3; }
-      100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
-    }
-
-    /* Pulse dot */
-    .pulse-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: #f50057;
-      animation: pulse 1.5s ease-in-out infinite;
-      display: inline-block;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.4); opacity: 0.7; }
-    }
-
-    /* Timeline */
-    .timeline-track {
-      background: rgba(255,255,255,0.05);
-      border-radius: 4px;
-      height: 32px;
-      position: relative;
-      overflow: hidden;
-    }
-    .timeline-fill {
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      background: linear-gradient(90deg, rgba(108,99,255,0.5), rgba(0,229,255,0.4));
-      border-radius: 4px;
-      transition: width 0.1s linear;
-    }
-    .timeline-cursor {
-      position: absolute;
-      top: 0; bottom: 0;
-      width: 2px;
-      background: white;
-      box-shadow: 0 0 8px white;
-    }
-
-    /* Notification toast */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      min-width: 280px;
-      padding: 16px 20px;
-      border-radius: 12px;
-      z-index: 9999;
-      transform: translateX(120%);
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .toast.show { transform: translateX(0); }
-
-    /* Spinner */
-    .spinner {
-      width: 20px; height: 20px;
-      border: 3px solid rgba(255,255,255,0.2);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Stats cards */
-    .stat-card {
-      background: rgba(26,26,53,0.5);
-      border: 1px solid rgba(108,99,255,0.2);
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-    }
-
-    /* Waveform animation */
-    .wave-bar {
-      display: inline-block;
-      width: 4px;
-      border-radius: 2px;
-      background: linear-gradient(to top, #6c63ff, #00e5ff);
-      animation: waveDance 1.2s ease-in-out infinite;
-      margin: 0 1px;
-    }
-    @keyframes waveDance {
-      0%, 100% { transform: scaleY(0.3); }
-      50% { transform: scaleY(1); }
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(108,99,255,0.4); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(108,99,255,0.7); }
-
-    /* Hover card glow */
-    .hover-glow:hover { box-shadow: var(--glow); }
-
-    /* Badge */
-    .badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(108,99,255,0.8);
-      margin-bottom: 12px;
-    }
-
-    /* Canvas hidden */
-    #hiddenCanvas { display: none; }
-
-    /* Template cards */
-    .template-card {
-      cursor: pointer;
-      transition: all 0.25s;
-      border: 2px solid transparent;
-    }
-    .template-card:hover {
-      border-color: var(--primary);
-      transform: scale(1.03);
-    }
-    .template-card.selected { border-color: var(--accent); }
-  </style>
-</head>
-<body class="relative">
-
-<div id="particles"></div>
-
-<header class="relative z-10 glass border-b border-purple-900/30 sticky top-0">
-  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl grad-btn flex items-center justify-center text-white font-bold text-lg shadow-lg">
-        <i class="fa-solid fa-film"></i>
-      </div>
-      <div>
-        <h1 class="font-black text-xl tracking-tight grad-text">SVG → Video Studio</h1>
-        <p class="text-xs text-purple-400 font-medium">Advanced Animation Converter</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-3">
-      <span class="badge bg-purple-900/60 text-purple-300 border border-purple-700/50">v2.1 Pro</span>
-      <span class="badge bg-green-900/60 text-green-300 border border-green-700/50">
-        <i class="fa-solid fa-circle text-green-400 mr-1" style="font-size:6px"></i>READY
-      </span>
-      <a href="#" class="text-sm text-purple-400 hover:text-purple-300 transition-colors hidden md:block">
-        <i class="fa-solid fa-circle-question mr-1"></i>Docs
-      </a>
-    </div>
-  </div>
-</header>
-
-<div class="relative z-10 text-center py-10 px-6">
-  <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-sm mb-6 text-purple-300">
-    <i class="fa-solid fa-wand-magic-sparkles text-yellow-400"></i>
-    Convert SVG animations to WebM / MP4 video in your browser — no upload needed
-  </div>
-  <h2 class="text-4xl md:text-5xl font-black mb-3">
-    <span class="grad-text">Transform SVG Animations</span><br/>
-    <span class="text-white opacity-90">into Stunning Videos</span>
-  </h2>
-  <p class="text-purple-300 max-w-xl mx-auto text-base">Upload your animated SVG or paste SVG code. Preview, configure settings, and export as WebM video — all powered by Canvas & MediaRecorder API.</p>
-</div>
-
-<main class="relative z-10 max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-  <div class="xl:col-span-1 flex flex-col gap-5">
-
-    <div class="glass rounded-2xl p-5">
-      <p class="section-title"><i class="fa-solid fa-file-import mr-2"></i>Input Source</p>
-      <div class="flex gap-6 border-b border-purple-900/30 mb-5">
-        <button class="tab-btn active text-sm font-semibold" data-tab="upload" onclick="switchTab('upload')">
-          <i class="fa-solid fa-upload mr-1"></i>Upload File
-        </button>
-        <button class="tab-btn text-sm font-semibold text-gray-400" data-tab="code" onclick="switchTab('code')">
-          <i class="fa-solid fa-code mr-1"></i>Paste Code
-        </button>
-        <button class="tab-btn text-sm font-semibold text-gray-400" data-tab="template" onclick="switchTab('template')">
-          <i class="fa-solid fa-shapes mr-1"></i>Templates
-        </button>
-      </div>
-
-      <div id="tab-upload">
-        <div id="dropZone" class="drop-zone rounded-xl p-8 text-center cursor-pointer" onclick="document.getElementById('fileInput').click()">
-          <div id="dropIconArea">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl glass-light flex items-center justify-center">
-              <i class="fa-solid fa-cloud-arrow-up text-3xl text-purple-400"></i>
-            </div>
-            <p class="text-white font-semibold mb-1">Drop SVG file here</p>
-            <p class="text-sm text-gray-500">or click to browse files</p>
-            <p class="text-xs text-gray-600 mt-3">Supports: .svg files with SMIL, CSS, or keyframe animations</p>
-          </div>
-          <div id="fileInfo" class="hidden">
-            <div class="w-14 h-14 mx-auto mb-3 rounded-xl bg-green-900/30 border border-green-700/40 flex items-center justify-center">
-              <i class="fa-solid fa-file-circle-check text-2xl text-green-400"></i>
-            </div>
-            <p id="fileName" class="text-white font-semibold text-sm"></p>
-            <p id="fileSize" class="text-xs text-green-400 mt-1"></p>
-          </div>
-        </div>
-        <input type="file" id="fileInput" accept=".svg,image/svg+xml" class="hidden" onchange="handleFileInput(this)" />
-        <button onclick="document.getElementById('fileInput').click()" class="w-full mt-3 grad-btn rounded-xl py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2">
-          <i class="fa-solid fa-folder-open"></i>Browse Files
-        </button>
-      </div>
-
-      <div id="tab-code" class="hidden">
-        <textarea id="svgCodeEditor" class="w-full h-56 p-3" placeholder="Paste your SVG code here...&#10;&#10;Example:&#10;&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 200 200&quot;&gt;&#10;  &lt;circle cx=&quot;100&quot; cy=&quot;100&quot; r=&quot;40&quot; fill=&quot;#6c63ff&quot;&gt;&#10;    &lt;animate attributeName=&quot;r&quot; from=&quot;40&quot; to=&quot;80&quot; dur=&quot;2s&quot; repeatCount=&quot;indefinite&quot;/&gt;&#10;  &lt;/circle&gt;&#10;&lt;/svg&gt;"></textarea>
-        <button onclick="loadSVGFromCode()" class="w-full mt-3 grad-btn rounded-xl py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2">
-          <i class="fa-solid fa-play-circle"></i>Load SVG Code
-        </button>
-      </div>
-
-      <div id="tab-template" class="hidden">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="template-card glass-light rounded-xl p-3" onclick="loadTemplate('spinner')">
-            <div class="h-20 flex items-center justify-center mb-2">
-              <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="30" cy="30" r="24" fill="none" stroke="#6c63ff" stroke-width="4" stroke-dasharray="100 50" stroke-linecap="round">
-                  <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="1s" repeatCount="indefinite"/>
-                </circle>
-              </svg>
-            </div>
-            <p class="text-xs text-center text-gray-300 font-medium">Spinner</p>
-          </div>
-          <div class="template-card glass-light rounded-xl p-3" onclick="loadTemplate('pulse')">
-            <div class="h-20 flex items-center justify-center mb-2">
-              <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="30" cy="30" r="20" fill="#f50057" opacity="0.8">
-                  <animate attributeName="r" values="10;25;10" dur="1.5s" repeatCount="indefinite"/>
-                  <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.5s" repeatCount="indefinite"/>
-                </circle>
-              </svg>
-            </div>
-            <p class="text-xs text-center text-gray-300 font-medium">Pulse</p>
-          </div>
-          <div class="template-card glass-light rounded-xl p-3" onclick="loadTemplate('morph')">
-            <div class="h-20 flex items-center justify-center mb-2">
-              <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-                <rect x="15" y="15" width="30" height="30" fill="#00e5ff" rx="4">
-                  <animate attributeName="rx" values="4;30;4" dur="2s" repeatCount="indefinite"/>
-                  <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="4s" repeatCount="indefinite"/>
-                </rect>
-              </svg>
-            </div>
-            <p class="text-xs text-center text-gray-300 font-medium">Morph</p>
-          </div>
-          <div class="template-card glass-light rounded-xl p-3" onclick="loadTemplate('wave')">
-            <div class="h-20 flex items-center justify-center mb-2">
-              <svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
-                <g>
-                  <rect x="5" y="20" width="6" height="15" fill="#6c63ff" rx="3">
-                    <animate attributeName="height" values="5;30;5" dur="1s" repeatCount="indefinite" begin="0s"/>
-                    <animate attributeName="y" values="30;10;30" dur="1s" repeatCount="indefinite" begin="0s"/>
-                  </rect>
-                  <rect x="15" y="20" width="6" height="15" fill="#8b5cf6" rx="3">
-                    <animate attributeName="height" values="5;30;5" dur="1s" repeatCount="indefinite" begin="0.2s"/>
-                    <animate attributeName="y" values="30;10;30" dur="1s" repeatCount="indefinite" begin="0.2s"/>
-                  </rect>
-                  <rect x="25" y="20" width="6" height="15" fill="#00e5ff" rx="3">
-                    <animate attributeName="height" values="5;30;5" dur="1s" repeatCount="indefinite" begin="0.4s"/>
-                    <animate attributeName="y" values="30;10;30" dur="1s" repeatCount="indefinite" begin="0.4s"/>
-                  </rect>
-                  <rect x="35" y="20" width="6" height="15" fill="#8b5cf6" rx="3">
-                    <animate attributeName="height" values="5;30;5" dur="1s" repeatCount="indefinite" begin="0.6s"/>
-                    <animate attributeName="y" values="30;10;30" dur="1s" repeatCount="indefinite" begin="0.6s"/>
-                  </rect>
-                  <rect x="45" y="20" width="6" height="15" fill="#6c63ff" rx="3">
-                    <animate attributeName="height" values="5;30;5" dur="1s" repeatCount="indefinite" begin="0.8s"/>
-                    <animate attributeName="y" values="30;10;30" dur="1s" repeatCount="indefinite" begin="0.8s"/>
-                  </rect>
-                </g>
-              </svg>
-            </div>
-            <p class="text-xs text-center text-gray-300 font-medium">Wave Bars</p>
-          </div>
-          <div class="template-card glass-light rounded-xl p-3" onclick="loadTemplate('orbit')">
-            <div class="h-20 flex items-center justify-center mb-2">
-              <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="30" cy="30" r="8" fill="#f50057"/>
-                <circle cx="30" cy="30" r="22" fill="none" stroke="rgba(108,99,255,0.3)" stroke-width="1"/>
-                <circle cx="52" cy="30" r="5" fill="#6c63ff">
-                  <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="2s" repeatCount="indefinite"/>
-                </circle>
-              </svg>
-            </div>
-            <p class="text-xs text-center text-gray-300 font-medium">Orbit</p>
-          </div>
-          <div class="template-card glass-light rounded-xl p-3" onclick="loadTemplate('dna')">
-            <div class="h-20 flex items-center justify-center mb-2">
-              <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 10 Q30 30 20 50" fill="none" stroke="#6c63ff" stroke-width="3" stroke-linecap="round">
-                  <animate attributeName="d" values="M20 10 Q30 30 20 50;M20 10 Q10 30 20 50;M20 10 Q30 30 20 50" dur="2s" repeatCount="indefinite"/>
-                </path>
-                <path d="M40 10 Q30 30 40 50" fill="none" stroke="#00e5ff" stroke-width="3" stroke-linecap="round">
-                  <animate attributeName="d" values="M40 10 Q30 30 40 50;M40 10 Q50 30 40 50;M40 10 Q30 30 40 50" dur="2s" repeatCount="indefinite"/>
-                </path>
-              </svg>
-            </div>
-            <p class="text-xs text-center text-gray-300 font-medium">DNA Wave</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass rounded-2xl p-5">
-      <p class="section-title"><i class="fa-solid fa-sliders mr-2"></i>Export Settings</p>
-
-      <div class="space-y-4">
-        <div>
-          <label class="text-xs text-gray-400 font-medium block mb-2">Resolution</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button class="res-btn glass-light rounded-lg py-2 text-xs font-semibold border-2 border-transparent text-gray-300 hover:border-purple-600 transition-all" onclick="setResolution(480,270,'480p')" data-res="480p">480p</button>
-            <button class="res-btn glass-light rounded-lg py-2 text-xs font-semibold border-2 border-purple-600 text-purple-300" onclick="setResolution(1280,720,'720p')" data-res="720p">720p HD</button>
-            <button class="res-btn glass-light rounded-lg py-2 text-xs font-semibold border-2 border-transparent text-gray-300 hover:border-purple-600 transition-all" onclick="setResolution(1920,1080,'1080p')" data-res="1080p">1080p FHD</button>
-          </div>
-          <div class="grid grid-cols-2 gap-2 mt-2">
-            <div>
-              <label class="text-xs text-gray-500 block mb-1">Width (px)</label>
-              <input type="number" id="customWidth" value="1280" min="100" max="3840" class="w-full bg-black/30 border border-purple-900/50 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-purple-500" oninput="updateResFromInputs()" />
-            </div>
-            <div>
-              <label class="text-xs text-gray-500 block mb-1">Height (px)</label>
-              <input type="number" id="customHeight" value="720" min="100" max="2160" class="w-full bg-black/30 border border-purple-900/50 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-purple-500" oninput="updateResFromInputs()" />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="flex justify-between mb-2">
-            <label class="text-xs text-gray-400 font-medium">Duration</label>
-            <span id="durationVal" class="text-xs text-purple-300 font-bold">5s</span>
-          </div>
-          <input type="range" id="durationSlider" min="1" max="60" value="5" oninput="document.getElementById('durationVal').textContent=this.value+'s'; updateStats()" />
-          <div class="flex justify-between text-xs text-gray-600 mt-1">
-            <span>1s</span><span>30s</span><span>60s</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="flex justify-between mb-2">
-            <label class="text-xs text-gray-400 font-medium">Frame Rate</label>
-            <span id="fpsVal" class="text-xs text-purple-300 font-bold">30 FPS</span>
-          </div>
-          <input type="range" id="fpsSlider" min="10" max="60" value="30" step="5" oninput="document.getElementById('fpsVal').textContent=this.value+' FPS'; updateStats()" />
-          <div class="flex justify-between text-xs text-gray-600 mt-1">
-            <span>10fps</span><span>30fps</span><span>60fps</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="flex justify-between mb-2">
-            <label class="text-xs text-gray-400 font-medium">Quality / Bitrate</label>
-            <span id="qualityVal" class="text-xs text-purple-300 font-bold">High</span>
-          </div>
-          <input type="range" id="qualitySlider" min="1" max="5" value="4" oninput="updateQualityLabel(this.value)" />
-          <div class="flex justify-between text-xs text-gray-600 mt-1">
-            <span>Low</span><span>Medium</span><span>Ultra</span>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <label class="text-xs text-gray-400 font-medium">Background</label>
-          <div class="flex items-center gap-3">
-            <button class="bg-btn w-7 h-7 rounded-lg bg-transparent border-2 border-dashed border-gray-600 text-xs" onclick="setBg('transparent')" title="Transparent" data-bg="transparent">
-              <i class="fa-solid fa-xmark text-gray-400 text-xs"></i>
-            </button>
-            <button class="bg-btn w-7 h-7 rounded-lg bg-white border-2 border-transparent" onclick="setBg('#ffffff')" data-bg="#ffffff"></button>
-            <button class="bg-btn w-7 h-7 rounded-lg border-2 border-purple-700/60" style="background:#0a0a1a" onclick="setBg('#0a0a1a')" data-bg="#0a0a1a"></button>
-            <input type="color" id="bgColorPicker" value="#0a0a1a" class="w-7 h-7 rounded-lg border border-purple-900/50 cursor-pointer" style="padding:1px" onchange="setBg(this.value)" title="Custom color" />
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <label class="text-xs text-gray-400 font-medium">Output Format</label>
-          <select id="formatSelect" onchange="updateFormatInfo()">
-            <option value="video/webm;codecs=vp9">WebM (VP9)</option>
-            <option value="video/webm;codecs=vp8">WebM (VP8)</option>
-            <option value="video/webm">WebM (Auto)</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass rounded-2xl p-5">
-      <p class="section-title"><i class="fa-solid fa-chart-bar mr-2"></i>Estimated Output</p>
-      <div class="grid grid-cols-3 gap-2">
-        <div class="stat-card">
-          <p class="text-xl font-black text-purple-300" id="statFrames">150</p>
-          <p class="text-xs text-gray-500 mt-0.5">Frames</p>
-        </div>
-        <div class="stat-card">
-          <p class="text-xl font-black text-cyan-300" id="statSize">~4.5MB</p>
-          <p class="text-xs text-gray-500 mt-0.5">Est. Size</p>
-        </div>
-        <div class="stat-card">
-          <p class="text-xl font-black text-pink-300" id="statTime">5.0s</p>
-          <p class="text-xs text-gray-500 mt-0.5">Duration</p>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="xl:col-span-2 flex flex-col gap-5">
-
-    <div class="glass rounded-2xl p-5">
-      <div class="flex items-center justify-between mb-4">
-        <p class="section-title mb-0"><i class="fa-solid fa-eye mr-2"></i>Live Preview</p>
-        <div class="flex items-center gap-2">
-          <div id="previewStatus" class="flex items-center gap-2 text-xs text-gray-500">
-            <i class="fa-regular fa-circle-dot"></i>No SVG loaded
-          </div>
-          <button onclick="resetPreview()" class="text-xs glass-light px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition-colors">
-            <i class="fa-solid fa-arrow-rotate-left mr-1"></i>Reset
-          </button>
-        </div>
-      </div>
-
-      <div id="svgPreviewWrap" class="relative rounded-xl overflow-hidden bg-black/40 border border-purple-900/30 flex items-center justify-center" style="min-height:320px;">
-        <div id="previewPlaceholder" class="text-center">
-          <div class="flex justify-center gap-1 mb-4">
-            <div class="wave-bar h-8" style="animation-delay:0s"></div>
-            <div class="wave-bar h-12" style="animation-delay:0.1s"></div>
-            <div class="wave-bar h-6" style="animation-delay:0.2s"></div>
-            <div class="wave-bar h-16" style="animation-delay:0.3s"></div>
-            <div class="wave-bar h-8" style="animation-delay:0.4s"></div>
-            <div class="wave-bar h-12" style="animation-delay:0.5s"></div>
-            <div class="wave-bar h-6" style="animation-delay:0.6s"></div>
-            <div class="wave-bar h-10" style="animation-delay:0.7s"></div>
-          </div>
-          <p class="text-gray-500 text-sm">Load an SVG to see live preview</p>
-          <p class="text-gray-600 text-xs mt-1">Animations will play here before conversion</p>
-        </div>
-        <div id="svgLiveDisplay" class="w-full h-full hidden flex items-center justify-center p-4"></div>
-      </div>
-
-      <div class="mt-4">
-        <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-          <span>Timeline</span>
-          <span id="timelineTime">0:00 / 0:00</span>
-        </div>
-        <div class="timeline-track">
-          <div class="timeline-fill" id="timelineFill" style="width:0%"></div>
-          <div class="timeline-cursor" id="timelineCursor" style="left:0%"></div>
-        </div>
-        <div class="flex justify-between text-xs text-gray-600 mt-1">
-          <span>0s</span>
-          <span id="timelineMid">2.5s</span>
-          <span id="timelineEnd">5s</span>
-        </div>
-      </div>
-
-      <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button id="convertBtn" onclick="startConversion()" disabled
-          class="grad-btn rounded-xl py-4 text-white font-bold flex items-center justify-center gap-3 text-base disabled:opacity-40 disabled:cursor-not-allowed shadow-lg relative z-10">
-          <i class="fa-solid fa-video"></i>
-          <span>Convert to Video</span>
-        </button>
-        <button id="previewBtn" onclick="startLivePreview()" disabled
-          class="btn-accent grad-btn rounded-xl py-4 text-white font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-          <i class="fa-solid fa-play"></i>
-          <span>Preview Animation</span>
-        </button>
-      </div>
-    </div>
-
-    <div id="conversionPanel" class="glass rounded-2xl p-5 hidden">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <span class="pulse-dot"></span>
-          <p class="font-bold text-white">Converting SVG to Video...</p>
-        </div>
-        <button onclick="cancelConversion()" class="text-xs text-red-400 hover:text-red-300 glass-light px-3 py-1.5 rounded-lg">
-          <i class="fa-solid fa-stop mr-1"></i>Cancel
-        </button>
-      </div>
-
-      <div class="progress-bar-wrap mb-3">
-        <div class="progress-bar-fill" id="convProgress" style="width:0%"></div>
-      </div>
-
-      <div class="flex justify-between items-center">
-        <div class="text-sm text-gray-400" id="convStatus">Initializing renderer...</div>
-        <div class="text-sm font-bold text-purple-300" id="convPercent">0%</div>
-      </div>
-
-      <p class="text-xs text-yellow-400 mt-2 text-center bg-yellow-900/20 py-2 rounded-lg border border-yellow-700/30">
-        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Do not minimize or switch tabs during conversion to prevent dropped frames.
-      </p>
-
-      <div class="grid grid-cols-3 gap-3 mt-4">
-        <div class="stat-card">
-          <p class="text-sm font-bold text-white" id="convFrameCount">0</p>
-          <p class="text-xs text-gray-500">Frames Rendered</p>
-        </div>
-        <div class="stat-card">
-          <p class="text-sm font-bold text-white" id="convElapsed">0s</p>
-          <p class="text-xs text-gray-500">Elapsed</p>
-        </div>
-        <div class="stat-card">
-          <p class="text-sm font-bold text-white" id="convETA">--</p>
-          <p class="text-xs text-gray-500">ETA</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="outputPanel" class="glass rounded-2xl p-5 hidden">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-green-900/40 border border-green-700/40 flex items-center justify-center">
-            <i class="fa-solid fa-circle-check text-green-400"></i>
-          </div>
-          <p class="font-bold text-white">Conversion Complete!</p>
-        </div>
-        <span class="badge bg-green-900/60 text-green-300 border border-green-700/50">SUCCESS</span>
-      </div>
-
-      <div class="relative rounded-xl overflow-hidden bg-black mb-4">
-        <video id="outputVideo" controls loop class="w-full" style="max-height:400px;"></video>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <div class="stat-card">
-          <p class="text-sm font-bold text-purple-300" id="outDuration">--</p>
-          <p class="text-xs text-gray-500 mt-0.5">Duration</p>
-        </div>
-        <div class="stat-card">
-          <p class="text-sm font-bold text-cyan-300" id="outResolution">--</p>
-          <p class="text-xs text-gray-500 mt-0.5">Resolution</p>
-        </div>
-        <div class="stat-card">
-          <p class="text-sm font-bold text-pink-300" id="outFileSize">--</p>
-          <p class="text-xs text-gray-500 mt-0.5">File Size</p>
-        </div>
-        <div class="stat-card">
-          <p class="text-sm font-bold text-yellow-300" id="outFPS">--</p>
-          <p class="text-xs text-gray-500 mt-0.5">Frame Rate</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <button id="downloadBtn" onclick="downloadVideo()" class="btn-success grad-btn rounded-xl py-3 text-white font-bold flex items-center justify-center gap-2">
-          <i class="fa-solid fa-download"></i>Download Video
-        </button>
-        <button onclick="shareOrCopy()" class="glass-light rounded-xl py-3 text-gray-300 font-semibold flex items-center justify-center gap-2 hover:text-white transition-colors">
-          <i class="fa-solid fa-share-nodes"></i>Copy URL
-        </button>
-      </div>
-
-      <button onclick="convertAnother()" class="w-full mt-3 glass-light rounded-xl py-2.5 text-sm text-gray-400 hover:text-white transition-colors">
-        <i class="fa-solid fa-plus mr-2"></i>Convert Another SVG
-      </button>
-    </div>
-
-    <div id="featuresPanel" class="glass rounded-2xl p-5">
-      <p class="section-title"><i class="fa-solid fa-info-circle mr-2"></i>How It Works</p>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="glass-light rounded-xl p-4 hover-glow transition-all">
-          <div class="w-10 h-10 rounded-xl bg-purple-900/50 flex items-center justify-center mb-3">
-            <i class="fa-solid fa-file-code text-purple-400 text-lg"></i>
-          </div>
-          <p class="text-sm font-bold text-white mb-1">1. Load SVG</p>
-          <p class="text-xs text-gray-500">Upload an .svg file, paste SVG code, or pick a built-in animation template.</p>
-        </div>
-        <div class="glass-light rounded-xl p-4 hover-glow transition-all">
-          <div class="w-10 h-10 rounded-xl bg-cyan-900/50 flex items-center justify-center mb-3">
-            <i class="fa-solid fa-gears text-cyan-400 text-lg"></i>
-          </div>
-          <p class="text-sm font-bold text-white mb-1">2. Configure</p>
-          <p class="text-xs text-gray-500">Set resolution, duration, FPS, quality, and background for your video output.</p>
-        </div>
-        <div class="glass-light rounded-xl p-4 hover-glow transition-all">
-          <div class="w-10 h-10 rounded-xl bg-pink-900/50 flex items-center justify-center mb-3">
-            <i class="fa-solid fa-download text-pink-400 text-lg"></i>
-          </div>
-          <p class="text-sm font-bold text-white mb-1">3. Export</p>
-          <p class="text-xs text-gray-500">Canvas renders each frame; MediaRecorder captures & packages as WebM video.</p>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</main>
-
-<canvas id="hiddenCanvas"></canvas>
-
-<div class="toast glass" id="toast">
-  <i id="toastIcon" class="fa-solid fa-circle-check text-green-400 text-xl"></i>
-  <div>
-    <p id="toastTitle" class="font-bold text-sm text-white">Success</p>
-    <p id="toastMsg" class="text-xs text-gray-300 mt-0.5">Operation completed.</p>
-  </div>
-</div>
-
-<script>
-// ============================================================
-// STATE
-// ============================================================
-let svgContent = '';
-let svgDataURL = '';
-let videoBlob = null;
-let videoURL = null;
-let mediaRecorder = null;
-let recordingActive = false;
-let startTime = null;
-let elapsedInterval = null;
-let timelineRAF = null;
-
-const state = {
-  width: 1280,
-  height: 720,
-  duration: 5,
-  fps: 30,
-  quality: 4,
-  bg: '#0a0a1a',
-  format: 'video/webm;codecs=vp9'
-};
-
-// Quality → bitrate mapping (bps)
-const qualityBitrates = [500000, 1500000, 4000000, 8000000, 16000000];
-const qualityLabels   = ['Low', 'Medium', 'High', 'Very High', 'Ultra'];
-
-// ============================================================
-// PARTICLES
-// ============================================================
-(function initParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = Math.random() * 5 + 2;
-    const colors = ['rgba(108,99,255,0.4)', 'rgba(0,229,255,0.3)', 'rgba(245,0,87,0.3)', 'rgba(139,92,246,0.4)'];
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${Math.random()*100}%;
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      animation-duration:${8+Math.random()*15}s;
-      animation-delay:${Math.random()*10}s;
-    `;
-    container.appendChild(p);
-  }
-})();
-
-// ============================================================
-// TABS & UI 
-// ============================================================
-function switchTab(tab) {
-  ['upload','code','template'].forEach(t => {
-    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
-  });
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    const isActive = btn.dataset.tab === tab;
-    btn.classList.toggle('active', isActive);
-    btn.classList.toggle('text-gray-400', !isActive);
-  });
-}
-
-const dropZone = document.getElementById('dropZone');
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && (file.type === 'image/svg+xml' || file.name.endsWith('.svg'))) {
-    processFile(file);
-  } else {
-    showToast('error', 'Invalid File', 'Please drop a valid .svg file.');
-  }
-});
-
-function handleFileInput(input) { if (input.files[0]) processFile(input.files[0]); }
-
-function processFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    svgContent = e.target.result;
-    showFileInfo(file.name, file.size);
-    renderSVGPreview(svgContent);
-    enableButtons();
-    showToast('success', 'SVG Loaded!', `"${file.name}" ready for conversion.`);
-  };
-  reader.readAsText(file);
-}
-
-function showFileInfo(name, size) {
-  document.getElementById('dropIconArea').classList.add('hidden');
-  document.getElementById('fileInfo').classList.remove('hidden');
-  document.getElementById('fileName').textContent = name;
-  document.getElementById('fileSize').textContent = formatBytes(size) + ' · SVG Animation';
-  dropZone.classList.add('has-file');
-}
-
-function formatBytes(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-  return (b/1048576).toFixed(1) + ' MB';
-}
-
-const templates = {
-  spinner: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><circle cx="100" cy="100" r="60" fill="none" stroke="#1a1a35" stroke-width="12"/><circle cx="100" cy="100" r="60" fill="none" stroke="url(#sg)" stroke-width="12" stroke-dasharray="200 180" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="1.2s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="35" fill="none" stroke="#6c63ff" stroke-width="6" stroke-dasharray="80 140" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="0.8s" repeatCount="indefinite"/></circle><defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#00e5ff"/></linearGradient></defs></svg>`,
-  pulse: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><circle cx="100" cy="100" r="10" fill="#f50057" opacity="0.2"><animate attributeName="r" values="10;80;10" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="10" fill="#f50057" opacity="0.3"><animate attributeName="r" values="10;55;10" dur="2s" begin="0.3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="2s" begin="0.3s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="25" fill="#f50057"><animate attributeName="r" values="22;28;22" dur="1s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="14" fill="white" opacity="0.9"/></svg>`,
-  morph: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><rect x="65" y="65" width="70" height="70" fill="none" stroke="#00e5ff" stroke-width="3" rx="8"><animate attributeName="rx" values="8;35;8" dur="3s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="6s" repeatCount="indefinite"/></rect><rect x="50" y="50" width="100" height="100" fill="url(#mg)" opacity="0.7" rx="10"><animate attributeName="rx" values="10;50;10" dur="3s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="4s" repeatCount="indefinite"/></rect><defs><linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6c63ff" stop-opacity="0.8"/><stop offset="100%" stop-color="#00e5ff" stop-opacity="0.5"/><animate attributeName="x2" values="100%;0%;100%" dur="4s" repeatCount="indefinite"/></linearGradient></defs></svg>`,
-  wave: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><g transform="translate(0, 100)"><rect x="20" y="-15" width="16" height="30" fill="#6c63ff" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0s"/></rect><rect x="44" y="-15" width="16" height="30" fill="#8b5cf6" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.15s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.15s"/></rect><rect x="68" y="-15" width="16" height="30" fill="#00e5ff" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.3s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.3s"/></rect><rect x="92" y="-15" width="16" height="30" fill="#00b8d4" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.45s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.45s"/></rect><rect x="116" y="-15" width="16" height="30" fill="#8b5cf6" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.6s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.6s"/></rect><rect x="140" y="-15" width="16" height="30" fill="#6c63ff" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.75s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.75s"/></rect><rect x="164" y="-15" width="16" height="30" fill="#a78bfa" rx="8"><animate attributeName="height" values="10;80;10" dur="1s" repeatCount="indefinite" begin="0.9s"/><animate attributeName="y" values="-5;-40;-5" dur="1s" repeatCount="indefinite" begin="0.9s"/></rect></g></svg>`,
-  orbit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><circle cx="100" cy="100" r="50" fill="none" stroke="rgba(108,99,255,0.15)" stroke-width="1" stroke-dasharray="4 4"/><circle cx="100" cy="100" r="30" fill="none" stroke="rgba(0,229,255,0.15)" stroke-width="1" stroke-dasharray="4 4"/><circle cx="100" cy="100" r="18" fill="#f50057" opacity="0.9"><animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="8" fill="white"/><g><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="3s" repeatCount="indefinite"/><circle cx="150" cy="100" r="10" fill="#6c63ff"/></g><g><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="1.8s" repeatCount="indefinite"/><circle cx="130" cy="100" r="7" fill="#00e5ff"/></g><g><animateTransform attributeName="transform" type="rotate" from="120 100 100" to="480 100 100" dur="5s" repeatCount="indefinite"/><circle cx="150" cy="100" r="5" fill="#f50057" opacity="0.7"/></g></svg>`,
-  dna: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" fill="#0a0a1a"/><path fill="none" stroke="#6c63ff" stroke-width="3" stroke-linecap="round"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M60 20 C80 60,120 60,140 100 C120 140,80 140,60 180; M60 20 C40 60,160 60,140 100 C160 140,40 140,60 180; M60 20 C80 60,120 60,140 100 C120 140,80 140,60 180"/></path><path fill="none" stroke="#00e5ff" stroke-width="3" stroke-linecap="round"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M140 20 C120 60,80 60,60 100 C80 140,120 140,140 180; M140 20 C160 60,40 60,60 100 C40 140,160 140,140 180; M140 20 C120 60,80 60,60 100 C80 140,120 140,140 180"/></path><g><line x1="65" y1="60" x2="135" y2="60" stroke="rgba(108,99,255,0.5)" stroke-width="2"/><line x1="60" y1="100" x2="140" y2="100" stroke="rgba(0,229,255,0.5)" stroke-width="2"/><line x1="65" y1="140" x2="135" y2="140" stroke="rgba(108,99,255,0.5)" stroke-width="2"/></g></svg>`
-};
-
-function loadTemplate(name) {
-  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  svgContent = templates[name];
-  renderSVGPreview(svgContent);
-  enableButtons();
-  showToast('success', 'Template Loaded!', `"${name}" animation template applied.`);
-}
-
-function loadSVGFromCode() {
-  const code = document.getElementById('svgCodeEditor').value.trim();
-  if (!code) { showToast('error', 'Empty Input', 'Please paste SVG code first.'); return; }
-  if (!code.includes('<svg')) { showToast('error', 'Invalid SVG', 'Code must contain a valid SVG element.'); return; }
-  svgContent = code;
-  renderSVGPreview(svgContent);
-  enableButtons();
-  showToast('success', 'SVG Code Loaded!', 'Your SVG code is ready for conversion.');
-}
-
-function renderSVGPreview(svg) {
-  const display = document.getElementById('svgLiveDisplay');
-  const placeholder = document.getElementById('previewPlaceholder');
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(svg, 'image/svg+xml');
-  const svgEl = doc.documentElement;
-
-  display.innerHTML = '';
-  const cloned = svgEl.cloneNode(true);
-  cloned.style.maxWidth = '100%';
-  cloned.style.maxHeight = '380px';
-  cloned.style.borderRadius = '8px';
-  display.appendChild(cloned);
-
-  placeholder.classList.add('hidden');
-  display.classList.remove('hidden');
-  display.classList.add('flex');
-
-  const vb = svgEl.getAttribute('viewBox') || `0 0 ${svgEl.getAttribute('width')||200} ${svgEl.getAttribute('height')||200}`;
-  document.getElementById('previewStatus').innerHTML = `<i class="fa-solid fa-circle text-green-400" style="font-size:8px"></i><span class="text-green-400">Live · ${vb}</span>`;
-
-  const dur = parseInt(document.getElementById('durationSlider').value);
-  document.getElementById('timelineEnd').textContent = dur + 's';
-  document.getElementById('timelineMid').textContent = (dur/2).toFixed(1) + 's';
-  document.getElementById('timelineTime').textContent = `0:00 / 0:${String(dur).padStart(2,'0')}`;
-
-  startTimelineAnimation(dur);
-  updateStats();
-}
-
-function startTimelineAnimation(dur) {
-  cancelAnimationFrame(timelineRAF);
-  const startT = performance.now();
-  const durMs = dur * 1000;
-
-  function tick(now) {
-    const elapsed = (now - startT) % durMs;
-    const pct = (elapsed / durMs) * 100;
-    document.getElementById('timelineFill').style.width = pct + '%';
-    document.getElementById('timelineCursor').style.left = pct + '%';
-    const secs = elapsed / 1000;
-    const m = Math.floor(secs / 60);
-    const s = (secs % 60).toFixed(1);
-    document.getElementById('timelineTime').textContent = `${m}:${String(Math.floor(secs)).padStart(2,'0')} / 0:${String(dur).padStart(2,'0')}`;
-    timelineRAF = requestAnimationFrame(tick);
-  }
-  timelineRAF = requestAnimationFrame(tick);
-}
-
-function startLivePreview() {
-  if (!svgContent) return;
-  renderSVGPreview(svgContent);
-  showToast('info', 'Preview Started', 'Animation is playing in the preview panel.');
-}
-
-function resetPreview() {
-  svgContent = '';
-  document.getElementById('svgLiveDisplay').classList.add('hidden');
-  document.getElementById('previewPlaceholder').classList.remove('hidden');
-  document.getElementById('previewStatus').innerHTML = `<i class="fa-regular fa-circle-dot"></i>No SVG loaded`;
-  document.getElementById('dropIconArea').classList.remove('hidden');
-  document.getElementById('fileInfo').classList.add('hidden');
-  dropZone.classList.remove('has-file');
-  document.getElementById('fileInput').value = '';
-  document.getElementById('svgCodeEditor').value = '';
-  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-  cancelAnimationFrame(timelineRAF);
-  document.getElementById('timelineFill').style.width = '0%';
-  document.getElementById('timelineCursor').style.left = '0%';
-  disableButtons();
-}
-
-function setResolution(w, h, label) {
-  state.width = w;
-  state.height = h;
-  document.getElementById('customWidth').value = w;
-  document.getElementById('customHeight').value = h;
-  document.querySelectorAll('.res-btn').forEach(btn => {
-    const active = btn.dataset.res === label;
-    btn.classList.toggle('border-purple-600', active);
-    btn.classList.toggle('text-purple-300', active);
-    btn.classList.toggle('border-transparent', !active);
-    btn.classList.toggle('text-gray-300', !active);
-  });
-  updateStats();
-}
-
-function updateResFromInputs() {
-  state.width  = parseInt(document.getElementById('customWidth').value)  || 1280;
-  state.height = parseInt(document.getElementById('customHeight').value) || 720;
-  document.querySelectorAll('.res-btn').forEach(btn => {
-    btn.classList.remove('border-purple-600','text-purple-300');
-    btn.classList.add('border-transparent','text-gray-300');
-  });
-  updateStats();
-}
-
-function updateQualityLabel(v) {
-  state.quality = parseInt(v);
-  document.getElementById('qualityVal').textContent = qualityLabels[state.quality - 1];
-  updateStats();
-}
-
-function setBg(color) {
-  state.bg = color;
-  document.querySelectorAll('.bg-btn').forEach(btn => {
-    btn.style.outline = btn.dataset.bg === color ? '2px solid #6c63ff' : 'none';
-  });
-}
-
-function updateFormatInfo() { state.format = document.getElementById('formatSelect').value; }
-
-function updateStats() {
-  const dur = parseInt(document.getElementById('durationSlider').value);
-  const fps = parseInt(document.getElementById('fpsSlider').value);
-  const frames = dur * fps;
-  const bitrate = qualityBitrates[state.quality - 1];
-  const sizeMB = ((bitrate * dur) / 8 / 1048576).toFixed(1);
-  document.getElementById('statFrames').textContent = frames;
-  document.getElementById('statSize').textContent = '~' + sizeMB + 'MB';
-  document.getElementById('statTime').textContent = dur + '.0s';
-  document.getElementById('timelineEnd').textContent = dur + 's';
-  document.getElementById('timelineMid').textContent = (dur/2).toFixed(1) + 's';
-}
-
-function enableButtons() {
-  document.getElementById('convertBtn').disabled = false;
-  document.getElementById('previewBtn').disabled = false;
-}
-function disableButtons() {
-  document.getElementById('convertBtn').disabled = true;
-  document.getElementById('previewBtn').disabled = true;
-}
-
-// ============================================================
-// CONVERSION ENGINE (FIXED)
-// ============================================================
-let conversionCancelled = false;
-
-async function startConversion() {
-  if (!svgContent) { showToast('error', 'No SVG', 'Please load an SVG first.'); return; }
-
-  conversionCancelled = false;
-  const dur     = parseInt(document.getElementById('durationSlider').value);
-  const fps     = parseInt(document.getElementById('fpsSlider').value);
-  const w       = parseInt(document.getElementById('customWidth').value)  || 1280;
-  const h       = parseInt(document.getElementById('customHeight').value) || 720;
-  const bitrate = qualityBitrates[state.quality - 1];
-  const format  = document.getElementById('formatSelect').value;
-
-  document.getElementById('conversionPanel').classList.remove('hidden');
-  document.getElementById('outputPanel').classList.add('hidden');
-  document.getElementById('featuresPanel').classList.add('hidden');
-  document.getElementById('convertBtn').disabled = true;
-
-  const canvas = document.getElementById('hiddenCanvas');
-  canvas.width  = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-
-  let mimeType = format;
-  if (!MediaRecorder.isTypeSupported(mimeType)) {
-    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
-    else if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
-    else { showToast('error', 'Unsupported', 'MediaRecorder not supported.'); return; }
-  }
-
-  const chunks = [];
-  
-  // FIX 1: Place the SVG heavily visible in the render tree but hidden behind other elements.
-  // This prevents Chrome/Firefox from turning off the internal animation clock.
-  const imgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
-  const img = new Image();
-  img.style.position = 'fixed';
-  img.style.top = '0';
-  img.style.left = '0';
-  img.style.width = '100px'; 
-  img.style.height = '100px';
-  img.style.opacity = '1';       // MUST be 1 so the browser renders it
-  img.style.zIndex = '-9999';    // Hide it behind the app UI
-  document.body.appendChild(img);
-
-  const totalFrames = dur * fps;
-  recordingActive = true;
-
-  img.onload = () => {
-    
-    // FIX 2: Draw an initial frame before initializing the canvas stream
-    // to ensure the stream tracks are valid before recording starts.
-    if (state.bg === 'transparent') {
-      ctx.clearRect(0, 0, w, h);
-    } else {
-      ctx.fillStyle = state.bg;
-      ctx.fillRect(0, 0, w, h);
-    }
-    ctx.drawImage(img, 0, 0, w, h);
-
-    const stream = canvas.captureStream(fps);
-    mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
-
-    mediaRecorder.ondataavailable = e => {
-      if (e.data && e.data.size > 0) chunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = () => {
-      if (conversionCancelled) { resetConversionUI(); return; }
-      
-      const rawBlob = new Blob(chunks, { type: mimeType });
-      
-      // FIX 3: Desktop video players get confused by "live stream" WebM files 
-      // because they lack a duration header. We patch the file so it downloads flawlessly.
-      if (mimeType.includes('webm') && window.ysFixWebmDuration) {
-        ysFixWebmDuration(rawBlob, dur * 1000, function(fixedBlob) {
-          if (videoURL) URL.revokeObjectURL(videoURL);
-          videoBlob = fixedBlob;
-          videoURL = URL.createObjectURL(fixedBlob);
-          finishConversion(videoURL, fixedBlob, w, h, dur, fps);
-        });
-      } else {
-        // Fallback
-        if (videoURL) URL.revokeObjectURL(videoURL);
-        videoBlob = rawBlob;
-        videoURL = URL.createObjectURL(rawBlob);
-        finishConversion(videoURL, rawBlob, w, h, dur, fps);
-      }
-    };
-
-    startTime = Date.now();
-    elapsedInterval = setInterval(updateElapsed, 500);
-    
-    // Start with a timeslice to force chunk flushing
-    mediaRecorder.start(250);
-
-    updateConvStatus('Rendering frames...', 0, 0, totalFrames);
-
-    function renderFrame() {
-      if (!recordingActive || conversionCancelled) {
-        clearInterval(elapsedInterval);
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        if (img.parentNode) img.parentNode.removeChild(img);
-        return;
-      }
-
-      const elapsed = Date.now() - startTime;
-      const currentFrame = Math.floor((elapsed / 1000) * fps);
-
-      if (elapsed >= (dur * 1000)) {
-        clearInterval(elapsedInterval);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Studio RJ | Dynamic Duration Renderer</title>
+    <script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
+    <style>
+        :root {
+            --bg-base: #020617;
+            --bg-panel: #0f172a;
+            --bg-input: #1e293b;
+            --accent: #0ea5e9;
+            --accent-glow: rgba(14, 165, 233, 0.5);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.4);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
         
-        // Let the final frames flush into the recorder gracefully
-        mediaRecorder.requestData(); 
-        setTimeout(() => {
-          if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-          if (img.parentNode) img.parentNode.removeChild(img);
-        }, 100);
-        return;
-      }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-      // Draw Background
-      if (state.bg === 'transparent') {
-        ctx.clearRect(0, 0, w, h);
-      } else {
-        ctx.fillStyle = state.bg;
-        ctx.fillRect(0, 0, w, h);
-      }
+        .subtitle { color: var(--text-dim); font-size: 1rem; }
 
-      // Draw active SVG image
-      ctx.drawImage(img, 0, 0, w, h);
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            width: 100%;
+            max-width: 1600px;
+            margin-bottom: 25px;
+        }
 
-      // UI
-      const pct = Math.min(100, Math.round((elapsed / (dur * 1000)) * 100));
-      updateConvStatus('Rendering frames...', pct, Math.min(currentFrame, totalFrames), totalFrames);
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
 
-      requestAnimationFrame(renderFrame);
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-live {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0% { box-shadow: 0 0 0 0 var(--success-glow); }
+            70% { box-shadow: 0 0 0 5px rgba(0,0,0,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+        }
+
+        .aspect-16-9 {
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            border-radius: 8px;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: var(--bg-base); }
+        textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            color: #34d399;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            border: none;
+            padding: 15px;
+            resize: none;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .preview-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        .preview-box svg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .control-deck {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px 30px;
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .settings-group { 
+            display: flex; 
+            align-items: flex-end; 
+            gap: 25px; 
+            flex-wrap: wrap;
+        }
+
+        .setting-item { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        
+        .setting-item label { 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            color: var(--text-dim); 
+            text-transform: uppercase; 
+        }
+
+        select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: border 0.2s;
+            min-width: 180px;
+        }
+        
+        select:focus { border-color: var(--accent); }
+
+        /* ── Duration indicator: shows the currently selected seconds live ── */
+        .duration-display {
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+            user-select: none;
+            text-align: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: max-content;
+            transition: all 0.3s;
+        }
+
+        .btn-render {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 15px 35px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px var(--accent-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            flex-shrink: 0;
+            align-self: flex-end;
+            height: 47px;
+        }
+
+        .btn-render:hover { transform: translateY(-2px); box-shadow: 0 12px 25px var(--accent-glow); }
+        .btn-render:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .render-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .render-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            width: 450px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+        }
+
+        .render-title { font-size: 1.2rem; font-weight: 800; color: var(--accent); margin-bottom: 10px; }
+        .render-subtitle { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 30px; }
+
+        .progress-bar-container {
+            width: 100%; height: 12px;
+            background: var(--bg-base);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.1s linear;
+        }
+
+        /* Live countdown shown inside the overlay */
+        .render-timer {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            margin-top: 10px;
+        }
+
+        #downloadArea { margin-top: 25px; text-align: center; }
+        
+        .download-btn {
+            background: var(--success);
+            color: #020617;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 16px;
+            box-shadow: 0 8px 25px var(--success-glow);
+            transition: all 0.3s;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+        .download-btn:hover { background: #34d399; transform: translateY(-2px); }
+
+        @media (max-width: 1000px) {
+            .workspace { grid-template-columns: 1fr; }
+            .control-deck { flex-direction: column; align-items: stretch; }
+            .btn-render { width: 100%; margin-top: 10px; }
+            .settings-group { flex-direction: column; align-items: stretch; gap: 15px; }
+            .duration-display { width: 100%; }
+        }
+
+        #renderCanvas { display: none; }
+        #hiddenEngineBox { position: fixed; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; opacity: 0.01; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SVG Studio - Papir Dol</h1>
+        <p class="subtitle">Created by Jubayer Islam | Version 3.0 — Dynamic Duration Fixed</p>
+    </div>
+
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><span>💻</span> Vector Source Code</div>
+                <div class="badge-live">LIVE SYNC</div>
+            </div>
+            <div class="aspect-16-9">
+                <textarea id="svgInput" spellcheck="false" placeholder="Paste your <svg> here..."><svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="#020617"/>
+  <style>
+    .neon-path {
+      fill: none;
+      stroke: #0ea5e9;
+      stroke-width: 8;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw 6s infinite ease-in-out; 
     }
+    .pulse-core {
+      fill: #10b981;
+      transform-origin: center;
+      animation: beat 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes draw {
+      0% { stroke-dashoffset: 1000; stroke: #0ea5e9; }
+      50% { stroke-dashoffset: 0; stroke: #10b981; }
+      100% { stroke-dashoffset: 1000; stroke: #0ea5e9; }
+    }
+    @keyframes beat {
+      0% { transform: scale(0.8) rotate(0deg); }
+      50% { transform: scale(1.5) rotate(180deg); }
+      100% { transform: scale(0.8) rotate(360deg); }
+    }
+  </style>
+  <g transform="translate(960, 540)">
+    <circle class="neon-path" cx="0" cy="0" r="300" />
+    <rect class="pulse-core" x="-75" y="-75" width="150" height="150" rx="30" />
+  </g>
+</svg></textarea>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><span>👁️</span> Cinematic Preview</div>
+            </div>
+            <div class="aspect-16-9 preview-box" id="previewArea"></div>
+        </div>
+    </div>
 
-    requestAnimationFrame(renderFrame);
-  };
+    <div class="control-deck">
+        <div class="settings-group">
 
-  img.onerror = () => {
-    showToast('error', 'Render Error', 'Could not render the SVG to canvas.');
-    resetConversionUI();
-    if (img.parentNode) img.parentNode.removeChild(img);
-  };
+            <div class="setting-item">
+                <label>Resolution Quality</label>
+                <select id="videoResolution">
+                    <option value="3840x2160">4K Ultra HD (2160p)</option>
+                    <option value="2560x1440">2K Quad HD (1440p)</option>
+                    <option value="1920x1080" selected>Full HD (1080p)</option>
+                </select>
+            </div>
 
-  img.src = imgUrl;
-}
+            <!-- ✅ FIX 1: Real dropdown for duration instead of a locked label -->
+            <div class="setting-item">
+                <label>Video Length</label>
+                <select id="videoDuration">
+                    <option value="3">3 Seconds</option>
+                    <option value="5">5 Seconds</option>
+                    <option value="6" selected>6 Seconds</option>
+                    <option value="8">8 Seconds</option>
+                    <option value="10">10 Seconds</option>
+                    <option value="15">15 Seconds</option>
+                    <option value="20">20 Seconds</option>
+                    <option value="30">30 Seconds</option>
+                    <option value="60">60 Seconds</option>
+                </select>
+            </div>
 
-function updateConvStatus(msg, pct, frames, total) {
-  document.getElementById('convProgress').style.width = pct + '%';
-  document.getElementById('convPercent').textContent = pct + '%';
-  document.getElementById('convStatus').textContent = msg;
-  document.getElementById('convFrameCount').textContent = frames + ' / ' + total;
-  if (frames > 0 && startTime) {
-    const elapsed = (Date.now() - startTime) / 1000;
-    const fps_actual = frames / elapsed;
-    const remaining = (total - frames) / (fps_actual || 1);
-    document.getElementById('convETA').textContent = remaining > 0 ? remaining.toFixed(1) + 's' : 'Done';
-  }
-}
+            <div class="setting-item">
+                <label>Frame Rate (FPS)</label>
+                <select id="videoFps">
+                    <option value="60" selected>60 FPS (Smooth)</option>
+                    <option value="30">30 FPS (Standard)</option>
+                </select>
+            </div>
 
-function updateElapsed() {
-  if (!startTime) return;
-  const e = ((Date.now() - startTime) / 1000).toFixed(1);
-  document.getElementById('convElapsed').textContent = e + 's';
-}
+            <!-- Live label showing exactly what was selected -->
+            <div class="setting-item">
+                <label>Will Record</label>
+                <div class="duration-display" id="durationDisplay">⏱ 6 SEC EXACT</div>
+            </div>
 
-function cancelConversion() {
-  conversionCancelled = true;
-  recordingActive = false;
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-  clearInterval(elapsedInterval);
-  resetConversionUI();
-  showToast('warning', 'Cancelled', 'Conversion was stopped.');
-}
+        </div>
 
-function resetConversionUI() {
-  document.getElementById('conversionPanel').classList.add('hidden');
-  document.getElementById('featuresPanel').classList.remove('hidden');
-  document.getElementById('convertBtn').disabled = false;
-}
+        <button id="convertBtn" class="btn-render">
+            ⏺ Convert to Video
+        </button>
+    </div>
+    
+    <div id="downloadArea"></div>
 
-function finishConversion(url, blob, w, h, dur, fps) {
-  recordingActive = false;
-  document.getElementById('conversionPanel').classList.add('hidden');
-  document.getElementById('outputPanel').classList.remove('hidden');
-  document.getElementById('convertBtn').disabled = false;
+    <div class="render-overlay" id="renderOverlay">
+        <div class="render-box">
+            <div class="render-title" id="renderStatus">Converting VIDEO...</div>
+            <div class="render-subtitle">Do not minimize the browser or switch tabs.</div>
+            <div class="progress-bar-container">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <!-- ✅ FIX 2: Live countdown so user sees actual time remaining -->
+            <div class="render-timer" id="renderTimer">0.0s / 0s</div>
+        </div>
+    </div>
 
-  const video = document.getElementById('outputVideo');
-  video.src = url;
+    <canvas id="renderCanvas"></canvas>
+    <div id="hiddenEngineBox"></div>
 
-  document.getElementById('outDuration').textContent = dur + 's';
-  document.getElementById('outResolution').textContent = w + '×' + h;
-  document.getElementById('outFileSize').textContent = formatBytes(blob.size);
-  document.getElementById('outFPS').textContent = fps + ' fps';
+    <script>
+        const svgInput        = document.getElementById('svgInput');
+        const previewArea     = document.getElementById('previewArea');
+        const convertBtn      = document.getElementById('convertBtn');
+        const downloadArea    = document.getElementById('downloadArea');
+        const renderOverlay   = document.getElementById('renderOverlay');
+        const renderStatus    = document.getElementById('renderStatus');
+        const progressFill    = document.getElementById('progressFill');
+        const renderTimer     = document.getElementById('renderTimer');
+        const durationDisplay = document.getElementById('durationDisplay');
+        const durationSelect  = document.getElementById('videoDuration');
 
-  showToast('success', 'Video Ready! 🎉', `Exported ${formatBytes(blob.size)} WebM video.`);
-  setTimeout(() => document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
-}
+        const canvas = document.getElementById('renderCanvas');
+        const hiddenEngineBox = document.getElementById('hiddenEngineBox');
+        const ctx = canvas.getContext('2d', { alpha: false });
 
-function downloadVideo() {
-  if (!videoBlob) return;
-  const a = document.createElement('a');
-  a.href = videoURL;
-  a.download = `svg-animation-${Date.now()}.webm`;
-  a.click();
-  showToast('success', 'Downloading!', 'Your video is being saved.');
-}
+        // ── Update the "Will Record" badge whenever the dropdown changes ──
+        function syncDurationBadge() {
+            const secs = parseInt(durationSelect.value);
+            durationDisplay.textContent = `⏱ ${secs} SEC EXACT`;
+        }
+        durationSelect.addEventListener('change', syncDurationBadge);
+        syncDurationBadge(); // run once on load
 
-function shareOrCopy() {
-  if (!videoURL) return;
-  try {
-    navigator.clipboard.writeText(videoURL);
-    showToast('info', 'URL Copied', 'Video object URL copied to clipboard.');
-  } catch {
-    showToast('info', 'Share', 'Copy the video URL from the player.');
-  }
-}
+        // ── Live Preview ──
+        let typingTimer;
+        function updateLivePreview() {
+            previewArea.innerHTML = svgInput.value;
+            downloadArea.innerHTML = "";
+        }
+        svgInput.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(updateLivePreview, 250);
+        });
+        window.addEventListener('DOMContentLoaded', updateLivePreview);
 
-function convertAnother() {
-  document.getElementById('outputPanel').classList.add('hidden');
-  document.getElementById('featuresPanel').classList.remove('hidden');
-  resetPreview();
-}
+        // ── Main Render Engine ──
+        convertBtn.addEventListener('click', () => {
+            let activeSvg = previewArea.querySelector('svg');
+            if (!activeSvg) {
+                alert("Error: No valid SVG code found.");
+                return;
+            }
 
-function showToast(type, title, msg) {
-  const toast = document.getElementById('toast');
-  const icon  = document.getElementById('toastIcon');
-  const iconMap = {
-    success: 'fa-circle-check text-green-400',
-    error:   'fa-circle-xmark text-red-400',
-    warning: 'fa-triangle-exclamation text-yellow-400',
-    info:    'fa-circle-info text-blue-400'
-  };
-  icon.className = 'fa-solid ' + (iconMap[type] || iconMap.info) + ' text-xl';
-  document.getElementById('toastTitle').textContent = title;
-  document.getElementById('toastMsg').textContent = msg;
+            // ✅ FIX 3: Read duration from the dropdown — NOT a hardcoded constant
+            const selectedSeconds   = parseInt(durationSelect.value);
+            const EXACT_DURATION_MS = selectedSeconds * 1000; // e.g. 10 → 10000ms
 
-  toast.classList.add('show');
-  clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => toast.classList.remove('show'), 3500);
-}
+            const fps        = parseInt(document.getElementById('videoFps').value);
+            const resSplit   = document.getElementById('videoResolution').value.split('x');
+            const targetWidth  = parseInt(resSplit[0]);
+            const targetHeight = parseInt(resSplit[1]);
 
-updateStats();
-updateQualityLabel(4);
+            // Lock UI
+            convertBtn.disabled = true;
+            renderOverlay.style.display = 'flex';
+            progressFill.style.width = '0%';
+            renderTimer.textContent = `0.0s / ${selectedSeconds}s`;
+            renderStatus.innerText = "UPSCALING VECTORS...";
+            downloadArea.innerHTML = "";
 
-document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.key === 'Enter' && svgContent) startConversion();
-});
-</script>
+            canvas.width  = targetWidth;
+            canvas.height = targetHeight;
+
+            // Clone & size the SVG
+            let cloneSvg = activeSvg.cloneNode(true);
+            if (!cloneSvg.getAttribute('viewBox')) {
+                const origW = cloneSvg.getAttribute('width')  || targetWidth;
+                const origH = cloneSvg.getAttribute('height') || targetHeight;
+                cloneSvg.setAttribute('viewBox', `0 0 ${parseInt(origW)} ${parseInt(origH)}`);
+            }
+            cloneSvg.setAttribute('width',  targetWidth  + 'px');
+            cloneSvg.setAttribute('height', targetHeight + 'px');
+
+            const rawSvgText = new XMLSerializer().serializeToString(cloneSvg);
+            const svgBlob    = new Blob([rawSvgText], { type: 'image/svg+xml;charset=utf-8' });
+            const svgUrl     = URL.createObjectURL(svgBlob);
+
+            const liveImageEl = document.createElement('img');
+            liveImageEl.style.width  = targetWidth  + 'px';
+            liveImageEl.style.height = targetHeight + 'px';
+            hiddenEngineBox.appendChild(liveImageEl);
+
+            liveImageEl.onload = () => {
+                renderStatus.innerText = `RECORDING ${selectedSeconds} SECONDS AT ${targetHeight}p...`;
+
+                const stream = canvas.captureStream(fps);
+                const recordedChunks = [];
+
+                // Dynamic bitrate
+                let targetBitrate = 12000000;
+                if (targetWidth >= 2560) targetBitrate = 20000000;
+                if (targetWidth >= 3840) targetBitrate = 35000000;
+
+                const mediaOptions = { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: targetBitrate };
+                let mediaRecorder;
+                try {
+                    mediaRecorder = new MediaRecorder(stream, mediaOptions);
+                } catch(e) {
+                    mediaRecorder = new MediaRecorder(stream, { videoBitsPerSecond: targetBitrate });
+                }
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    renderStatus.innerText = "APPLYING METADATA FIXES...";
+                    hiddenEngineBox.innerHTML = '';
+                    URL.revokeObjectURL(svgUrl);
+
+                    const brokenBlob = new Blob(recordedChunks, { type: 'video/webm' });
+
+                    // ✅ FIX 4: Pass the user-chosen duration (not a hardcoded 6s/16s) to the metadata fixer
+                    ysFixWebmDuration(brokenBlob, EXACT_DURATION_MS, function(fixedBlob) {
+                        const videoUrl = URL.createObjectURL(fixedBlob);
+
+                        renderOverlay.style.display = 'none';
+                        convertBtn.disabled = false;
+
+                        const filename = `SVG-Studio-${selectedSeconds}sec-${targetHeight}p.webm`;
+
+                        downloadArea.innerHTML = `
+                            <a href="${videoUrl}" download="${filename}" class="download-btn">
+                                ⬇ Download ${selectedSeconds}-Second Video (${targetHeight}p)
+                            </a>
+                        `;
+
+                        // Auto-download
+                        const a = document.createElement('a');
+                        a.href = videoUrl;
+                        a.download = filename;
+                        a.click();
+                    });
+                };
+
+                // ✅ FIX 5: The stoppage timer now uses EXACT_DURATION_MS from the dropdown
+                mediaRecorder.start();
+
+                const startTime = performance.now();
+                let animationId;
+                let isRecording = true;
+
+                // Precision stop — fires at exactly the selected milliseconds
+                const stopTimeout = setTimeout(() => {
+                    isRecording = false;
+                    cancelAnimationFrame(animationId);
+                    mediaRecorder.stop();
+                }, EXACT_DURATION_MS);
+
+                function renderLoop(currentTime) {
+                    if (!isRecording) return;
+
+                    const elapsed = currentTime - startTime;
+
+                    // ✅ Progress and countdown both driven by EXACT_DURATION_MS
+                    const pct = Math.min((elapsed / EXACT_DURATION_MS) * 100, 100);
+                    progressFill.style.width = pct + '%';
+
+                    const elapsedSec   = Math.min(elapsed / 1000, selectedSeconds).toFixed(1);
+                    renderTimer.textContent = `${elapsedSec}s / ${selectedSeconds}s`;
+
+                    // Draw frame
+                    ctx.fillStyle = '#020617';
+                    ctx.fillRect(0, 0, targetWidth, targetHeight);
+                    ctx.drawImage(liveImageEl, 0, 0, targetWidth, targetHeight);
+
+                    // Force-dirty pixel so Chrome doesn't drop static frames
+                    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.05})`;
+                    ctx.fillRect(0, 0, 1, 1);
+
+                    animationId = requestAnimationFrame(renderLoop);
+                }
+
+                requestAnimationFrame(renderLoop);
+            };
+
+            liveImageEl.onerror = () => {
+                alert("System Error: The SVG code is invalid or missing dependencies.");
+                renderOverlay.style.display = 'none';
+                convertBtn.disabled = false;
+            };
+
+            liveImageEl.src = svgUrl;
+        });
+    </script>
 </body>
 </html>
