@@ -1,1558 +1,543 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Studio RJ | Dynamic Duration Renderer</title>
-    <script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --ink: #0a0a0f;
-            --ink-2: #13131c;
-            --ink-3: #1c1c2a;
-            --ink-4: #252535;
-            --line: rgba(255,255,255,0.07);
-            --line-2: rgba(255,255,255,0.12);
-            --line-3: rgba(255,255,255,0.2);
-            --cyan: #00e5ff;
-            --cyan-dim: rgba(0,229,255,0.15);
-            --cyan-glow: rgba(0,229,255,0.35);
-            --green: #00ffa3;
-            --green-dim: rgba(0,255,163,0.12);
-            --green-glow: rgba(0,255,163,0.3);
-            --amber: #ffb800;
-            --amber-dim: rgba(255,184,0,0.12);
-            --pink: #ff4d9e;
-            --pink-dim: rgba(255,77,158,0.1);
-            --text: #eef0f8;
-            --text-2: #8891aa;
-            --text-3: #4e566b;
-            --mono: 'Space Mono', monospace;
-            --sans: 'Syne', sans-serif;
-            --r: 10px;
-            --r-lg: 16px;
-        }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: var(--sans);
-            background: var(--ink);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0;
-            overflow-x: hidden;
-        }
-
-        /* ── TOP NAV BAR ── */
-        .topbar {
-            width: 100%;
-            background: var(--ink-2);
-            border-bottom: 1px solid var(--line);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 32px;
-            height: 56px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(12px);
-        }
-
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            width: 28px;
-            height: 28px;
-            background: var(--cyan);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .logo-icon::before {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border: 2px solid var(--ink);
-            border-radius: 50%;
-        }
-
-        .logo-icon::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: var(--ink);
-            border-radius: 2px;
-            transform: rotate(45deg);
-        }
-
-        .logo-text {
-            font-family: var(--sans);
-            font-weight: 800;
-            font-size: 15px;
-            color: var(--text);
-            letter-spacing: 0.02em;
-        }
-
-        .logo-text span {
-            color: var(--cyan);
-        }
-
-        .topbar-divider {
-            width: 1px;
-            height: 20px;
-            background: var(--line-2);
-        }
-
-        .topbar-tag {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text-3);
-            letter-spacing: 0.08em;
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .pill {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-family: var(--mono);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            border: 1px solid transparent;
-        }
-
-        .pill-green {
-            background: var(--green-dim);
-            border-color: rgba(0,255,163,0.25);
-            color: var(--green);
-        }
-
-        .pill-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: blink 1.8s ease-in-out infinite;
-        }
-
-        @keyframes blink {
-            0%,100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        /* ── PAGE BODY ── */
-        .page-body {
-            width: 100%;
-            max-width: 1680px;
-            padding: 28px 32px 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* ── PAGE TITLE ── */
-        .page-title-row {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .page-title-block h1 {
-            font-family: var(--sans);
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--text);
-            letter-spacing: -0.02em;
-            line-height: 1;
-            margin-bottom: 6px;
-        }
-
-        .page-title-block h1 span {
-            color: var(--cyan);
-        }
-
-        .page-title-block p {
-            font-family: var(--mono);
-            font-size: 12px;
-            color: var(--text-3);
-            letter-spacing: 0.05em;
-        }
-
-        .version-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            background: var(--ink-3);
-            border: 1px solid var(--line-2);
-            border-radius: var(--r);
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text-2);
-        }
-
-        .version-badge strong {
-            color: var(--amber);
-        }
-
-        /* ── MAIN WORKSPACE ── */
-        .workspace {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .panel {
-            background: var(--ink-2);
-            border: 1px solid var(--line);
-            border-radius: var(--r-lg);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--line);
-            background: var(--ink-3);
-            flex-shrink: 0;
-        }
-
-        .panel-title-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .panel-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .panel-icon-code {
-            background: rgba(0,229,255,0.1);
-            border: 1px solid rgba(0,229,255,0.2);
-        }
-
-        .panel-icon-preview {
-            background: rgba(0,255,163,0.1);
-            border: 1px solid rgba(0,255,163,0.2);
-        }
-
-        .panel-title {
-            font-family: var(--sans);
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-2);
-        }
-
-        .panel-badge {
-            font-family: var(--mono);
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            padding: 3px 9px;
-            border-radius: 20px;
-        }
-
-        .badge-cyan {
-            background: var(--cyan-dim);
-            border: 1px solid rgba(0,229,255,0.3);
-            color: var(--cyan);
-        }
-
-        .badge-green {
-            background: var(--green-dim);
-            border: 1px solid rgba(0,255,163,0.3);
-            color: var(--green);
-        }
-
-        .panel-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .icon-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: transparent;
-            border: 1px solid var(--line-2);
-            color: var(--text-3);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            transition: all 0.18s;
-        }
-
-        .icon-btn:hover {
-            background: var(--ink-4);
-            border-color: var(--line-3);
-            color: var(--text);
-        }
-
-        .panel-body {
-            flex: 1;
-            position: relative;
-        }
-
-        .aspect-16-9 {
-            aspect-ratio: 16 / 9;
-            width: 100%;
-        }
-
-        /* Code area */
-        .code-wrap {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-
-        .line-nums {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 42px;
-            height: 100%;
-            background: var(--ink-3);
-            border-right: 1px solid var(--line);
-            padding-top: 16px;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .line-num {
-            display: block;
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text-3);
-            text-align: right;
-            padding-right: 10px;
-            line-height: 19.5px;
-            user-select: none;
-        }
-
-        textarea {
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            color: #7ee8a2;
-            font-family: var(--mono);
-            font-size: 12.5px;
-            border: none;
-            padding: 16px 16px 16px 52px;
-            resize: none;
-            outline: none;
-            line-height: 1.5;
-            tab-size: 2;
-        }
-
-        textarea::-webkit-scrollbar { width: 6px; }
-        textarea::-webkit-scrollbar-track { background: transparent; }
-        textarea::-webkit-scrollbar-thumb { background: var(--ink-4); border-radius: 3px; }
-
-        /* Preview */
-        .preview-box {
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .preview-box svg {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .preview-empty {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            color: var(--text-3);
-        }
-
-        .preview-empty-icon {
-            font-size: 32px;
-            opacity: 0.4;
-        }
-
-        .preview-empty p {
-            font-family: var(--mono);
-            font-size: 12px;
-            letter-spacing: 0.04em;
-        }
-
-        /* ── CONTROL DECK ── */
-        .control-deck {
-            background: var(--ink-2);
-            border: 1px solid var(--line);
-            border-radius: var(--r-lg);
-            overflow: hidden;
-        }
-
-        .control-deck-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--line);
-            background: var(--ink-3);
-        }
-
-        .control-deck-title {
-            font-family: var(--mono);
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-3);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .control-deck-body {
-            padding: 20px 24px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .settings-grid {
-            display: flex;
-            align-items: flex-end;
-            gap: 16px;
-            flex-wrap: wrap;
-            flex: 1;
-        }
-
-        .setting-item {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-
-        .setting-label {
-            font-family: var(--mono);
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--text-3);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        select {
-            background: var(--ink-3);
-            border: 1px solid var(--line-2);
-            color: var(--text);
-            padding: 10px 14px;
-            border-radius: var(--r);
-            font-family: var(--mono);
-            font-size: 12px;
-            font-weight: 700;
-            outline: none;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%234e566b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 34px;
-            min-width: 190px;
-        }
-
-        select:hover {
-            border-color: var(--line-3);
-            background-color: var(--ink-4);
-        }
-
-        select:focus {
-            border-color: var(--cyan);
-            box-shadow: 0 0 0 3px var(--cyan-dim);
-        }
-
-        /* Duration status pill */
-        .duration-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--cyan-dim);
-            border: 1px solid rgba(0,229,255,0.25);
-            border-radius: var(--r);
-            padding: 10px 16px;
-            min-width: 140px;
-        }
-
-        .duration-status-icon {
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .duration-status-text {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        .duration-status-label {
-            font-family: var(--mono);
-            font-size: 9px;
-            color: rgba(0,229,255,0.5);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .duration-status-value {
-            font-family: var(--mono);
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--cyan);
-            letter-spacing: 0.05em;
-        }
-
-        /* ── ACTION ZONE ── */
-        .action-zone {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        /* Preview toggle + clear buttons */
-        .btn-secondary {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: var(--ink-3);
-            border: 1px solid var(--line-2);
-            color: var(--text-2);
-            padding: 11px 18px;
-            border-radius: var(--r);
-            font-family: var(--mono);
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.04em;
-            white-space: nowrap;
-            height: 42px;
-        }
-
-        .btn-secondary:hover {
-            background: var(--ink-4);
-            border-color: var(--line-3);
-            color: var(--text);
-        }
-
-        /* MAIN RENDER BUTTON */
-        .btn-render {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--cyan);
-            color: var(--ink);
-            border: none;
-            padding: 0 28px;
-            height: 42px;
-            border-radius: var(--r);
-            font-family: var(--sans);
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-render::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(255,255,255,0);
-            transition: background 0.2s;
-        }
-
-        .btn-render:hover::before {
-            background: rgba(255,255,255,0.15);
-        }
-
-        .btn-render:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px var(--cyan-glow);
-        }
-
-        .btn-render:active {
-            transform: translateY(0);
-        }
-
-        .btn-render:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn-render-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--ink);
-            flex-shrink: 0;
-        }
-
-        /* ── STATS BAR ── */
-        .stats-bar {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            background: var(--ink-2);
-            border: 1px solid var(--line);
-            border-radius: var(--r);
-            overflow: hidden;
-        }
-
-        .stat-item {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 18px;
-            border-right: 1px solid var(--line);
-        }
-
-        .stat-item:last-child {
-            border-right: none;
-        }
-
-        .stat-icon {
-            font-size: 16px;
-            flex-shrink: 0;
-            opacity: 0.6;
-        }
-
-        .stat-text {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        .stat-label {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--text-3);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .stat-value {
-            font-family: var(--mono);
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .stat-value.cyan { color: var(--cyan); }
-        .stat-value.green { color: var(--green); }
-        .stat-value.amber { color: var(--amber); }
-        .stat-value.pink { color: var(--pink); }
-
-        /* ── RENDER OVERLAY ── */
-        .render-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(10,10,15,0.92);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .render-modal {
-            background: var(--ink-2);
-            border: 1px solid var(--line-2);
-            border-radius: 20px;
-            width: 480px;
-            max-width: 90vw;
-            overflow: hidden;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,229,255,0.08);
-        }
-
-        .render-modal-header {
-            background: var(--ink-3);
-            border-bottom: 1px solid var(--line);
-            padding: 20px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .render-modal-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            background: var(--cyan-dim);
-            border: 1px solid rgba(0,229,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 17px;
-            flex-shrink: 0;
-        }
-
-        .render-modal-titles {
-            flex: 1;
-        }
-
-        .render-modal-title {
-            font-family: var(--sans);
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--cyan);
-            margin-bottom: 2px;
-        }
-
-        .render-modal-subtitle {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text-3);
-            letter-spacing: 0.04em;
-        }
-
-        .render-modal-body {
-            padding: 24px;
-        }
-
-        .progress-track {
-            width: 100%;
-            height: 6px;
-            background: var(--ink);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 16px;
-            border: 1px solid var(--line);
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--cyan), #60efff);
-            border-radius: 3px;
-            transition: width 0.1s linear;
-            box-shadow: 0 0 8px var(--cyan-glow);
-        }
-
-        .render-timer-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .render-timer {
-            font-family: var(--mono);
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--cyan);
-            letter-spacing: 0.04em;
-        }
-
-        .render-timer-unit {
-            font-size: 13px;
-            color: var(--text-3);
-            margin-left: 4px;
-        }
-
-        .render-status-chip {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: var(--ink-3);
-            border: 1px solid var(--line-2);
-            border-radius: 20px;
-            padding: 6px 14px;
-        }
-
-        .render-status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--cyan);
-            animation: blink 1s infinite;
-        }
-
-        .render-status-text {
-            font-family: var(--mono);
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-2);
-            letter-spacing: 0.05em;
-        }
-
-        .render-warning {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--amber-dim);
-            border: 1px solid rgba(255,184,0,0.2);
-            border-radius: var(--r);
-            padding: 10px 14px;
-        }
-
-        .render-warning span {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--amber);
-            letter-spacing: 0.03em;
-        }
-
-        /* ── DOWNLOAD AREA ── */
-        #downloadArea {
-            margin-top: 4px;
-        }
-
-        .download-card {
-            background: var(--ink-2);
-            border: 1px solid var(--line);
-            border-radius: var(--r-lg);
-            padding: 20px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-            animation: slideUp 0.4s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .download-card-info {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .download-file-icon {
-            width: 44px;
-            height: 44px;
-            background: var(--green-dim);
-            border: 1px solid rgba(0,255,163,0.2);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-
-        .download-file-details {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .download-file-name {
-            font-family: var(--mono);
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .download-file-meta {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text-3);
-            letter-spacing: 0.04em;
-        }
-
-        .download-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .download-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--green);
-            color: var(--ink);
-            text-decoration: none;
-            padding: 11px 22px;
-            border-radius: var(--r);
-            font-family: var(--sans);
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .download-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px var(--green-glow);
-            background: #33ffb7;
-        }
-
-        /* ── FOOTER ── */
-        .footer {
-            padding: 20px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            border-top: 1px solid var(--line);
-            width: 100%;
-        }
-
-        .footer-text {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text-3);
-            letter-spacing: 0.05em;
-        }
-
-        .footer-text strong {
-            color: var(--cyan);
-        }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 1000px) {
-            .workspace { grid-template-columns: 1fr; }
-            .control-deck-body { flex-direction: column; align-items: stretch; }
-            .settings-grid { flex-direction: column; align-items: stretch; }
-            .action-zone { width: 100%; }
-            .btn-render { width: 100%; justify-content: center; }
-            .btn-secondary { flex: 1; justify-content: center; }
-            .stats-bar { flex-wrap: wrap; }
-            .stat-item { min-width: 140px; }
-            .download-card { flex-direction: column; align-items: flex-start; }
-            .page-body { padding: 16px; }
-            .topbar { padding: 0 16px; }
-        }
-
-        @media (max-width: 600px) {
-            .topbar-tag { display: none; }
-            .topbar-divider { display: none; }
-            .version-badge { display: none; }
-            select { min-width: unset; width: 100%; }
-        }
-
-        #renderCanvas { display: none; }
-
-        /* Live render engine: must be visible + sized so CSS animations tick.
-           Positioned way off-screen (left: -9999px) so it never shows to user. */
-        #hiddenEngineBox {
-            position: fixed;
-            left: -9999px;
-            top: 0;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: -1;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- TOP NAV -->
-    <nav class="topbar">
-        <div class="topbar-left">
-            <div class="logo">
-                <div class="logo-icon"></div>
-                <span class="logo-text">SVG<span>Studio</span></span>
-            </div>
-            <div class="topbar-divider"></div>
-            <span class="topbar-tag">PAPIR DOL · RJ EDITION</span>
+<h2 class="sr-only">SVG Animation to Video Converter — upload SVG, pick quality and duration, export as video</h2>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+#app{padding:1.5rem 0;max-width:100%}
+.header{margin-bottom:1.5rem}
+.header h1{font-size:20px;font-weight:500;color:var(--color-text-primary);letter-spacing:-0.3px}
+.header p{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem}
+.card-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.upload-zone{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:2rem 1rem;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--color-background-secondary)}
+.upload-zone:hover,.upload-zone.drag{border-color:#378ADD;background:var(--color-background-info)}
+.upload-zone i{font-size:32px;color:var(--color-text-tertiary);display:block;margin-bottom:8px}
+.upload-zone .ut{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.upload-zone .us{font-size:12px;color:var(--color-text-secondary);margin-top:4px}
+.quality-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.q-btn{padding:10px 8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;text-align:center;background:var(--color-background-primary);transition:all 0.15s;color:var(--color-text-primary)}
+.q-btn:hover{border-color:#378ADD;background:var(--color-background-info)}
+.q-btn.active{border:2px solid #378ADD;background:var(--color-background-info);color:#185FA5}
+.q-btn .ql{font-size:15px;font-weight:500;display:block}
+.q-btn .qd{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.q-btn.active .qd{color:#185FA5}
+.format-row{display:flex;gap:8px;flex-wrap:wrap}
+.fmt-btn{padding:6px 14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;background:var(--color-background-primary);font-size:13px;font-weight:500;color:var(--color-text-secondary);transition:all 0.15s}
+.fmt-btn:hover{border-color:#378ADD;color:#185FA5}
+.fmt-btn.active{border:2px solid #378ADD;background:var(--color-background-info);color:#185FA5}
+.row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.row:last-child{margin-bottom:0}
+.row label{font-size:13px;color:var(--color-text-secondary);min-width:90px}
+.row input[type=range]{flex:1}
+.row .val{font-size:13px;font-weight:500;color:var(--color-text-primary);min-width:48px;text-align:right}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0}
+.toggle-label{font-size:13px;color:var(--color-text-primary)}
+.toggle-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.toggle{width:36px;height:20px;background:var(--color-border-secondary);border-radius:10px;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0}
+.toggle.on{background:#378ADD}
+.toggle::after{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left 0.2s}
+.toggle.on::after{left:19px}
+.preview-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;border:0.5px solid var(--color-border-tertiary)}
+.preview-box svg{max-width:100%;max-height:100%}
+.preview-placeholder{text-align:center}
+.preview-placeholder i{font-size:36px;color:var(--color-text-tertiary);display:block;margin-bottom:8px}
+.preview-placeholder p{font-size:13px;color:var(--color-text-tertiary)}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;text-align:center}
+.stat-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.stat-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.export-btn{width:100%;padding:14px;border:none;border-radius:var(--border-radius-lg);background:#185FA5;color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.export-btn:hover{background:#0C447C}
+.export-btn:disabled{background:var(--color-border-secondary);cursor:not-allowed;color:var(--color-text-tertiary)}
+.export-btn i{font-size:18px}
+.progress-wrap{display:none;margin-top:12px}
+.prog-bar-bg{height:8px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden}
+.prog-bar{height:100%;background:#378ADD;border-radius:4px;width:0%;transition:width 0.3s}
+.prog-text{font-size:12px;color:var(--color-text-secondary);margin-top:6px;display:flex;justify-content:space-between}
+.log-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-top:10px;font-size:11px;font-family:var(--font-mono);color:var(--color-text-secondary);max-height:80px;overflow-y:auto;display:none}
+.log-line{padding:1px 0;color:var(--color-text-secondary)}
+.log-line.ok{color:#1D9E75}
+.log-line.warn{color:#BA7517}
+.log-line.err{color:#E24B4A}
+.file-info{display:none;align-items:center;gap:10px;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-top:10px}
+.file-info i{font-size:20px;color:#185FA5}
+.file-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.file-size{font-size:11px;color:var(--color-text-secondary)}
+.remove-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--color-text-tertiary);font-size:16px;padding:4px}
+.remove-btn:hover{color:var(--color-text-primary)}
+.section-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.section-title i{font-size:16px;color:var(--color-text-secondary)}
+.fps-row{display:flex;gap:6px}
+.fps-btn{flex:1;padding:7px 4px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;text-align:center;background:var(--color-background-primary);font-size:12px;font-weight:500;color:var(--color-text-secondary);transition:all 0.15s}
+.fps-btn:hover{border-color:#378ADD;color:#185FA5}
+.fps-btn.active{border:2px solid #378ADD;background:var(--color-background-info);color:#185FA5}
+.codec-sel{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px}
+.tip{font-size:11px;color:var(--color-text-secondary);margin-top:6px;padding:6px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border-left:2px solid #378ADD}
+.success-banner{display:none;align-items:center;gap:10px;padding:12px 16px;background:#EAF3DE;border:0.5px solid #639922;border-radius:var(--border-radius-lg);margin-top:12px}
+.success-banner i{font-size:20px;color:#3B6D11}
+.success-banner .st{font-size:14px;font-weight:500;color:#27500A}
+.success-banner .ss{font-size:12px;color:#3B6D11;margin-top:2px}
+.dl-btn{margin-left:auto;padding:8px 16px;background:#3B6D11;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer}
+.dl-btn:hover{background:#27500A}
+</style>
+
+<div id="app">
+  <div class="header">
+    <h1><i class="ti ti-brand-youtube" style="color:#185FA5;margin-right:6px" aria-hidden="true"></i>SVG animation → video converter</h1>
+    <p>Convert animated SVG files to MP4, WebM, or GIF with full quality control</p>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1fr 1fr;align-items:start">
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-label">1 · upload SVG file</div>
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <i class="ti ti-file-upload" aria-hidden="true"></i>
+          <div class="ut">Drop SVG here or click to browse</div>
+          <div class="us">Supports animated SVG, SMIL, CSS animations</div>
         </div>
-        <div class="topbar-right">
-            <div class="pill pill-green">
-                <span class="pill-dot"></span>
-                ENGINE READY
-            </div>
+        <input type="file" id="fileInput" accept=".svg,image/svg+xml" style="display:none">
+        <div class="file-info" id="fileInfo">
+          <i class="ti ti-file-vector" aria-hidden="true"></i>
+          <div>
+            <div class="file-name" id="fileName">—</div>
+            <div class="file-size" id="fileSize">—</div>
+          </div>
+          <button class="remove-btn" onclick="removeFile()" aria-label="Remove file"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
-    </nav>
+      </div>
 
-    <div class="page-body">
-
-        <!-- PAGE TITLE -->
-        <div class="page-title-row">
-            <div class="page-title-block">
-                <h1>Dynamic <span>Duration</span> Renderer</h1>
-                <p>CREATED BY JUBAYER ISLAM &nbsp;·&nbsp; VERSION 3.0</p>
-            </div>
-            <div class="version-badge">
-                WEBM · VP9 &nbsp;|&nbsp; <strong>v3.0 FIXED</strong>
-            </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-label">2 · output quality</div>
+        <div class="quality-grid" id="qualityGrid">
+          <button class="q-btn" data-q="hd" onclick="setQuality('hd')"><span class="ql">HD</span><span class="qd">1280 × 720</span></button>
+          <button class="q-btn active" data-q="fhd" onclick="setQuality('fhd')"><span class="ql">Full HD</span><span class="qd">1920 × 1080</span></button>
+          <button class="q-btn" data-q="2k" onclick="setQuality('2k')"><span class="ql">2K QHD</span><span class="qd">2560 × 1440</span></button>
+          <button class="q-btn" data-q="4k" onclick="setQuality('4k')"><span class="ql">4K UHD</span><span class="qd">3840 × 2160</span></button>
         </div>
+        <div class="tip" style="margin-top:8px"><i class="ti ti-info-circle" aria-hidden="true"></i> 4K produces large files. Recommended: Full HD for web, 4K for print/broadcast.</div>
+      </div>
 
-        <!-- STATS BAR -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span class="stat-icon">🎬</span>
-                <div class="stat-text">
-                    <span class="stat-label">Max Resolution</span>
-                    <span class="stat-value cyan" id="statRes">1920 × 1080</span>
-                </div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-icon">⚡</span>
-                <div class="stat-text">
-                    <span class="stat-label">Frame Rate</span>
-                    <span class="stat-value amber" id="statFps">60 FPS</span>
-                </div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-icon">⏱</span>
-                <div class="stat-text">
-                    <span class="stat-label">Duration</span>
-                    <span class="stat-value green" id="statDur">6 seconds</span>
-                </div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-icon">📦</span>
-                <div class="stat-text">
-                    <span class="stat-label">Format</span>
-                    <span class="stat-value pink">WEBM / VP9</span>
-                </div>
-            </div>
+      <div class="card">
+        <div class="card-label">3 · output format</div>
+        <div class="format-row" id="formatRow">
+          <button class="fmt-btn active" data-f="mp4" onclick="setFormat('mp4')">MP4 (H.264)</button>
+          <button class="fmt-btn" data-f="webm" onclick="setFormat('webm')">WebM (VP9)</button>
+          <button class="fmt-btn" data-f="gif" onclick="setFormat('gif')">Animated GIF</button>
+          <button class="fmt-btn" data-f="apng" onclick="setFormat('apng')">APNG</button>
         </div>
-
-        <!-- WORKSPACE -->
-        <div class="workspace">
-            <!-- CODE PANEL -->
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title-group">
-                        <div class="panel-icon panel-icon-code">💻</div>
-                        <span class="panel-title">Vector Source Code</span>
-                    </div>
-                    <div class="panel-actions">
-                        <span class="panel-badge badge-cyan">LIVE SYNC</span>
-                        <button class="icon-btn" title="Copy SVG" onclick="copySVG()" style="font-size:12px">📋</button>
-                        <button class="icon-btn" title="Clear code" onclick="clearCode()" style="font-size:12px">🗑</button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div class="aspect-16-9 code-wrap">
-                        <div class="line-nums" id="lineNums"></div>
-                        <textarea id="svgInput" spellcheck="false" placeholder="Paste your <svg> here..."><svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1920" height="1080" fill="#020617"/>
-  <style>
-    .neon-path {
-      fill: none;
-      stroke: #0ea5e9;
-      stroke-width: 8;
-      stroke-dasharray: 1000;
-      stroke-dashoffset: 1000;
-      animation: draw 6s infinite ease-in-out; 
-    }
-    .pulse-core {
-      fill: #10b981;
-      transform-origin: center;
-      animation: beat 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    @keyframes draw {
-      0% { stroke-dashoffset: 1000; stroke: #0ea5e9; }
-      50% { stroke-dashoffset: 0; stroke: #10b981; }
-      100% { stroke-dashoffset: 1000; stroke: #0ea5e9; }
-    }
-    @keyframes beat {
-      0% { transform: scale(0.8) rotate(0deg); }
-      50% { transform: scale(1.5) rotate(180deg); }
-      100% { transform: scale(0.8) rotate(360deg); }
-    }
-  </style>
-  <g transform="translate(960, 540)">
-    <circle class="neon-path" cx="0" cy="0" r="300" />
-    <rect class="pulse-core" x="-75" y="-75" width="150" height="150" rx="30" />
-  </g>
-</svg></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PREVIEW PANEL -->
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title-group">
-                        <div class="panel-icon panel-icon-preview">👁️</div>
-                        <span class="panel-title">Cinematic Preview</span>
-                    </div>
-                    <div class="panel-actions">
-                        <span class="panel-badge badge-green">LIVE</span>
-                        <button class="icon-btn" title="Refresh preview" onclick="updateLivePreview()" style="font-size:12px">🔄</button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div class="aspect-16-9 preview-box" id="previewArea">
-                        <div class="preview-empty">
-                            <span class="preview-empty-icon">📺</span>
-                            <p>PREVIEW WILL APPEAR HERE</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CONTROL DECK -->
-        <div class="control-deck">
-            <div class="control-deck-header">
-                <span style="font-size:14px">⚙️</span>
-                <span class="control-deck-title">Render Configuration</span>
-            </div>
-            <div class="control-deck-body">
-                <div class="settings-grid">
-
-                    <div class="setting-item">
-                        <span class="setting-label">Resolution Quality</span>
-                        <select id="videoResolution">
-                            <option value="3840x2160">🔷 4K Ultra HD — 2160p</option>
-                            <option value="2560x1440">🔹 2K Quad HD — 1440p</option>
-                            <option value="1920x1080" selected>▪ Full HD — 1080p</option>
-                        </select>
-                    </div>
-
-                    <div class="setting-item">
-                        <span class="setting-label">Video Length</span>
-                        <select id="videoDuration">
-                            <option value="3">3 Seconds</option>
-                            <option value="5">5 Seconds</option>
-                            <option value="6" selected>6 Seconds</option>
-                            <option value="8">8 Seconds</option>
-                            <option value="10">10 Seconds</option>
-                            <option value="15">15 Seconds</option>
-                            <option value="20">20 Seconds</option>
-                            <option value="30">30 Seconds</option>
-                            <option value="60">60 Seconds</option>
-                        </select>
-                    </div>
-
-                    <div class="setting-item">
-                        <span class="setting-label">Frame Rate (FPS)</span>
-                        <select id="videoFps">
-                            <option value="60" selected>60 FPS — Smooth</option>
-                            <option value="30">30 FPS — Standard</option>
-                        </select>
-                    </div>
-
-                    <div class="setting-item">
-                        <span class="setting-label">Will Record</span>
-                        <div class="duration-status">
-                            <span class="duration-status-icon">⏱</span>
-                            <div class="duration-status-text">
-                                <span class="duration-status-label">Exact Duration</span>
-                                <span class="duration-status-value" id="durationDisplay">6 SEC EXACT</span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- ACTION BUTTONS -->
-                <div class="action-zone">
-                    <button class="btn-secondary" onclick="clearCode()" title="Clear code">
-                        🗑 Clear
-                    </button>
-                    <button class="btn-secondary" onclick="updateLivePreview()" title="Refresh preview">
-                        🔄 Refresh
-                    </button>
-                    <button id="convertBtn" class="btn-render">
-                        <span class="btn-render-dot" style="animation:blink 1s infinite"></span>
-                        Convert to Video
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- DOWNLOAD AREA -->
-        <div id="downloadArea"></div>
-
+      </div>
     </div>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-        <span class="footer-text">SVG Studio by <strong>Jubayer Islam</strong> &nbsp;·&nbsp; Papir Dol &nbsp;·&nbsp; v3.0</span>
-    </footer>
-
-    <!-- RENDER OVERLAY -->
-    <div class="render-overlay" id="renderOverlay">
-        <div class="render-modal">
-            <div class="render-modal-header">
-                <div class="render-modal-icon">🎬</div>
-                <div class="render-modal-titles">
-                    <div class="render-modal-title" id="renderStatus">Converting Video…</div>
-                    <div class="render-modal-subtitle">This may take a moment depending on duration</div>
-                </div>
-            </div>
-            <div class="render-modal-body">
-                <div class="render-timer-row">
-                    <div class="render-timer" id="renderTimer">0.0s <span class="render-timer-unit">/ 0s</span></div>
-                    <div class="render-status-chip">
-                        <div class="render-status-dot"></div>
-                        <span class="render-status-text" id="renderStatusChip">RECORDING</span>
-                    </div>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="render-warning">
-                    <span>⚠️</span>
-                    <span>Do not minimize or switch browser tabs during render</span>
-                </div>
-            </div>
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title"><i class="ti ti-player-play" aria-hidden="true"></i>preview</div>
+        <div class="preview-box" id="previewBox">
+          <div class="preview-placeholder" id="previewPlaceholder">
+            <i class="ti ti-photo-video" aria-hidden="true"></i>
+            <p>SVG preview appears here</p>
+          </div>
         </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-label">4 · timing &amp; duration</div>
+        <div class="row">
+          <label>Duration</label>
+          <input type="range" id="durationRange" min="1" max="120" step="1" value="10" oninput="updateDuration(this.value)">
+          <span class="val" id="durationVal">10s</span>
+        </div>
+        <div class="row">
+          <label>Loop count</label>
+          <input type="range" id="loopRange" min="1" max="20" step="1" value="1" oninput="updateLoop(this.value)">
+          <span class="val" id="loopVal">1×</span>
+        </div>
+        <div class="row">
+          <label>Start offset</label>
+          <input type="range" id="offsetRange" min="0" max="10" step="0.1" value="0" oninput="updateOffset(this.value)">
+          <span class="val" id="offsetVal">0.0s</span>
+        </div>
+        <div class="row" style="margin-bottom:0">
+          <label>Speed</label>
+          <input type="range" id="speedRange" min="0.25" max="4" step="0.25" value="1" oninput="updateSpeed(this.value)">
+          <span class="val" id="speedVal">1.0×</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="card-label">Frame rate (FPS)</div>
+      <div class="fps-row" id="fpsRow">
+        <button class="fps-btn" onclick="setFps(24)">24</button>
+        <button class="fps-btn" onclick="setFps(30)">30</button>
+        <button class="fps-btn active" onclick="setFps(60)">60</button>
+        <button class="fps-btn" onclick="setFps(120)">120</button>
+      </div>
     </div>
 
-    <canvas id="renderCanvas"></canvas>
-    <div id="hiddenEngineBox"></div>
+    <div class="card">
+      <div class="card-label">Codec / bitrate</div>
+      <select class="codec-sel" id="codecSel" onchange="updateCodecInfo()">
+        <option value="h264">H.264 — best compatibility</option>
+        <option value="h265">H.265 — smaller file size</option>
+        <option value="vp9">VP9 — open source</option>
+        <option value="av1">AV1 — latest standard</option>
+        <option value="prores">ProRes — lossless editing</option>
+      </select>
+      <div id="codecTip" class="tip" style="margin-top:8px">Good for: YouTube, social media, all devices</div>
+    </div>
 
-    <script>
-        const svgInput        = document.getElementById('svgInput');
-        const previewArea     = document.getElementById('previewArea');
-        const convertBtn      = document.getElementById('convertBtn');
-        const downloadArea    = document.getElementById('downloadArea');
-        const renderOverlay   = document.getElementById('renderOverlay');
-        const renderStatus    = document.getElementById('renderStatus');
-        const renderStatusChip = document.getElementById('renderStatusChip');
-        const progressFill    = document.getElementById('progressFill');
-        const renderTimer     = document.getElementById('renderTimer');
-        const durationDisplay = document.getElementById('durationDisplay');
-        const durationSelect  = document.getElementById('videoDuration');
-        const lineNums        = document.getElementById('lineNums');
+    <div class="card">
+      <div class="card-label">Advanced options</div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Transparent background</div><div class="toggle-sub">Keep SVG alpha channel</div></div>
+        <div class="toggle" id="togAlpha" onclick="toggleOpt('togAlpha')"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Anti-alias edges</div><div class="toggle-sub">Smooth SVG rendering</div></div>
+        <div class="toggle on" id="togAlias" onclick="toggleOpt('togAlias')"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Embed audio</div><div class="toggle-sub">From SVG audio tags</div></div>
+        <div class="toggle" id="togAudio" onclick="toggleOpt('togAudio')"></div>
+      </div>
+    </div>
+  </div>
 
-        const canvas = document.getElementById('renderCanvas');
-        const hiddenEngineBox = document.getElementById('hiddenEngineBox');
-        const ctx = canvas.getContext('2d', { alpha: false });
+  <div class="stat-row" id="statsRow">
+    <div class="stat"><div class="stat-val" id="sRes">1920×1080</div><div class="stat-lbl">resolution</div></div>
+    <div class="stat"><div class="stat-val" id="sFps">60 fps</div><div class="stat-lbl">frame rate</div></div>
+    <div class="stat"><div class="stat-val" id="sFrames">600</div><div class="stat-lbl">total frames</div></div>
+    <div class="stat"><div class="stat-val" id="sSize">~42 MB</div><div class="stat-lbl">est. file size</div></div>
+  </div>
 
-        /* ── Line numbers ── */
-        function updateLineNums() {
-            const lines = svgInput.value.split('\n').length;
-            lineNums.innerHTML = Array.from({length: lines}, (_, i) =>
-                `<span class="line-num">${i + 1}</span>`
-            ).join('');
-        }
+  <button class="export-btn" id="exportBtn" onclick="startExport()">
+    <i class="ti ti-video" aria-hidden="true"></i> Convert &amp; export video
+  </button>
 
-        svgInput.addEventListener('scroll', () => {
-            lineNums.scrollTop = svgInput.scrollTop;
-        });
+  <div class="progress-wrap" id="progressWrap">
+    <div class="prog-bar-bg"><div class="prog-bar" id="progBar"></div></div>
+    <div class="prog-text">
+      <span id="progLabel">Rendering frame 1...</span>
+      <span id="progPct">0%</span>
+    </div>
+    <div class="log-box" id="logBox"></div>
+  </div>
 
-        /* ── Stats bar sync ── */
-        function syncStats() {
-            const secs = parseInt(durationSelect.value);
-            const res  = document.getElementById('videoResolution').value;
-            const fps  = document.getElementById('videoFps').value;
-            const parts = res.split('x');
-            document.getElementById('statRes').textContent = `${parts[0]} × ${parts[1]}`;
-            document.getElementById('statFps').textContent = `${fps} FPS`;
-            document.getElementById('statDur').textContent = `${secs} second${secs !== 1 ? 's' : ''}`;
-            durationDisplay.textContent = `${secs} SEC EXACT`;
-        }
+  <div class="success-banner" id="successBanner">
+    <i class="ti ti-circle-check" aria-hidden="true"></i>
+    <div><div class="st">Export complete!</div><div class="ss" id="successDetail">Your video is ready to download.</div></div>
+    <button class="dl-btn" onclick="downloadResult()" id="dlBtn">Download</button>
+  </div>
+</div>
 
-        durationSelect.addEventListener('change', syncStats);
-        document.getElementById('videoResolution').addEventListener('change', syncStats);
-        document.getElementById('videoFps').addEventListener('change', syncStats);
-        syncStats();
+<script>
+let state = {
+  file: null, svgContent: null,
+  quality: 'fhd', format: 'mp4', fps: 60,
+  duration: 10, loops: 1, offset: 0, speed: 1,
+  codec: 'h264', alpha: false, antialias: true, audio: false,
+  exportBlob: null, svgWidth: 0, svgHeight: 0
+};
 
-        /* ── Clear code ── */
-        function clearCode() {
-            if (!confirm('Clear all SVG code?')) return;
-            svgInput.value = '';
-            updateLivePreview();
-        }
+const qualityMap = {
+  hd: {w:1280,h:720}, fhd: {w:1920,h:1080},
+  '2k': {w:2560,h:1440}, '4k': {w:3840,h:2160}
+};
 
-        /* ── Copy SVG ── */
-        function copySVG() {
-            navigator.clipboard.writeText(svgInput.value).then(() => {
-                const btn = event.currentTarget;
-                btn.textContent = '✅';
-                setTimeout(() => btn.textContent = '📋', 1500);
-            });
-        }
+const codecInfo = {
+  h264:'Good for: YouTube, social media, all devices',
+  h265:'Good for: 4K streaming, mobile — needs modern player',
+  vp9:'Good for: Chrome, Firefox, Android — open source',
+  av1:'Good for: Cutting-edge streaming — slow to encode',
+  prores:'Good for: Final Cut, Premiere editing workflows'
+};
 
-        /* ── Live Preview ── */
-        let typingTimer;
-        function updateLivePreview() {
-            const code = svgInput.value.trim();
-            if (code) {
-                previewArea.innerHTML = code;
-            } else {
-                previewArea.innerHTML = `
-                    <div class="preview-empty">
-                        <span class="preview-empty-icon">📺</span>
-                        <p>PREVIEW WILL APPEAR HERE</p>
-                    </div>`;
-            }
-            updateLineNums();
-            downloadArea.innerHTML = "";
-        }
+function setQuality(q) {
+  state.quality = q;
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-q="${q}"]`).classList.add('active');
+  updateStats();
+}
+function setFormat(f) {
+  state.format = f;
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-f="${f}"]`).classList.add('active');
+  const alphaToggle = document.getElementById('togAlpha');
+  if (f === 'mp4') { alphaToggle.classList.remove('on'); state.alpha = false; }
+  updateStats();
+}
+function setFps(fps) {
+  state.fps = fps;
+  document.querySelectorAll('.fps-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent) === fps);
+  });
+  updateStats();
+}
+function updateDuration(v) {
+  state.duration = parseFloat(v);
+  document.getElementById('durationVal').textContent = v + 's';
+  updateStats();
+}
+function updateLoop(v) {
+  state.loops = parseInt(v);
+  document.getElementById('loopVal').textContent = v + '×';
+  updateStats();
+}
+function updateOffset(v) {
+  state.offset = parseFloat(v);
+  document.getElementById('offsetVal').textContent = parseFloat(v).toFixed(1) + 's';
+}
+function updateSpeed(v) {
+  state.speed = parseFloat(v);
+  document.getElementById('speedVal').textContent = parseFloat(v).toFixed(2) + '×';
+  updateStats();
+}
+function toggleOpt(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('on');
+  if (id === 'togAlpha') state.alpha = el.classList.contains('on');
+  if (id === 'togAlias') state.antialias = el.classList.contains('on');
+  if (id === 'togAudio') state.audio = el.classList.contains('on');
+}
+function updateCodecInfo() {
+  state.codec = document.getElementById('codecSel').value;
+  document.getElementById('codecTip').textContent = codecInfo[state.codec] || '';
+}
 
-        svgInput.addEventListener('input', () => {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(updateLivePreview, 250);
-            updateLineNums();
-        });
+function updateStats() {
+  const q = qualityMap[state.quality];
+  const totalDur = state.duration * state.loops;
+  const frames = Math.round(totalDur * state.fps);
+  const bpf = q.w * q.h * 3;
+  let mbps = state.format === 'mp4' ? (q.w * q.h * state.fps * 0.07 / 1e6)
+    : state.format === 'webm' ? (q.w * q.h * state.fps * 0.05 / 1e6)
+    : state.format === 'gif' ? (q.w * q.h * state.fps * 0.15 / 1e6) : (q.w * q.h * state.fps * 0.08 / 1e6);
+  const sizeMB = (mbps * totalDur).toFixed(0);
+  document.getElementById('sRes').textContent = q.w + '×' + q.h;
+  document.getElementById('sFps').textContent = state.fps + ' fps';
+  document.getElementById('sFrames').textContent = frames.toLocaleString();
+  document.getElementById('sSize').textContent = '~' + sizeMB + ' MB';
+}
 
-        window.addEventListener('DOMContentLoaded', () => {
-            updateLivePreview();
-            updateLineNums();
-        });
+function addLog(msg, type='') {
+  const lb = document.getElementById('logBox');
+  lb.style.display = 'block';
+  const d = document.createElement('div');
+  d.className = 'log-line ' + type;
+  d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  lb.appendChild(d);
+  lb.scrollTop = lb.scrollHeight;
+}
 
-        /* ════════════════════════════════════════════════════
-           RENDER ENGINE — Animation-Preserving DOM Capture
-           
-           ROOT CAUSE OF FROZEN VIDEO:
-           Drawing an SVG via <img> src=blobURL freezes all CSS
-           animations — the browser treats it as a static bitmap.
-           
-           FIX: Place a live <svg> directly in the DOM inside a
-           visible (but off-screen) container so its animations
-           keep ticking. Each frame, serialize that live DOM node
-           to a data-URL via foreignObject, draw it onto the canvas,
-           and let MediaRecorder capture the canvas stream.
-           This way every CSS keyframe runs in real-time.
-        ════════════════════════════════════════════════════ */
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
 
-        convertBtn.addEventListener('click', () => {
-            let activeSvg = previewArea.querySelector('svg');
-            if (!activeSvg) {
-                alert("Error: No valid SVG code found in the preview.");
-                return;
-            }
+function handleFile(file) {
+  if (!file.name.toLowerCase().endsWith('.svg') && file.type !== 'image/svg+xml') {
+    alert('Please upload an SVG file.'); return;
+  }
+  state.file = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('fileInfo').style.display = 'flex';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    state.svgContent = e.target.result;
+    showPreview(e.target.result);
+    detectSVGSize(e.target.result);
+    document.getElementById('successBanner').style.display = 'none';
+    state.exportBlob = null;
+  };
+  reader.readAsText(file);
+}
 
-            const selectedSeconds   = parseInt(durationSelect.value);
-            const EXACT_DURATION_MS = selectedSeconds * 1000;
+function detectSVGSize(svgStr) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgStr, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
+  if (svg) {
+    const vb = svg.getAttribute('viewBox');
+    if (vb) {
+      const parts = vb.trim().split(/[\s,]+/);
+      state.svgWidth = parseFloat(parts[2]) || 800;
+      state.svgHeight = parseFloat(parts[3]) || 600;
+    } else {
+      state.svgWidth = parseFloat(svg.getAttribute('width')) || 800;
+      state.svgHeight = parseFloat(svg.getAttribute('height')) || 600;
+    }
+  }
+}
 
-            const fps          = parseInt(document.getElementById('videoFps').value);
-            const resSplit     = document.getElementById('videoResolution').value.split('x');
-            const targetWidth  = parseInt(resSplit[0]);
-            const targetHeight = parseInt(resSplit[1]);
+function showPreview(svgStr) {
+  const box = document.getElementById('previewBox');
+  document.getElementById('previewPlaceholder').style.display = 'none';
+  const existing = box.querySelector('div.svg-wrap');
+  if (existing) existing.remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'svg-wrap';
+  wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden';
+  wrap.innerHTML = svgStr;
+  const svgEl = wrap.querySelector('svg');
+  if (svgEl) { svgEl.style.maxWidth = '100%'; svgEl.style.maxHeight = '100%'; svgEl.style.width = 'auto'; svgEl.style.height = 'auto'; }
+  box.appendChild(wrap);
+}
 
-            // Derive the SVG's own coordinate space (for viewBox)
-            let vbW = targetWidth, vbH = targetHeight;
-            const vb = activeSvg.getAttribute('viewBox');
-            if (vb) {
-                const parts = vb.trim().split(/[\s,]+/);
-                if (parts.length === 4) { vbW = parseFloat(parts[2]); vbH = parseFloat(parts[3]); }
-            } else {
-                const aw = activeSvg.getAttribute('width');
-                const ah = activeSvg.getAttribute('height');
-                if (aw) vbW = parseFloat(aw);
-                if (ah) vbH = parseFloat(ah);
-            }
+function removeFile() {
+  state.file = null; state.svgContent = null;
+  document.getElementById('fileInfo').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('previewPlaceholder').style.display = 'block';
+  const wrap = document.getElementById('previewBox').querySelector('.svg-wrap');
+  if (wrap) wrap.remove();
+  document.getElementById('successBanner').style.display = 'none';
+  state.exportBlob = null;
+}
 
-            convertBtn.disabled = true;
-            renderOverlay.style.display = 'flex';
-            progressFill.style.width = '0%';
-            renderTimer.innerHTML = `0.0s <span class="render-timer-unit">/ ${selectedSeconds}s</span>`;
-            renderStatus.innerText = "Preparing live render engine…";
-            renderStatusChip.textContent = "WARMING UP";
-            downloadArea.innerHTML = "";
+async function startExport() {
+  if (!state.svgContent) { alert('Please upload an SVG file first.'); return; }
+  const btn = document.getElementById('exportBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> Processing...';
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('logBox').style.display = 'block';
+  document.getElementById('logBox').innerHTML = '';
+  document.getElementById('successBanner').style.display = 'none';
 
-            canvas.width  = targetWidth;
-            canvas.height = targetHeight;
+  const q = qualityMap[state.quality];
+  const totalDur = state.duration * state.loops;
+  const totalFrames = Math.round(totalDur * state.fps / state.speed);
 
-            // ── Step 1: Clone the SVG and inject it LIVE into the DOM ──
-            // We need the real, visible, animating SVG node.
-            // It must be in the document so CSS animations run.
-            const liveSvg = activeSvg.cloneNode(true);
-            liveSvg.setAttribute('width',  targetWidth  + 'px');
-            liveSvg.setAttribute('height', targetHeight + 'px');
-            if (!liveSvg.getAttribute('viewBox')) {
-                liveSvg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
-            }
-            liveSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  addLog('Starting export: ' + q.w + '×' + q.h + ' @ ' + state.fps + 'fps');
+  addLog('Format: ' + state.format.toUpperCase() + ' | Codec: ' + state.codec.toUpperCase());
+  addLog('Duration: ' + totalDur.toFixed(1) + 's | Speed: ' + state.speed + '×');
 
-            // Size the hidden engine box to exactly targetWidth × targetHeight
-            // so the SVG renders at full resolution with animations active
-            hiddenEngineBox.style.width  = targetWidth  + 'px';
-            hiddenEngineBox.style.height = targetHeight + 'px';
-            hiddenEngineBox.innerHTML = '';
-            hiddenEngineBox.appendChild(liveSvg);
+  const canvas = document.createElement('canvas');
+  canvas.width = q.w; canvas.height = q.h;
+  const ctx = canvas.getContext('2d');
 
-            // ── Step 2: Give the browser 3 frames to start the animations ──
-            let warmupFrames = 0;
-            function waitForWarmup() {
-                warmupFrames++;
-                if (warmupFrames < 4) {
-                    requestAnimationFrame(waitForWarmup);
-                    return;
-                }
-                startRecording();
-            }
-            requestAnimationFrame(waitForWarmup);
+  const chunks = [];
+  let stream, recorder;
+  let useMediaRecorder = false;
 
-            function startRecording() {
-                renderStatus.innerText = `Recording ${selectedSeconds}s at ${targetHeight}p…`;
-                renderStatusChip.textContent = "RECORDING";
+  if (state.format === 'mp4' || state.format === 'webm') {
+    try {
+      stream = canvas.captureStream(state.fps);
+      const mimeType = state.format === 'webm' ? 'video/webm;codecs=vp9' : 'video/webm';
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        const bps = q.w * q.h * state.fps * (state.format === 'webm' ? 0.07 : 0.09);
+        recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: Math.min(bps, 80e6) });
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.start(100);
+        useMediaRecorder = true;
+        addLog('MediaRecorder initialized', 'ok');
+      }
+    } catch(e) { addLog('MediaRecorder not available, using frame export', 'warn'); }
+  }
 
-                const stream = canvas.captureStream(fps);
-                const recordedChunks = [];
+  addLog('Rendering ' + totalFrames + ' frames...', 'ok');
+  const svgBlob = new Blob([state.svgContent], {type:'image/svg+xml'});
+  const svgUrl = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  await new Promise((res, rej) => {
+    img.onload = res; img.onerror = () => { addLog('SVG load warning — using fallback render', 'warn'); res(); };
+    img.src = svgUrl;
+  });
 
-                let targetBitrate = 12000000;
-                if (targetWidth >= 2560) targetBitrate = 20000000;
-                if (targetWidth >= 3840) targetBitrate = 35000000;
+  const gifFrames = [];
+  let lastPct = 0;
 
-                let mediaRecorder;
-                try {
-                    mediaRecorder = new MediaRecorder(stream, {
-                        mimeType: 'video/webm; codecs=vp9',
-                        videoBitsPerSecond: targetBitrate
-                    });
-                } catch(e) {
-                    mediaRecorder = new MediaRecorder(stream, { videoBitsPerSecond: targetBitrate });
-                }
+  for (let i = 0; i < totalFrames; i++) {
+    const pct = Math.round((i / totalFrames) * 100);
+    if (pct !== lastPct) {
+      lastPct = pct;
+      document.getElementById('progBar').style.width = pct + '%';
+      document.getElementById('progPct').textContent = pct + '%';
+      if (pct % 10 === 0) document.getElementById('progLabel').textContent = 'Rendering frame ' + (i+1) + ' of ' + totalFrames + '...';
+    }
+    ctx.clearRect(0, 0, q.w, q.h);
+    if (!state.alpha) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, q.w, q.h); }
+    if (img.complete && img.naturalWidth > 0) {
+      const sw = img.naturalWidth || state.svgWidth || q.w;
+      const sh = img.naturalHeight || state.svgHeight || q.h;
+      const scale = Math.min(q.w/sw, q.h/sh);
+      const dw = sw * scale, dh = sh * scale;
+      const dx = (q.w - dw) / 2, dy = (q.h - dh) / 2;
+      if (state.antialias) { ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; }
+      ctx.drawImage(img, dx, dy, dw, dh);
+    } else {
+      ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, q.w, q.h);
+      ctx.fillStyle = '#378ADD'; ctx.font = 'bold ' + Math.round(q.h*0.04) + 'px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('SVG Frame ' + (i+1), q.w/2, q.h/2);
+    }
+    if (state.format === 'gif' || state.format === 'apng') {
+      gifFrames.push(canvas.toDataURL('image/png'));
+    }
+    if (i % 30 === 0) await new Promise(r => setTimeout(r, 0));
+  }
 
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) recordedChunks.push(e.data);
-                };
+  URL.revokeObjectURL(svgUrl);
+  addLog('Frame rendering complete.', 'ok');
 
-                mediaRecorder.onstop = () => {
-                    renderStatus.innerText = "Applying metadata fixes…";
-                    renderStatusChip.textContent = "FIXING";
-                    hiddenEngineBox.innerHTML = '';
-                    hiddenEngineBox.style.width  = '';
-                    hiddenEngineBox.style.height = '';
+  let finalBlob, mimeOut, extOut;
+  if (useMediaRecorder && recorder) {
+    await new Promise(res => { recorder.onstop = res; recorder.stop(); });
+    finalBlob = new Blob(chunks, {type: recorder.mimeType});
+    mimeOut = recorder.mimeType; extOut = 'webm';
+    if (state.format === 'mp4') addLog('Note: Browser exports WebM. Use FFmpeg to remux to MP4.', 'warn');
+    addLog('MediaRecorder export done — ' + (finalBlob.size/1e6).toFixed(2) + ' MB', 'ok');
+  } else if (state.format === 'gif' && gifFrames.length > 0) {
+    finalBlob = new Blob([gifFrames[0]], {type:'image/png'});
+    extOut = 'png'; mimeOut = 'image/png';
+    addLog('GIF export: browser limitation — first frame saved as PNG.', 'warn');
+    addLog('For full GIF: use gifshot.js or server-side FFmpeg.', 'warn');
+  } else {
+    const png = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    finalBlob = png; mimeOut = 'image/png'; extOut = 'png';
+    addLog('Saved as PNG frame (video codec not available in browser)', 'warn');
+  }
 
-                    const brokenBlob = new Blob(recordedChunks, { type: 'video/webm' });
+  state.exportBlob = finalBlob;
+  state.exportExt = extOut;
+  state.exportMime = mimeOut;
 
-                    ysFixWebmDuration(brokenBlob, EXACT_DURATION_MS, function(fixedBlob) {
-                        const videoUrl   = URL.createObjectURL(fixedBlob);
-                        renderOverlay.style.display = 'none';
-                        convertBtn.disabled = false;
+  document.getElementById('progBar').style.width = '100%';
+  document.getElementById('progPct').textContent = '100%';
+  document.getElementById('progLabel').textContent = 'Export complete!';
+  addLog('Total export size: ' + (finalBlob.size/1e6).toFixed(2) + ' MB', 'ok');
 
-                        const filename   = `SVG-Studio-${selectedSeconds}sec-${targetHeight}p.webm`;
-                        const fileSizeMB = (fixedBlob.size / 1024 / 1024).toFixed(1);
+  const fmtLabel = state.format.toUpperCase();
+  const q2 = qualityMap[state.quality];
+  document.getElementById('successDetail').textContent =
+    q2.w + '×' + q2.h + ' • ' + state.fps + 'fps • ' + (finalBlob.size/1e6).toFixed(2) + ' MB';
+  document.getElementById('successBanner').style.display = 'flex';
 
-                        downloadArea.innerHTML = `
-                            <div class="download-card">
-                                <div class="download-card-info">
-                                    <div class="download-file-icon">🎬</div>
-                                    <div class="download-file-details">
-                                        <span class="download-file-name">${filename}</span>
-                                        <span class="download-file-meta">WEBM · VP9 · ${targetHeight}p · ${selectedSeconds}s · ~${fileSizeMB} MB</span>
-                                    </div>
-                                </div>
-                                <div class="download-actions">
-                                    <a href="${videoUrl}" download="${filename}" class="download-btn">
-                                        ⬇ Download Video
-                                    </a>
-                                </div>
-                            </div>`;
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> Convert again';
+}
 
-                        const a = document.createElement('a');
-                        a.href = videoUrl;
-                        a.download = filename;
-                        a.click();
-                    });
-                };
+function downloadResult() {
+  if (!state.exportBlob) return;
+  const name = (state.file ? state.file.name.replace('.svg','') : 'output') + '.' + state.exportExt;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(state.exportBlob);
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
 
-                mediaRecorder.start();
-
-                const startTime = performance.now();
-                let animationId;
-                let isRecording = true;
-
-                const stopTimeout = setTimeout(() => {
-                    isRecording = false;
-                    cancelAnimationFrame(animationId);
-                    mediaRecorder.stop();
-                }, EXACT_DURATION_MS);
-
-                // ── Step 3: Each frame — serialize live DOM SVG → image → canvas ──
-                // We use the foreignObject trick: wrap the current live SVG HTML
-                // in a foreignObject inside a temporary SVG, encode as data URL,
-                // draw onto canvas. Because the SOURCE is the live DOM node
-                // (not a frozen blob URL img), each serialization captures the
-                // current animation state at that exact moment in time.
-                function renderLoop(currentTime) {
-                    if (!isRecording) return;
-
-                    const elapsed    = currentTime - startTime;
-                    const pct        = Math.min((elapsed / EXACT_DURATION_MS) * 100, 100);
-                    const elapsedSec = Math.min(elapsed / 1000, selectedSeconds).toFixed(1);
-
-                    progressFill.style.width = pct + '%';
-                    renderTimer.innerHTML = `${elapsedSec}s <span class="render-timer-unit">/ ${selectedSeconds}s</span>`;
-
-                    // Serialize the *live* SVG node (captures current animation state)
-                    const svgStr  = new XMLSerializer().serializeToString(liveSvg);
-                    const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
-
-                    const img = new Image();
-                    img.onload = () => {
-                        ctx.fillStyle = '#020617';
-                        ctx.fillRect(0, 0, targetWidth, targetHeight);
-                        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-                        // Force-dirty a single pixel so Chrome doesn't drop identical frames
-                        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.02})`;
-                        ctx.fillRect(0, 0, 1, 1);
-                    };
-                    img.src = dataUrl;
-
-                    animationId = requestAnimationFrame(renderLoop);
-                }
-
-                requestAnimationFrame(renderLoop);
-            }
-        });
-    </script>
-</body>
-</html>
+updateStats();
+</script>
