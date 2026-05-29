@@ -5,133 +5,769 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SVG Studio Pro — Advanced Renderer</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
 <style>
 :root {
-  --void: #08090d; --base: #0d0f16; --panel: #12151f; --panel2: #171a27;
-  --surface: #1e2130; --surface2: #252840; --border: #2a2d3e; --border2: #333650;
-  --cyan: #00d4ff; --cyan-dim: rgba(0,212,255,0.12); --cyan-mid: rgba(0,212,255,0.35);
-  --green: #00ff9d; --green-dim: rgba(0,255,157,0.12);
-  --amber: #ffb800; --amber-dim: rgba(255,184,0,0.15);
-  --red: #ff4466; --red-dim: rgba(255,68,102,0.15);
-  --text: #e8eaf0; --text-mid: #8b90a8; --text-dim: #4a4f6a;
-  --radius: 6px; --font-ui: 'Syne', sans-serif; --font-mono: 'JetBrains Mono', monospace;
+  --void: #08090d;
+  --base: #0d0f16;
+  --panel: #12151f;
+  --panel2: #171a27;
+  --surface: #1e2130;
+  --surface2: #252840;
+  --border: #2a2d3e;
+  --border2: #333650;
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0,212,255,0.12);
+  --cyan-mid: rgba(0,212,255,0.35);
+  --green: #00ff9d;
+  --green-dim: rgba(0,255,157,0.12);
+  --amber: #ffb800;
+  --amber-dim: rgba(255,184,0,0.15);
+  --red: #ff4466;
+  --red-dim: rgba(255,68,102,0.15);
+  --text: #e8eaf0;
+  --text-mid: #8b90a8;
+  --text-dim: #4a4f6a;
+  --radius: 6px;
+  --font-ui: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
+
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--void);color:var(--text);font-family:var(--font-ui);overflow:hidden;}
-.app{display:grid;grid-template-rows:52px 1fr 200px 48px;height:100vh;width:100vw;}
-.menubar{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:24px;z-index:100;}
-.logo{font-size:1.05rem;font-weight:800;letter-spacing:0.08em;background:linear-gradient(90deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;margin-right:8px;}
+
+html,body{
+  height:100%;
+  background:var(--void);
+  color:var(--text);
+  font-family:var(--font-ui);
+  overflow:hidden;
+}
+
+/* ── App shell ── */
+.app{
+  display:grid;
+  grid-template-rows:52px 1fr 220px 48px;
+  height:100vh;
+  width:100vw;
+}
+
+/* ─────────── TOP MENUBAR ─────────── */
+.menubar{
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  gap:24px;
+  z-index:100;
+}
+.logo{
+  font-size:1.05rem;
+  font-weight:800;
+  letter-spacing:0.08em;
+  background:linear-gradient(90deg,var(--cyan),var(--green));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  white-space:nowrap;
+  margin-right:8px;
+}
 .menu-group{display:flex;gap:2px}
-.menu-btn{background:none;border:none;color:var(--text-mid);font-family:var(--font-ui);font-size:0.78rem;font-weight:600;padding:6px 10px;border-radius:4px;cursor:pointer;transition:all .15s;}
+.menu-btn{
+  background:none;
+  border:none;
+  color:var(--text-mid);
+  font-family:var(--font-ui);
+  font-size:0.78rem;
+  font-weight:600;
+  padding:6px 10px;
+  border-radius:4px;
+  cursor:pointer;
+  transition:all .15s;
+}
 .menu-btn:hover{background:var(--surface);color:var(--text)}
-.menubar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.badge{font-size:0.65rem;font-weight:700;font-family:var(--font-mono);padding:3px 8px;border-radius:3px;letter-spacing:0.06em;}
+
+.menubar-right{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.badge{
+  font-size:0.65rem;
+  font-weight:700;
+  font-family:var(--font-mono);
+  padding:3px 8px;
+  border-radius:3px;
+  letter-spacing:0.06em;
+}
 .badge-pro{background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-mid)}
 .badge-ver{background:var(--surface);color:var(--text-dim);border:1px solid var(--border)}
-.workspace{display:grid;grid-template-columns:320px 1fr 300px;overflow:hidden;background:var(--base);}
-.code-panel{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.panel-tab-bar{display:flex;background:var(--void);border-bottom:1px solid var(--border);flex-shrink:0;}
-.panel-tab{font-family:var(--font-mono);font-size:0.7rem;padding:9px 14px;color:var(--text-dim);cursor:pointer;border-right:1px solid var(--border);transition:all .15s;white-space:nowrap;}
-.panel-tab.active{background:var(--panel);color:var(--cyan);border-bottom:2px solid var(--cyan);}
-.editor-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tool-icon-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-size:0.7rem;padding:4px 8px;border-radius:3px;cursor:pointer;transition:all .15s;font-family:var(--font-mono);}
+
+/* ─────────── MAIN WORKSPACE ─────────── */
+.workspace{
+  display:grid;
+  grid-template-columns:320px 1fr 300px;
+  overflow:hidden;
+  background:var(--base);
+}
+
+/* ── Left Panel: Code editor ── */
+.code-panel{
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.panel-tab-bar{
+  display:flex;
+  background:var(--void);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.panel-tab{
+  font-family:var(--font-mono);
+  font-size:0.7rem;
+  padding:9px 14px;
+  color:var(--text-dim);
+  cursor:pointer;
+  border-right:1px solid var(--border);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.panel-tab.active{
+  background:var(--panel);
+  color:var(--cyan);
+  border-bottom:2px solid var(--cyan);
+}
+.editor-toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.tool-icon-btn{
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text-mid);
+  font-size:0.7rem;
+  padding:4px 8px;
+  border-radius:3px;
+  cursor:pointer;
+  transition:all .15s;
+  font-family:var(--font-mono);
+}
 .tool-icon-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
-.line-count{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);margin-left:auto;}
-#svgInput{flex:1;background:var(--panel);color:#7dd3fc;font-family:var(--font-mono);font-size:12.5px;line-height:1.65;border:none;outline:none;padding:14px;resize:none;overflow-y:auto;tab-size:2;}
+.line-count{
+  font-family:var(--font-mono);
+  font-size:0.65rem;
+  color:var(--text-dim);
+  margin-left:auto;
+}
+#svgInput{
+  flex:1;
+  background:var(--panel);
+  color:#7dd3fc;
+  font-family:var(--font-mono);
+  font-size:12.5px;
+  line-height:1.65;
+  border:none;
+  outline:none;
+  padding:14px;
+  resize:none;
+  overflow-y:auto;
+  tab-size:2;
+}
 #svgInput::-webkit-scrollbar{width:6px}
 #svgInput::-webkit-scrollbar-track{background:var(--void)}
 #svgInput::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-.preview-panel{display:flex;flex-direction:column;background:var(--base);overflow:hidden;}
-.preview-toolbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
-.preview-label{font-size:0.72rem;font-weight:700;color:var(--text-mid);letter-spacing:0.06em;text-transform:uppercase;}
-.res-badge{background:var(--surface);border:1px solid var(--border);font-family:var(--font-mono);font-size:0.65rem;color:var(--text-mid);padding:3px 8px;border-radius:3px;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:livepulse 2s infinite;margin-left:auto;}
-@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.4}}
-.preview-stage{flex:1;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#13151e 0% 25%,#0d0f16 0% 50%) 0 0/24px 24px;overflow:hidden;position:relative;}
-.preview-frame{aspect-ratio:16/9;background:#000;max-width:calc(100% - 40px);max-height:calc(100% - 40px);box-shadow:0 0 0 1px var(--border),0 20px 60px rgba(0,0,0,.8);overflow:hidden;position:relative;}
+
+/* ── Centre: Preview ── */
+.preview-panel{
+  display:flex;
+  flex-direction:column;
+  background:var(--base);
+  overflow:hidden;
+}
+.preview-toolbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 14px;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.preview-label{
+  font-size:0.72rem;
+  font-weight:700;
+  color:var(--text-mid);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+}
+.res-badge{
+  background:var(--surface);
+  border:1px solid var(--border);
+  font-family:var(--font-mono);
+  font-size:0.65rem;
+  color:var(--text-mid);
+  padding:3px 8px;
+  border-radius:3px;
+}
+.live-dot{
+  width:7px;height:7px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 6px var(--green);
+  animation:livepulse 2s infinite;
+  margin-left:auto;
+}
+@keyframes livepulse{
+  0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}
+  50%{opacity:.4;box-shadow:0 0 2px var(--green)}
+}
+.preview-stage{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:repeating-conic-gradient(#13151e 0% 25%,#0d0f16 0% 50%) 0 0/24px 24px;
+  overflow:hidden;
+  position:relative;
+}
+.preview-frame{
+  aspect-ratio:16/9;
+  background:#000;
+  max-width:calc(100% - 40px);
+  max-height:calc(100% - 40px);
+  box-shadow:0 0 0 1px var(--border),0 20px 60px rgba(0,0,0,.8);
+  overflow:hidden;
+  position:relative;
+}
 .preview-frame svg{width:100%;height:100%}
-.preview-overlay-time{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid var(--border2);font-family:var(--font-mono);font-size:0.65rem;color:var(--cyan);padding:3px 8px;border-radius:3px;pointer-events:none;}
-.settings-panel{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+
+/* Playhead overlay on preview */
+.preview-overlay-time{
+  position:absolute;
+  bottom:10px;right:10px;
+  background:rgba(0,0,0,.7);
+  border:1px solid var(--border2);
+  font-family:var(--font-mono);
+  font-size:0.65rem;
+  color:var(--cyan);
+  padding:3px 8px;
+  border-radius:3px;
+  pointer-events:none;
+}
+
+/* ── Right Panel: Settings ── */
+.settings-panel{
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+}
 .settings-panel::-webkit-scrollbar{width:4px}
 .settings-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.settings-section{border-bottom:1px solid var(--border);padding:14px;}
-.section-title{font-size:0.67rem;font-weight:700;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-.section-title::before{content:'';width:3px;height:12px;background:var(--cyan);border-radius:2px;display:inline-block;}
+
+.settings-section{
+  border-bottom:1px solid var(--border);
+  padding:14px;
+}
+.section-title{
+  font-size:0.67rem;
+  font-weight:700;
+  color:var(--text-dim);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.section-title::before{
+  content:'';
+  width:3px;height:12px;
+  background:var(--cyan);
+  border-radius:2px;
+  display:inline-block;
+}
+
 .field{margin-bottom:10px}
-.field-label{font-size:0.68rem;color:var(--text-mid);font-weight:600;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
-.field-val{font-family:var(--font-mono);color:var(--cyan);font-size:0.68rem;}
-select,input[type=number],input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.78rem;padding:7px 10px;border-radius:var(--radius);outline:none;transition:border .15s;-webkit-appearance:none;}
-select:focus,input:focus{border-color:var(--cyan-mid)}
+.field-label{
+  font-size:0.68rem;
+  color:var(--text-mid);
+  font-weight:600;
+  margin-bottom:5px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.field-val{
+  font-family:var(--font-mono);
+  color:var(--cyan);
+  font-size:0.68rem;
+}
+
+select,input[type=number],input[type=text]{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  padding:7px 10px;
+  border-radius:var(--radius);
+  outline:none;
+  transition:border .15s;
+  -webkit-appearance:none;
+}
+select:focus,input[type=number]:focus{border-color:var(--cyan-mid)}
 select option{background:var(--surface2)}
-input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:var(--surface2);border-radius:2px;outline:none;cursor:pointer;margin:4px 0;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--cyan);cursor:pointer;}
+
+input[type=range]{
+  width:100%;
+  -webkit-appearance:none;
+  height:4px;
+  background:var(--surface2);
+  border-radius:2px;
+  outline:none;
+  cursor:pointer;
+  margin:4px 0;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:14px;height:14px;
+  border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 6px var(--cyan-mid);
+  cursor:pointer;
+}
+
+/* Format pills */
 .format-pills{display:flex;gap:6px;flex-wrap:wrap}
-.format-pill{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-family:var(--font-mono);font-size:0.68rem;font-weight:700;padding:5px 10px;border-radius:4px;cursor:pointer;transition:all .15s;letter-spacing:0.04em;}
-.format-pill.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+.format-pill{
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text-mid);
+  font-family:var(--font-mono);
+  font-size:0.68rem;
+  font-weight:700;
+  padding:5px 10px;
+  border-radius:4px;
+  cursor:pointer;
+  transition:all .15s;
+  letter-spacing:0.04em;
+}
+.format-pill.active{
+  background:var(--cyan-dim);
+  border-color:var(--cyan);
+  color:var(--cyan);
+}
 .format-pill:hover{border-color:var(--border2);color:var(--text)}
-.render-btn{margin:14px;background:linear-gradient(135deg,#0099cc,#00cc88);border:none;color:#000;font-family:var(--font-ui);font-size:0.85rem;font-weight:800;padding:14px;border-radius:var(--radius);cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;transition:all .2s;box-shadow:0 6px 20px rgba(0,200,150,.25);flex-shrink:0;}
+
+/* Render button */
+.render-btn{
+  margin:14px;
+  background:linear-gradient(135deg,#0099cc,#00cc88);
+  border:none;
+  color:#000;
+  font-family:var(--font-ui);
+  font-size:0.85rem;
+  font-weight:800;
+  padding:14px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  transition:all .2s;
+  box-shadow:0 6px 20px rgba(0,200,150,.25);
+  flex-shrink:0;
+}
 .render-btn:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,200,150,.4)}
 .render-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.timeline-panel{background:var(--panel);border-top:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.timeline-toolbar{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--void);border-bottom:1px solid var(--border);flex-shrink:0;}
-.tl-label{font-size:0.68rem;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.08em;}
-.tl-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);font-size:0.7rem;width:24px;height:24px;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+
+/* ─────────── TIMELINE PANEL ─────────── */
+.timeline-panel{
+  background:var(--panel);
+  border-top:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.timeline-toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 14px;
+  background:var(--void);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.tl-label{
+  font-size:0.68rem;
+  font-weight:700;
+  color:var(--text-mid);
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+}
+.tl-btn{
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text-mid);
+  font-size:0.7rem;
+  width:24px;height:24px;
+  border-radius:3px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
 .tl-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
-.tl-time{font-family:var(--font-mono);font-size:0.7rem;color:var(--cyan);background:var(--surface);border:1px solid var(--border);padding:3px 8px;border-radius:3px;}
+.tl-time{
+  font-family:var(--font-mono);
+  font-size:0.7rem;
+  color:var(--cyan);
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:3px 8px;
+  border-radius:3px;
+}
 .tl-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .zoom-label{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim)}
-.timeline-tracks{flex:1;display:flex;overflow:hidden;}
-.track-labels{width:110px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;}
-.track-label{height:36px;display:flex;align-items:center;padding:0 10px;font-size:0.65rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);gap:6px;}
+
+/* Timeline track area */
+.timeline-tracks{
+  flex:1;
+  display:flex;
+  overflow:hidden;
+}
+.track-labels{
+  width:110px;
+  flex-shrink:0;
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+}
+.track-label{
+  height:38px;
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  font-size:0.65rem;
+  font-weight:700;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  border-bottom:1px solid var(--border);
+  gap:6px;
+}
 .track-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.timeline-scroll{flex:1;overflow-x:auto;overflow-y:hidden;position:relative;}
+
+.timeline-scroll{
+  flex:1;
+  overflow-x:auto;
+  overflow-y:hidden;
+  position:relative;
+}
 .timeline-scroll::-webkit-scrollbar{height:6px}
 .timeline-scroll::-webkit-scrollbar-track{background:var(--void)}
 .timeline-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-.timeline-inner{position:relative;min-width:100%;height:100%;}
-.tl-ruler{height:20px;background:var(--void);border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
-.tl-ruler-canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
-.tl-tracks-area{position:relative;}
-.tl-track-row{height:36px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
-.tl-clip{position:absolute;top:7px;height:22px;border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 8px;font-size:0.6rem;font-weight:700;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;}
-.kf-diamond{position:absolute;top:50%;transform:translate(-50%,-50%) rotate(45deg);width:8px;height:8px;cursor:pointer;z-index:5;}
-.tl-playhead{position:absolute;top:0;width:2px;height:100%;background:var(--red);box-shadow:0 0 8px var(--red);z-index:10;pointer-events:none;}
-.tl-playhead::before{content:'';position:absolute;top:0;left:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--red);}
-.statusbar{background:var(--void);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:20px;z-index:100;}
-.status-item{font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
-.status-item.ok{color:var(--cyan)}
-.status-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
-/* Overlay */
-.render-overlay{position:fixed;inset:0;background:rgba(8,9,13,.95);backdrop-filter:blur(20px);z-index:999;display:none;align-items:center;justify-content:center;}
-.render-modal{background:var(--panel);border:1px solid var(--border2);border-radius:10px;padding:36px;width:480px;box-shadow:0 30px 80px rgba(0,0,0,.9);}
-.render-modal-title{font-size:1.1rem;font-weight:800;color:var(--cyan);margin-bottom:4px;}
-.render-modal-sub{font-size:0.78rem;color:var(--text-mid);font-family:var(--font-mono);margin-bottom:24px;}
-.render-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-.render-stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center;}
-.render-stat-val{font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--text);display:block;}
-.render-stat-lbl{font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;}
-.progress-track{width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:10px;}
-.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px;transition:width .1s linear;}
-.render-info{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:0.72rem;color:var(--text-mid);}
-.render-stage{font-size:0.68rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:8px;min-height:16px;}
-.note-box{margin-top:14px;padding:10px 12px;border-radius:5px;font-size:0.69rem;font-family:var(--font-mono);}
-.note-box.info{background:var(--cyan-dim);border:1px solid var(--cyan-mid);color:var(--cyan);}
-.note-box.warn{background:var(--amber-dim);border:1px solid rgba(255,184,0,.3);color:var(--amber);}
-#downloadArea{position:fixed;bottom:60px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
-.dl-btn{background:linear-gradient(135deg,#0f7a2e,#00a854);color:#fff;text-decoration:none;padding:11px 20px;border-radius:6px;font-family:var(--font-ui);font-weight:700;font-size:0.8rem;box-shadow:0 6px 20px rgba(0,168,84,.35);transition:all .2s;display:flex;align-items:center;gap:8px;white-space:nowrap;}
-.dl-btn:hover{transform:translateY(-2px)}
-#renderCanvas{position:fixed;top:-9999px;left:-9999px;pointer-events:none;}
-.kf-list{display:flex;flex-direction:column;gap:5px;max-height:100px;overflow-y:auto}
-.kf-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-family:var(--font-mono);font-size:0.67rem;color:var(--text-mid);}
+
+.timeline-inner{
+  position:relative;
+  min-width:100%;
+  height:100%;
+}
+
+/* Ruler */
+.tl-ruler{
+  height:20px;
+  background:var(--void);
+  border-bottom:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+}
+.tl-ruler-canvas{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+}
+
+/* Tracks */
+.tl-tracks-area{
+  position:relative;
+}
+.tl-track-row{
+  height:38px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+}
+
+/* Keyframe clip bar */
+.tl-clip{
+  position:absolute;
+  top:7px;
+  height:24px;
+  border-radius:3px;
+  cursor:pointer;
+  transition:filter .15s;
+  display:flex;
+  align-items:center;
+  padding:0 8px;
+  font-size:0.6rem;
+  font-weight:700;
+  font-family:var(--font-mono);
+  white-space:nowrap;
+  overflow:hidden;
+}
+.tl-clip:hover{filter:brightness(1.2)}
+
+/* Keyframe diamond */
+.kf{
+  position:absolute;
+  top:50%;
+  transform:translate(-50%,-50%) rotate(45deg);
+  width:8px;height:8px;
+  cursor:pointer;
+  transition:all .15s;
+  z-index:5;
+}
+.kf:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.4)}
+
+/* Playhead */
+.tl-playhead{
+  position:absolute;
+  top:0;
+  width:2px;
+  height:100%;
+  background:var(--red);
+  box-shadow:0 0 8px var(--red);
+  z-index:10;
+  pointer-events:none;
+  transition:left 0.05s linear;
+}
+.tl-playhead::before{
+  content:'';
+  position:absolute;
+  top:0;left:-5px;
+  width:0;height:0;
+  border-left:6px solid transparent;
+  border-right:6px solid transparent;
+  border-top:8px solid var(--red);
+}
+
+/* ─────────── STATUS BAR ─────────── */
+.statusbar{
+  background:var(--void);
+  border-top:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  padding:0 14px;
+  gap:20px;
+  z-index:100;
+}
+.status-item{
+  font-family:var(--font-mono);
+  font-size:0.62rem;
+  color:var(--text-dim);
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.status-item.active{color:var(--cyan)}
+.status-dot{
+  width:5px;height:5px;
+  border-radius:50%;
+  background:currentColor;
+}
+
+/* ─────────── RENDER OVERLAY ─────────── */
+.render-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(8,9,13,.92);
+  backdrop-filter:blur(20px);
+  z-index:999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.render-modal{
+  background:var(--panel);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:40px;
+  width:480px;
+  box-shadow:0 30px 80px rgba(0,0,0,.9),0 0 0 1px rgba(0,212,255,.08);
+}
+.render-modal-title{
+  font-size:1.1rem;
+  font-weight:800;
+  color:var(--cyan);
+  margin-bottom:4px;
+}
+.render-modal-sub{
+  font-size:0.78rem;
+  color:var(--text-mid);
+  font-family:var(--font-mono);
+  margin-bottom:28px;
+}
+.render-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-bottom:24px;
+}
+.render-stat{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:10px;
+  text-align:center;
+}
+.render-stat-val{
+  font-family:var(--font-mono);
+  font-size:1.1rem;
+  font-weight:700;
+  color:var(--text);
+  display:block;
+}
+.render-stat-lbl{
+  font-size:0.6rem;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:0.07em;
+}
+.progress-track{
+  width:100%;
+  height:6px;
+  background:var(--surface2);
+  border-radius:3px;
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--cyan),var(--green));
+  border-radius:3px;
+  transition:width .08s linear;
+  box-shadow:0 0 10px var(--cyan-mid);
+}
+.render-countdown{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  color:var(--text-mid);
+}
+.countdown-time{color:var(--green);font-size:0.9rem;font-weight:700}
+.render-stage-label{
+  font-size:0.72rem;
+  color:var(--text-dim);
+  font-family:var(--font-mono);
+  margin-top:10px;
+  min-height:18px;
+}
+/* GIF note */
+.gif-warning{
+  margin-top:14px;
+  background:var(--amber-dim);
+  border:1px solid rgba(255,184,0,.3);
+  color:var(--amber);
+  font-size:0.7rem;
+  font-family:var(--font-mono);
+  padding:8px 12px;
+  border-radius:5px;
+  display:none;
+}
+
+/* ─────────── DOWNLOAD AREA ─────────── */
+#downloadArea{
+  position:fixed;
+  bottom:60px;right:20px;
+  z-index:200;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:flex-end;
+}
+.dl-btn{
+  background:linear-gradient(135deg,#0f7a2e,#00a854);
+  color:#fff;
+  text-decoration:none;
+  padding:11px 20px;
+  border-radius:6px;
+  font-family:var(--font-ui);
+  font-weight:700;
+  font-size:0.8rem;
+  letter-spacing:0.04em;
+  box-shadow:0 6px 20px rgba(0,168,84,.35);
+  transition:all .2s;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.dl-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,168,84,.5)}
+
+/* hidden hardware */
+#renderCanvas{display:none}
+#hiddenBox{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;opacity:.01;pointer-events:none}
+
+/* Tooltip */
+[title]{cursor:help}
+
+/* Keyframe panel inside settings */
+.kf-list{display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto}
+.kf-list::-webkit-scrollbar{width:3px}
+.kf-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.kf-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:5px 8px;
+  font-family:var(--font-mono);
+  font-size:0.67rem;
+  color:var(--text-mid);
+}
 .kf-item-time{color:var(--cyan);min-width:42px}
-.kf-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.8rem;padding:0 2px;}
+.kf-item-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kf-del{
+  background:none;border:none;color:var(--text-dim);
+  cursor:pointer;font-size:0.8rem;
+  padding:0 2px;
+  transition:color .15s;
+}
 .kf-del:hover{color:var(--red)}
-.add-kf-btn{background:var(--surface);border:1px dashed var(--border2);color:var(--text-mid);font-family:var(--font-mono);font-size:0.7rem;padding:6px;border-radius:4px;cursor:pointer;width:100%;transition:all .15s;margin-top:4px;}
+.add-kf-btn{
+  background:var(--surface);
+  border:1px dashed var(--border2);
+  color:var(--text-mid);
+  font-family:var(--font-mono);
+  font-size:0.7rem;
+  padding:6px;
+  border-radius:4px;
+  cursor:pointer;
+  width:100%;
+  transition:all .15s;
+  margin-top:4px;
+}
 .add-kf-btn:hover{border-color:var(--cyan-mid);color:var(--cyan)}
 </style>
 </head>
 <body>
+
 <div class="app">
+
   <div class="menubar">
     <div class="logo">SVG STUDIO PRO</div>
     <div class="menu-group">
@@ -142,21 +778,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <button class="menu-btn">Help</button>
     </div>
     <div class="menubar-right">
-      <span class="badge badge-ver">v4.0</span>
+      <span class="badge badge-ver">v3.0</span>
       <span class="badge badge-pro">PRO</span>
     </div>
   </div>
 
   <div class="workspace">
+
     <div class="code-panel">
       <div class="panel-tab-bar">
         <div class="panel-tab active">source.svg</div>
         <div class="panel-tab">properties</div>
       </div>
       <div class="editor-toolbar">
-        <button class="tool-icon-btn" onclick="formatCode()">⌥ Format</button>
-        <button class="tool-icon-btn" onclick="clearEditor()">✕ Clear</button>
-        <button class="tool-icon-btn" onclick="copySVG()">⎘ Copy</button>
+        <button class="tool-icon-btn" title="Format Code" onclick="formatCode()">⌥ Format</button>
+        <button class="tool-icon-btn" title="Clear Editor" onclick="clearEditor()">✕ Clear</button>
+        <button class="tool-icon-btn" title="Copy SVG" onclick="copySVG()">⎘ Copy</button>
         <span class="line-count" id="lineCount">0 lines</span>
       </div>
       <textarea id="svgInput" spellcheck="false" placeholder="Paste <svg> code here..."></textarea>
@@ -168,7 +805,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
         <span class="res-badge" id="resBadge">1920×1080</span>
         <span class="res-badge" id="fpsBadge">60 fps</span>
         <span class="res-badge" id="durBadge">6.0s</span>
-        <div class="live-dot"></div>
+        <div class="live-dot" title="Live sync active"></div>
       </div>
       <div class="preview-stage">
         <div class="preview-frame" id="previewFrame">
@@ -179,27 +816,34 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     </div>
 
     <div class="settings-panel">
+
       <div class="settings-section">
         <div class="section-title">Output Settings</div>
+
         <div class="field">
           <div class="field-label">Resolution <span class="field-val" id="resLabel">1920×1080</span></div>
           <select id="videoResolution" onchange="syncBadges()">
+            <option value="3840x2160">4K Ultra HD — 2160p</option>
+            <option value="2560x1440">2K Quad HD — 1440p</option>
             <option value="1920x1080" selected>Full HD — 1080p</option>
             <option value="1280x720">HD Ready — 720p</option>
             <option value="854x480">SD — 480p</option>
-            <option value="640x360">Low — 360p</option>
           </select>
         </div>
+
         <div class="field">
           <div class="field-label">Duration (seconds) <span class="field-val" id="durLabel">6.0s</span></div>
-          <input type="number" id="videoDuration" value="6" min="1" max="120" step="0.5" oninput="syncBadges();buildTimeline()">
+          <input type="number" id="videoDuration" value="6" min="1" max="300" step="0.5"
+                 oninput="syncBadges();buildTimeline()" placeholder="e.g. 10.5">
         </div>
+
         <div class="field">
-          <div class="field-label">Frame Rate <span class="field-val" id="fpsLabel">30 fps</span></div>
+          <div class="field-label">Frame Rate <span class="field-val" id="fpsLabel">60 fps</span></div>
           <select id="videoFps" onchange="syncBadges()">
-            <option value="60">60 FPS</option>
-            <option value="30" selected>30 FPS</option>
-            <option value="24">24 FPS</option>
+            <option value="60" selected>60 FPS — Ultra Smooth</option>
+            <option value="30">30 FPS — Cinematic</option>
+            <option value="24">24 FPS — Film</option>
+            <option value="15">15 FPS — Compressed</option>
           </select>
         </div>
       </div>
@@ -207,60 +851,67 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="settings-section">
         <div class="section-title">Export Format</div>
         <div class="format-pills">
-          <div class="format-pill active" data-fmt="webm" onclick="selectFmt(this)">WebM</div>
-          <div class="format-pill" data-fmt="gif" onclick="selectFmt(this)">GIF</div>
+          <div class="format-pill active" data-fmt="webm" onclick="selectFormat(this)">WebM</div>
+          <div class="format-pill" data-fmt="mp4"  onclick="selectFormat(this)">MP4</div>
+          <div class="format-pill" data-fmt="gif"  onclick="selectFormat(this)">GIF</div>
         </div>
-        <div id="fmtNote" style="font-size:0.64rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:8px;line-height:1.5">
-          WebM (VP8) — plays in Chrome, Firefox, Edge. Rename to .webm after download.
+        <div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:8px" id="formatNote">
+          VP9 codec · best quality/size ratio
         </div>
       </div>
 
       <div class="settings-section">
         <div class="section-title">Quality</div>
         <div class="field">
-          <div class="field-label">Bitrate <span class="field-val" id="bitrateLabel">8 Mbps</span></div>
-          <input type="range" id="bitrateSlider" min="1" max="40" value="8" oninput="syncBitrate()">
+          <div class="field-label">Bitrate <span class="field-val" id="bitrateLabel">12 Mbps</span></div>
+          <input type="range" id="bitrateSlider" min="2" max="80" value="12" oninput="syncBitrate()">
         </div>
         <div class="field">
           <div class="field-label">Background</div>
-          <input type="text" id="bgColor" value="#020617" placeholder="#000000">
+          <input type="text" id="bgColor" value="#020617" placeholder="#000000" style="font-family:var(--font-mono);font-size:0.75rem">
         </div>
       </div>
 
       <div class="settings-section">
         <div class="section-title">Keyframes</div>
-        <div class="kf-list" id="kfList"><div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono)">No keyframes</div></div>
-        <button class="add-kf-btn" onclick="addKF()">+ Add at Playhead</button>
+        <div class="kf-list" id="kfList"></div>
+        <button class="add-kf-btn" onclick="addKeyframeAtCurrent()">+ Add Keyframe at Playhead</button>
       </div>
 
-      <button class="render-btn" id="renderBtn" onclick="startRender()">▶ RENDER &amp; EXPORT</button>
+      <button class="render-btn" id="renderBtn" onclick="startRender()">
+        ▶ RENDER &amp; EXPORT
+      </button>
+
     </div>
   </div>
 
   <div class="timeline-panel">
     <div class="timeline-toolbar">
       <span class="tl-label">Timeline</span>
-      <button class="tl-btn" onclick="seekTo(0)">⏮</button>
-      <button class="tl-btn" id="playBtn" onclick="togglePlay()">▶</button>
-      <button class="tl-btn" onclick="seekTo(getDur())">⏭</button>
-      <span class="tl-time" id="tlTime">00:00.000</span>
+      <button class="tl-btn" title="Go to start" onclick="seekTo(0)">⏮</button>
+      <button class="tl-btn" title="Play/Pause" id="playBtn" onclick="togglePlay()">▶</button>
+      <button class="tl-btn" title="Go to end" onclick="seekToEnd()">⏭</button>
+      <span class="tl-time" id="tlTimeDisplay">00:00.000</span>
       <div class="tl-right">
         <span class="zoom-label">ZOOM</span>
-        <input type="range" id="zoomSlider" min="40" max="400" value="100" style="width:80px" oninput="buildTimeline()">
+        <input type="range" id="zoomSlider" min="50" max="400" value="100"
+               style="width:80px" oninput="buildTimeline()">
         <span class="zoom-label" id="zoomVal">100%</span>
       </div>
     </div>
     <div class="timeline-tracks">
       <div class="track-labels">
-        <div class="track-label"><span class="track-dot" style="background:var(--cyan)"></span>SVG</div>
-        <div class="track-label"><span class="track-dot" style="background:var(--amber)"></span>KF</div>
+        <div class="track-label"><span class="track-dot" style="background:var(--cyan)"></span>SVG Anim</div>
+        <div class="track-label"><span class="track-dot" style="background:var(--green)"></span>Keyframes</div>
+        <div class="track-label"><span class="track-dot" style="background:var(--amber)"></span>Markers</div>
       </div>
       <div class="timeline-scroll" id="tlScroll">
         <div class="timeline-inner" id="tlInner">
-          <div class="tl-ruler"><canvas id="rulerCanvas" class="tl-ruler-canvas"></canvas></div>
-          <div class="tl-tracks-area">
+          <div class="tl-ruler"><canvas class="tl-ruler-canvas" id="rulerCanvas"></canvas></div>
+          <div class="tl-tracks-area" id="tlTracksArea">
             <div class="tl-track-row" id="trackAnim"></div>
             <div class="tl-track-row" id="trackKf"></div>
+            <div class="tl-track-row" id="trackMarker"></div>
           </div>
           <div class="tl-playhead" id="playhead"></div>
         </div>
@@ -269,535 +920,777 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   </div>
 
   <div class="statusbar">
-    <div class="status-item ok"><div class="status-dot"></div><span id="statusTxt">Ready</span></div>
-    <div class="status-item" id="codecStat">—</div>
-    <div class="status-item" id="frameStat">—</div>
-    <div class="status-item" style="margin-left:auto;font-size:0.6rem;opacity:.4">SVG Studio Pro v4.0</div>
+    <div class="status-item active"><div class="status-dot"></div><span id="statusText">Ready</span></div>
+    <div class="status-item" id="memStat">MEM —</div>
+    <div class="status-item" id="frameStat">FRAME —</div>
+    <div class="status-item" style="margin-left:auto;font-size:0.6rem;opacity:.5">Created by Jubayer Islam</div>
   </div>
 </div>
 
 <div class="render-overlay" id="renderOverlay">
   <div class="render-modal">
-    <div class="render-modal-title" id="mTitle">Rendering…</div>
-    <div class="render-modal-sub" id="mSub">Starting…</div>
+    <div class="render-modal-title" id="modalTitle">Rendering…</div>
+    <div class="render-modal-sub" id="modalSub">Initialising encoder pipeline</div>
     <div class="render-stats">
-      <div class="render-stat"><span class="render-stat-val" id="rFps">—</span><span class="render-stat-lbl">FPS</span></div>
-      <div class="render-stat"><span class="render-stat-val" id="rRes">—</span><span class="render-stat-lbl">Resolution</span></div>
-      <div class="render-stat"><span class="render-stat-val" id="rDur">—</span><span class="render-stat-lbl">Duration</span></div>
+      <div class="render-stat">
+        <span class="render-stat-val" id="rStatFps">—</span>
+        <span class="render-stat-lbl">FPS</span>
+      </div>
+      <div class="render-stat">
+        <span class="render-stat-val" id="rStatRes">—</span>
+        <span class="render-stat-lbl">Resolution</span>
+      </div>
+      <div class="render-stat">
+        <span class="render-stat-val" id="rStatDur">—</span>
+        <span class="render-stat-lbl">Duration</span>
+      </div>
     </div>
-    <div class="progress-track"><div class="progress-fill" id="pFill"></div></div>
-    <div class="render-info">
-      <span id="rElapsed">0s</span>
-      <span id="rPct" style="color:var(--green);font-weight:700">0%</span>
-      <span id="rRemain">—</span>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
     </div>
-    <div class="render-stage" id="rStage"></div>
-    <div class="note-box info" id="rNote"></div>
+    <div class="render-countdown">
+      <span id="rElapsed">0.0s elapsed</span>
+      <span class="countdown-time" id="rRemain">— remaining</span>
+      <span id="rPercent">0%</span>
+    </div>
+    <div class="render-stage-label" id="renderStageLabel"></div>
+    <div class="gif-warning" id="gifWarning">
+      ⚠ GIF encoding is CPU-intensive. Large resolutions may be slow. Recommended: 720p or below for GIF.
+    </div>
   </div>
 </div>
 
 <div id="downloadArea"></div>
 <canvas id="renderCanvas"></canvas>
+<div id="hiddenBox"></div>
 
 <script>
-// =============================================================
-//  SVG STUDIO PRO v4.0
-//  
-//  FORMAT SUPPORT (what browsers can actually do):
-//  - WebM (VP8): Native MediaRecorder output. Plays in Chrome,
-//    Firefox, Edge. Does NOT play on Windows Media Player or
-//    QuickTime — user needs VLC or a modern browser to view.
-//  - GIF: Pure JS encoder. Plays everywhere, lower quality.
-//
-//  WHY NO MP4:
-//  Browsers cannot encode H.264 MP4 natively. MediaRecorder
-//  only outputs WebM. True MP4 needs FFmpeg server-side.
-//  The old code claimed to make MP4 but just renamed a broken
-//  WebM file — that's why it showed "unsupported format".
-//
-//  HOW WE FIX SEEKABILITY:
-//  We render frames onto canvas at REAL-TIME speed (matching
-//  the chosen FPS exactly using setInterval). This gives
-//  MediaRecorder uniform frame timing → correct timestamps →
-//  video seeks properly to any point.
-// =============================================================
+/* ===================================================
+   SVG STUDIO PRO — Full Engine
+=================================================== */
 
-const $ = id => document.getElementById(id);
-const svgInput    = $('svgInput');
-const previewFrame= $('previewFrame');
-const canvas      = $('renderCanvas');
-const ctx         = canvas.getContext('2d', {alpha:false});
-const downloadArea= $('downloadArea');
+// DOM refs
+const svgInput     = document.getElementById('svgInput');
+const previewFrame = document.getElementById('previewFrame');
+const renderBtn    = document.getElementById('renderBtn');
+const renderOverlay= document.getElementById('renderOverlay');
+const progressFill = document.getElementById('progressFill');
+const canvas       = document.getElementById('renderCanvas');
+const hiddenBox    = document.getElementById('hiddenBox');
+const ctx          = canvas.getContext('2d',{alpha:false});
+const downloadArea = document.getElementById('downloadArea');
 
-let selectedFmt   = 'webm';
-let keyframes     = [];
-let curTime       = 0;
-let isPlaying     = false;
-let playRAF       = null;
-let playStart     = null;
-let playFrom      = 0;
+// Timeline DOM
+const tlScroll     = document.getElementById('tlScroll');
+const tlInner      = document.getElementById('tlInner');
+const rulerCanvas  = document.getElementById('rulerCanvas');
+const playhead     = document.getElementById('playhead');
+const trackAnim    = document.getElementById('trackAnim');
+const trackKf      = document.getElementById('trackKf');
+const trackMarker  = document.getElementById('trackMarker');
+const tlTimeDisplay= document.getElementById('tlTimeDisplay');
+const playBtn      = document.getElementById('playBtn');
+const kfList       = document.getElementById('kfList');
 
-const FMT_NOTES = {
-  webm: 'WebM (VP8) — plays in Chrome, Firefox, Edge, VLC.\nDoes NOT open in Windows Media Player or QuickTime.',
-  gif:  'Animated GIF — plays everywhere.\nLower quality, larger file, no audio.'
+// State
+let selectedFormat = 'webm';
+let keyframes      = [];
+let currentTimeSec = 0;
+let isPlaying      = false;
+let playRAF        = null;
+let playStartWall  = null;
+let playStartSec   = 0;
+let markers        = [];
+
+// ── Format notes
+const FORMAT_NOTES = {
+  webm:'VP9 codec · best quality/size ratio',
+  mp4 :'H.264 via WebM→MP4 remux · universal playback',
+  gif :'Animated GIF · CSS-animated · no audio'
 };
 
-function selectFmt(el) {
+function selectFormat(el){
   document.querySelectorAll('.format-pill').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
-  selectedFmt = el.dataset.fmt;
-  $('fmtNote').textContent = FMT_NOTES[selectedFmt];
+  selectedFormat = el.dataset.fmt;
+  document.getElementById('formatNote').textContent = FORMAT_NOTES[selectedFormat];
+  document.getElementById('gifWarning').style.display = selectedFormat==='gif'?'block':'none';
 }
 
-function getDur() { return Math.max(0.5, parseFloat($('videoDuration').value)||6); }
-function getFps() { return parseInt($('videoFps').value)||30; }
-function getRes() { return ($('videoResolution').value||'1280x720').split('x').map(Number); }
-
-function syncBadges() {
-  const [W,H] = getRes(), fps = getFps(), dur = getDur();
-  $('resBadge').textContent = `${W}×${H}`;
-  $('fpsBadge').textContent = `${fps} fps`;
-  $('durBadge').textContent = `${dur.toFixed(1)}s`;
-  $('resLabel').textContent = `${W}×${H}`;
-  $('fpsLabel').textContent = `${fps} fps`;
-  $('durLabel').textContent = `${dur.toFixed(1)}s`;
+// ── Badge sync
+function syncBadges(){
+  const res  = document.getElementById('videoResolution').value;
+  const fps  = document.getElementById('videoFps').value;
+  const dur  = parseFloat(document.getElementById('videoDuration').value)||6;
+  const parts= res.split('x');
+  const label= `${parts[0]}×${parts[1]}`;
+  document.getElementById('resBadge').textContent  = label;
+  document.getElementById('fpsBadge').textContent  = fps+' fps';
+  document.getElementById('durBadge').textContent  = dur.toFixed(1)+'s';
+  document.getElementById('resLabel').textContent  = label;
+  document.getElementById('fpsLabel').textContent  = fps+' fps';
+  document.getElementById('durLabel').textContent  = dur.toFixed(1)+'s';
   buildTimeline();
 }
-function syncBitrate() { $('bitrateLabel').textContent = $('bitrateSlider').value+' Mbps'; }
-
-function updateLineCount() { $('lineCount').textContent = svgInput.value.split('\n').length+' lines'; }
-svgInput.addEventListener('input', ()=>{ updateLineCount(); clearTimeout(window._pt); window._pt=setTimeout(updatePreview,200); });
-
-function formatCode() {
-  try {
-    const doc = new DOMParser().parseFromString(svgInput.value,'image/svg+xml');
-    svgInput.value = new XMLSerializer().serializeToString(doc);
-    updateLineCount();
-  } catch(e){ alert('Invalid SVG'); }
+function syncBitrate(){
+  const v = document.getElementById('bitrateSlider').value;
+  document.getElementById('bitrateLabel').textContent = v+' Mbps';
 }
-function clearEditor() { if(confirm('Clear?')){ svgInput.value=''; updatePreview(); updateLineCount(); } }
-function copySVG() { navigator.clipboard.writeText(svgInput.value).then(()=>setStatus('Copied!')); }
 
-function updatePreview() {
+// ── Line counter
+function updateLineCount(){
+  const lines = svgInput.value.split('\n').length;
+  document.getElementById('lineCount').textContent = lines+' lines';
+}
+svgInput.addEventListener('input',()=>{
+  updateLineCount();
+  clearTimeout(window._previewTimer);
+  window._previewTimer = setTimeout(updatePreview,200);
+});
+function formatCode(){
+  try{
+    const p=new DOMParser();
+    const d=p.parseFromString(svgInput.value,'image/svg+xml');
+    const s=new XMLSerializer().serializeToString(d);
+    svgInput.value=s;
+    updateLineCount();
+  }catch(e){alert('Invalid SVG — cannot format')}
+}
+function clearEditor(){
+  if(confirm('Clear SVG code?')){svgInput.value='';updatePreview();updateLineCount();}
+}
+function copySVG(){
+  navigator.clipboard.writeText(svgInput.value).then(()=>{
+    setStatus('Copied to clipboard','active');
+    setTimeout(()=>setStatus('Ready','active'),1500);
+  });
+}
+
+// ── Live Preview
+function updatePreview(){
   const raw = svgInput.value.trim();
-  if (!raw) { previewFrame.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2a2d3e;font-size:0.8rem;font-family:var(--font-mono)">Paste SVG to preview</div>'; return; }
+  if(!raw){
+    previewFrame.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#2a2d3e;font-size:0.8rem;font-family:var(--font-mono)">Paste SVG to preview</div>';
+    return;
+  }
   previewFrame.innerHTML = raw;
 }
 
-function setStatus(msg, cls='ok') {
-  $('statusTxt').textContent = msg;
-  $('statusTxt').parentElement.className = 'status-item '+(cls||'');
+// ── Toolbar helpers
+function setStatus(msg, cls=''){
+  const el=document.getElementById('statusText');
+  el.textContent=msg;
+  el.parentElement.className='status-item'+(cls?' '+cls:'');
 }
 
-// ── TIMELINE ──
-function pps() {
-  const z = parseInt($('zoomSlider').value)||100;
-  $('zoomVal').textContent = z+'%';
+// ══════════════════════════════════════════
+//  TIMELINE ENGINE
+// ══════════════════════════════════════════
+const PX_PER_SEC = ()=>{
+  const z=parseInt(document.getElementById('zoomSlider').value)||100;
+  document.getElementById('zoomVal').textContent=z+'%';
   return Math.round(80*z/100);
-}
+};
 
-function buildTimeline() {
-  const dur = getDur(), px = pps();
-  const totalW = Math.max(Math.ceil(dur*px)+120, ($('tlScroll').clientWidth||600));
-  $('tlInner').style.width = totalW+'px';
+function buildTimeline(){
+  const dur = parseFloat(document.getElementById('videoDuration').value)||6;
+  const pps = PX_PER_SEC();
+  const totalW = Math.max(Math.ceil(dur*pps)+120, tlScroll.clientWidth||600);
 
-  const rc = $('rulerCanvas');
-  rc.width = totalW; rc.height = 20;
-  const r = rc.getContext('2d');
-  r.fillStyle='#0d0f16'; r.fillRect(0,0,totalW,20);
-  const step = px>=100?0.5:px>=50?1:2;
-  r.font='9px JetBrains Mono,monospace';
-  for(let t=0; t<=dur+step; t+=step) {
-    const x=Math.round(t*px); if(x>totalW)break;
-    const maj=Math.abs(t%1)<0.001;
-    r.strokeStyle=maj?'#333650':'#1e2130'; r.lineWidth=1;
-    r.beginPath(); r.moveTo(x,maj?6:12); r.lineTo(x,20); r.stroke();
-    if(maj){ r.fillStyle='#4a4f6a'; r.fillText(t.toFixed(0)+'s',x+2,9); }
+  tlInner.style.width = totalW+'px';
+
+  // Draw ruler
+  const rc=rulerCanvas;
+  rc.width=totalW; rc.height=20;
+  const rCtx=rc.getContext('2d');
+  rCtx.clearRect(0,0,totalW,20);
+  rCtx.fillStyle='#0d0f16';
+  rCtx.fillRect(0,0,totalW,20);
+
+  // Tick marks
+  const step = pps>=100?0.5:pps>=60?1:pps>=30?2:5;
+  rCtx.strokeStyle='#2a2d3e';
+  rCtx.fillStyle='#4a4f6a';
+  rCtx.font='9px JetBrains Mono,monospace';
+  for(let t=0;t<=dur+step;t+=step){
+    const x=Math.round(t*pps);
+    if(x>totalW)break;
+    const isMajor = Math.abs(t%1)<0.001;
+    rCtx.strokeStyle=isMajor?'#333650':'#1e2130';
+    rCtx.lineWidth=1;
+    rCtx.beginPath();rCtx.moveTo(x,isMajor?6:11);rCtx.lineTo(x,20);rCtx.stroke();
+    if(isMajor){
+      rCtx.fillStyle='#4a4f6a';
+      rCtx.fillText(t.toFixed(0)+'s',x+2,9);
+    }
   }
 
-  $('trackAnim').innerHTML='';
+  // Draw animation clip bar (full duration)
+  trackAnim.innerHTML='';
   const clip=document.createElement('div');
   clip.className='tl-clip';
-  clip.style.cssText=`left:0;width:${dur*px}px;background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.4);color:rgba(0,212,255,0.7)`;
-  clip.textContent=`SVG · ${dur.toFixed(2)}s`;
-  $('trackAnim').appendChild(clip);
+  clip.style.cssText=`left:0;width:${dur*pps}px;background:rgba(0,212,255,0.18);border:1px solid rgba(0,212,255,0.4);color:rgba(0,212,255,0.7)`;
+  clip.textContent=`SVG Animation · ${dur.toFixed(2)}s`;
+  trackAnim.appendChild(clip);
 
-  $('trackKf').innerHTML='';
+  // Draw keyframes row
+  trackKf.innerHTML='';
   keyframes.forEach((kf,i)=>{
-    const d=document.createElement('div');
-    d.className='kf-diamond';
-    d.style.cssText=`left:${Math.round(kf.time*px)}px;background:var(--amber);border:1px solid rgba(255,255,255,.3)`;
-    d.title=`${kf.label} @ ${kf.time.toFixed(2)}s`;
-    d.onclick=()=>seekTo(kf.time);
-    $('trackKf').appendChild(d);
+    const x=Math.round(kf.time*pps);
+    const diamond=document.createElement('div');
+    diamond.className='kf';
+    diamond.style.cssText=`left:${x}px;background:${kf.color||'var(--amber)'};border:1px solid rgba(255,255,255,.3)`;
+    diamond.title=`KF ${i+1}: ${kf.label} @ ${kf.time.toFixed(2)}s`;
+    diamond.onclick=()=>seekTo(kf.time);
+    trackKf.appendChild(diamond);
   });
 
-  updatePH();
+  // Draw markers
+  trackMarker.innerHTML='';
+  markers.forEach(m=>{
+    const x=Math.round(m.time*pps);
+    const mk=document.createElement('div');
+    mk.className='kf';
+    mk.style.cssText=`left:${x}px;background:var(--green);border:1px solid rgba(255,255,255,.3)`;
+    mk.title=`Marker: ${m.label} @ ${m.time.toFixed(2)}s`;
+    trackMarker.appendChild(mk);
+  });
+
+  updatePlayheadPosition();
 }
 
-function updatePH() {
-  const dur=getDur(), px=pps();
-  const t=Math.max(0,Math.min(curTime,dur));
-  $('playhead').style.left=Math.round(t*px)+'px';
-  const ms=Math.floor(t*1000), sec=Math.floor(ms/1000), msRem=ms%1000;
-  const ts=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}.${String(msRem).padStart(3,'0')}`;
-  $('tlTime').textContent=ts;
-  $('previewTime').textContent=ts;
+function updatePlayheadPosition(){
+  const dur = parseFloat(document.getElementById('videoDuration').value)||6;
+  const pps = PX_PER_SEC();
+  const safeTime = Math.max(0,Math.min(currentTimeSec,dur));
+  const x = safeTime*pps;
+  playhead.style.left = x+'px';
+  const ms=safeTime*1000;
+  const s=Math.floor(ms/1000),ms2=Math.floor(ms%1000);
+  const min=Math.floor(s/60),sec=s%60;
+  const timeStr=`${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms2).padStart(3,'0')}`;
+  tlTimeDisplay.textContent=timeStr;
+  document.getElementById('previewTime').textContent=timeStr;
+  // scroll playhead into view
+  const scrollLeft=tlScroll.scrollLeft;
+  const viewW=tlScroll.clientWidth;
+  if(x<scrollLeft+40||x>scrollLeft+viewW-40){
+    tlScroll.scrollLeft=Math.max(0,x-viewW/3);
+  }
 }
 
-function seekTo(sec) { curTime=Math.max(0,Math.min(sec,getDur())); if(isPlaying){stopPlay();startPlay();} else updatePH(); }
+function seekTo(sec){
+  const dur=parseFloat(document.getElementById('videoDuration').value)||6;
+  currentTimeSec=Math.max(0,Math.min(sec,dur));
+  if(isPlaying){stopPlay();startPlay();}
+  else updatePlayheadPosition();
+}
+function seekToEnd(){seekTo(parseFloat(document.getElementById('videoDuration').value)||6)}
 
-$('tlScroll').addEventListener('click',e=>{
-  const r=$('tlScroll').getBoundingClientRect();
-  seekTo((e.clientX-r.left+$('tlScroll').scrollLeft)/pps());
+// Click on ruler / tracks to seek
+tlScroll.addEventListener('click',e=>{
+  const pps=PX_PER_SEC();
+  const rect=tlScroll.getBoundingClientRect();
+  const scrollLeft=tlScroll.scrollLeft;
+  const x=e.clientX-rect.left+scrollLeft;
+  seekTo(x/pps);
 });
 
-function togglePlay(){ isPlaying?stopPlay():startPlay(); }
+// Play/Pause
+function togglePlay(){isPlaying?stopPlay():startPlay()}
 function startPlay(){
-  if(curTime>=getDur()) curTime=0;
-  isPlaying=true; $('playBtn').textContent='⏸';
-  playStart=performance.now(); playFrom=curTime;
-  function tick(now){
+  const dur=parseFloat(document.getElementById('videoDuration').value)||6;
+  if(currentTimeSec>=dur)currentTimeSec=0;
+  isPlaying=true;
+  playBtn.textContent='⏸';
+  playStartWall=performance.now();
+  playStartSec=currentTimeSec;
+  function frame(now){
     if(!isPlaying)return;
-    curTime=playFrom+(now-playStart)/1000;
-    if(curTime>=getDur()){ curTime=getDur(); stopPlay(); return; }
-    updatePH(); playRAF=requestAnimationFrame(tick);
+    const elapsed=(now-playStartWall)/1000;
+    currentTimeSec=playStartSec+elapsed;
+    const dur2=parseFloat(document.getElementById('videoDuration').value)||6;
+    if(currentTimeSec>=dur2){currentTimeSec=dur2;stopPlay();return;}
+    updatePlayheadPosition();
+    playRAF=requestAnimationFrame(frame);
   }
-  playRAF=requestAnimationFrame(tick);
+  playRAF=requestAnimationFrame(frame);
 }
-function stopPlay(){ isPlaying=false; $('playBtn').textContent='▶'; cancelAnimationFrame(playRAF); updatePH(); }
+function stopPlay(){
+  isPlaying=false;
+  playBtn.textContent='▶';
+  cancelAnimationFrame(playRAF);
+  updatePlayheadPosition();
+}
 
-function addKF(){
+// Keyframe management
+function addKeyframeAtCurrent(){
+  const label=`KF ${keyframes.length+1}`;
   const colors=['var(--amber)','var(--cyan)','var(--green)','var(--red)'];
-  keyframes.push({time:curTime,label:`KF${keyframes.length+1}`,color:colors[keyframes.length%4]});
+  keyframes.push({time:currentTimeSec,label,color:colors[keyframes.length%colors.length]});
   keyframes.sort((a,b)=>a.time-b.time);
-  renderKfList(); buildTimeline();
+  renderKfList();
+  buildTimeline();
 }
-function removeKF(i){ keyframes.splice(i,1); renderKfList(); buildTimeline(); }
+function removeKeyframe(i){
+  keyframes.splice(i,1);
+  renderKfList();
+  buildTimeline();
+}
 function renderKfList(){
-  $('kfList').innerHTML='';
-  if(!keyframes.length){ $('kfList').innerHTML='<div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono)">No keyframes</div>'; return; }
+  kfList.innerHTML='';
+  if(keyframes.length===0){
+    kfList.innerHTML='<div style="font-size:0.65rem;color:var(--text-dim);font-family:var(--font-mono);padding:4px 0">No keyframes yet</div>';
+    return;
+  }
   keyframes.forEach((kf,i)=>{
-    const el=document.createElement('div'); el.className='kf-item';
-    el.innerHTML=`<span class="kf-item-time">${kf.time.toFixed(2)}s</span><span style="flex:1">${kf.label}</span><button class="kf-del" onclick="removeKF(${i})">✕</button>`;
-    el.onclick=e=>{ if(e.target.tagName!=='BUTTON') seekTo(kf.time); };
-    $('kfList').appendChild(el);
+    const el=document.createElement('div');
+    el.className='kf-item';
+    el.innerHTML=`<span class="kf-item-time">${kf.time.toFixed(2)}s</span><span class="kf-item-label">${kf.label}</span><button class="kf-del" onclick="removeKeyframe(${i})" title="Remove">✕</button>`;
+    el.onclick=e=>{if(e.target.tagName!=='BUTTON')seekTo(kf.time)};
+    kfList.appendChild(el);
   });
 }
 
-// =============================================================
+// Add default markers
+markers=[{time:0,label:'Start'},{time:null,label:'End'}];
+
+// ══════════════════════════════════════════
 //  RENDER ENGINE
-// =============================================================
+// ══════════════════════════════════════════
+function startRender(){
+  const activeSvg=previewFrame.querySelector('svg');
+  if(!activeSvg){alert('No valid SVG found in preview. Paste SVG code first.');return;}
 
-function startRender() {
-  const activeSvg = previewFrame.querySelector('svg');
-  if(!activeSvg){ alert('No SVG found. Paste your SVG code first.'); return; }
+  const durSec   = parseFloat(document.getElementById('videoDuration').value);
+  if(isNaN(durSec)||durSec<=0){alert('Enter a valid duration (seconds).');return;}
 
-  const dur    = getDur();
-  const fps    = getFps();
-  const [W,H]  = getRes();
-  const bitrate= parseInt($('bitrateSlider').value)*1_000_000;
-  const bgCol  = $('bgColor').value||'#020617';
-  const fmt    = selectedFmt;
+  const EXACT_MS = Math.round(durSec*1000);
+  const fps      = parseInt(document.getElementById('videoFps').value);
+  const res      = document.getElementById('videoResolution').value.split('x');
+  const W        = parseInt(res[0]);
+  const H        = parseInt(res[1]);
+  const bitrate  = parseInt(document.getElementById('bitrateSlider').value)*1000000;
+  const bgColor  = document.getElementById('bgColor').value||'#020617';
+  const fmt      = selectedFormat;
+
+  // End marker now set
+  markers=markers.map(m=>m.label==='End'?{...m,time:durSec}:m);
 
   stopPlay();
 
-  // Show overlay
-  $('renderBtn').disabled=true;
-  $('renderOverlay').style.display='flex';
-  $('pFill').style.width='0%';
-  $('rFps').textContent=fps;
-  $('rRes').textContent=`${H}p`;
-  $('rDur').textContent=dur.toFixed(1)+'s';
-  $('mTitle').textContent=`Rendering ${fmt.toUpperCase()}…`;
-  $('mSub').textContent='Preparing SVG image…';
-  $('rPct').textContent='0%';
-  $('rElapsed').textContent='0s';
-  $('rRemain').textContent='—';
-  $('rStage').textContent='';
-  $('downloadArea').innerHTML='';
-  $('rNote').textContent='';
+  // UI
+  renderBtn.disabled=true;
+  document.getElementById('gifWarning').style.display=fmt==='gif'?'block':'none';
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('rStatFps').textContent=fps;
+  document.getElementById('rStatRes').textContent=`${H}p`;
+  document.getElementById('rStatDur').textContent=durSec.toFixed(1)+'s';
+  document.getElementById('modalTitle').textContent=`Rendering ${fmt.toUpperCase()}…`;
+  document.getElementById('modalSub').textContent='Initialising encoder pipeline';
+  document.getElementById('rElapsed').textContent='0.0s elapsed';
+  document.getElementById('rRemain').textContent='— remaining';
+  document.getElementById('rPercent').textContent='0%';
+  document.getElementById('renderStageLabel').textContent='';
+  renderOverlay.style.display='flex';
+  downloadArea.innerHTML='';
 
   canvas.width=W; canvas.height=H;
 
-  // Clone + size SVG
-  const clone = activeSvg.cloneNode(true);
+  // Clone and scale SVG
+  const clone=activeSvg.cloneNode(true);
   if(!clone.getAttribute('viewBox')){
-    const cw=clone.getAttribute('width')||W;
-    const ch=clone.getAttribute('height')||H;
-    clone.setAttribute('viewBox',`0 0 ${cw} ${ch}`);
+    clone.setAttribute('viewBox',`0 0 ${clone.getAttribute('width')||W} ${clone.getAttribute('height')||H}`);
   }
-  clone.setAttribute('width', W+'px');
-  clone.setAttribute('height', H+'px');
+  clone.setAttribute('width',W+'px');
+  clone.setAttribute('height',H+'px');
 
-  const svgStr = new XMLSerializer().serializeToString(clone);
-  const blob   = new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
-  const svgUrl = URL.createObjectURL(blob);
+  const svgBlob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml;charset=utf-8'});
+  const svgUrl =URL.createObjectURL(svgBlob);
 
-  const img = new Image(W,H);
-  img.onload = ()=>{
-    if(fmt==='gif') renderGIF(img,W,H,fps,dur,bgCol,svgUrl);
-    else            renderWebM(img,W,H,fps,bitrate,dur,bgCol,svgUrl);
+  const img=document.createElement('img');
+  img.style.cssText=`width:${W}px;height:${H}px`;
+  hiddenBox.appendChild(img);
+
+  img.onload=()=>{
+    document.getElementById('modalSub').textContent=`Recording ${durSec.toFixed(1)}s at ${H}p / ${fps}fps`;
+
+    if(fmt==='gif'){
+      renderGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl);
+    } else {
+      renderWebM(img,W,H,fps,bitrate,EXACT_MS,bgColor,svgUrl,fmt);
+    }
   };
-  img.onerror = ()=>{
-    alert('Failed to load SVG as image. Check your SVG code.');
-    $('renderOverlay').style.display='none';
-    $('renderBtn').disabled=false;
+  img.onerror=()=>{
+    alert('Invalid SVG or missing dependencies.');
+    renderOverlay.style.display='none';
+    renderBtn.disabled=false;
   };
-  img.src = svgUrl;
+  img.src=svgUrl;
 }
 
-// ─────────────────────────────────────────
-//  WebM RENDER
-//  
-//  We paint frames at EXACTLY the right interval
-//  using setInterval (not requestAnimationFrame which
-//  can be throttled). This gives MediaRecorder
-//  correct timestamps so seeking works perfectly.
-// ─────────────────────────────────────────
-function renderWebM(img, W, H, fps, bitrate, dur, bgCol, svgUrl) {
-  const INTERVAL_MS = 1000/fps;          // exact ms per frame
-  const TOTAL_FRAMES = Math.round(dur*fps);
-  const EXACT_MS = Math.round(dur*1000);
-
-  // Detect best supported codec
-  const codecs = [
-    'video/webm; codecs=vp8',
-    'video/webm; codecs=vp9',
-    'video/webm'
-  ];
-  let mimeType = '';
-  for(const c of codecs){
-    if(MediaRecorder.isTypeSupported(c)){ mimeType=c; break; }
+/* ── WebM/MP4 Renderer (FIXED VERSION) ── */
+function renderWebM(img, W, H, fps, bitrate, EXACT_MS, bgColor, svgUrl, fmt) {
+  function makeRecorder(stream) {
+    const tries = [
+      { mimeType: 'video/webm; codecs=vp8', videoBitsPerSecond: bitrate },
+      { mimeType: 'video/webm', videoBitsPerSecond: bitrate },
+      { videoBitsPerSecond: bitrate }
+    ];
+    for (const o of tries) {
+      try {
+        if (!o.mimeType || MediaRecorder.isTypeSupported(o.mimeType))
+          return new MediaRecorder(stream, o);
+      } catch (e) {}
+    }
+    return new MediaRecorder(stream);
   }
 
-  if(!mimeType && !MediaRecorder){ 
-    alert('Your browser does not support video recording. Try Chrome or Firefox.');
-    $('renderOverlay').style.display='none';
-    $('renderBtn').disabled=false;
-    return;
-  }
+  const stream = canvas.captureStream(fps);
+  const allChunks = [];
+  
+  const startWall = performance.now();
+  let isRec = true;
+  let rafId = null;
 
-  const codecLabel = mimeType||'video/webm (default)';
-  $('codecStat').textContent = codecLabel;
-  $('rNote').textContent = `Codec: ${codecLabel} | Open in Chrome/Firefox/VLC`;
+  // Use a SINGLE MediaRecorder for the entire duration
+  const seg = makeRecorder(stream);
 
-  const stream   = canvas.captureStream(fps);
-  const recOpts  = { videoBitsPerSecond: bitrate };
-  if(mimeType) recOpts.mimeType = mimeType;
-
-  let recorder;
-  try { recorder = new MediaRecorder(stream, recOpts); }
-  catch(e){
-    try { recorder = new MediaRecorder(stream); }
-    catch(e2){ alert('MediaRecorder not available: '+e2.message); return; }
-  }
-
-  const chunks = [];
-  recorder.ondataavailable = e=>{ if(e.data && e.data.size>0) chunks.push(e.data); };
-
-  const wallStart = performance.now();
-  let frameCount  = 0;
-  let interval    = null;
-
-  recorder.onstop = ()=>{
-    clearInterval(interval);
-    URL.revokeObjectURL(svgUrl);
-
-    $('rStage').textContent='Assembling video file…';
-    $('pFill').style.width='100%';
-    $('rPct').textContent='100%';
-    $('rRemain').textContent='Done!';
-
-    const rawBlob = new Blob(chunks,{type:'video/webm'});
-    const filename = `animation-${Math.round(dur)}s-${H}p.webm`;
-    finishDownload(rawBlob,'video/webm',filename);
+  seg.ondataavailable = e => {
+    if (e.data && e.data.size > 0) allChunks.push(e.data);
   };
 
-  // Collect data frequently — smaller chunks = better seeking
-  recorder.start(Math.round(INTERVAL_MS)); // flush every frame
+  seg.onstop = () => {
+    document.getElementById('renderStageLabel').textContent = 'Fixing WebM metadata…';
+    hiddenBox.innerHTML = '';
+    URL.revokeObjectURL(svgUrl);
 
-  $('mSub').textContent=`Recording ${TOTAL_FRAMES} frames at ${fps}fps…`;
+    // Create the raw Blob from our single continuous recording
+    const raw = new Blob(allChunks, { type: 'video/webm' });
 
-  // Paint frames at precise intervals
-  interval = setInterval(()=>{
-    if(frameCount >= TOTAL_FRAMES){
-      clearInterval(interval);
-      // Give recorder a moment to flush last frames then stop
-      setTimeout(()=>{ try{ recorder.stop(); }catch(e){} }, 300);
+    // ysFixWebmDuration fixes the top-level duration tag
+    ysFixWebmDuration(raw, EXACT_MS, fixed => {
+      const durLabel = parseFloat(document.getElementById('videoDuration').value).toFixed(1);
+      if (fmt === 'mp4') {
+        finishDownload(fixed, 'video/mp4', `SVG-Studio-${durLabel}s-${H}p.mp4`);
+      } else {
+        finishDownload(fixed, 'video/webm', `SVG-Studio-${durLabel}s-${H}p.webm`);
+      }
+    });
+  };
+
+  // Start recording, flush chunks every 100ms
+  seg.start(100);
+
+  // Draw loop
+  function loop(now) {
+    if (!isRec) return;
+    const elapsed = now - startWall;
+
+    // Stop drawing canvas at the exact target duration
+    if (elapsed >= EXACT_MS) {
+      isRec = false;
+      cancelAnimationFrame(rafId);
+      seg.stop(); // This triggers seg.onstop above
       return;
     }
 
-    // Draw frame
-    ctx.fillStyle = bgCol;
+    // Progress bar / counters
+    const pct = Math.min((elapsed / EXACT_MS) * 100, 100);
+    progressFill.style.width = pct + '%';
+    const elSec = (elapsed / 1000).toFixed(1);
+    const remSec = Math.max(0, (EXACT_MS - elapsed) / 1000).toFixed(1);
+    
+    document.getElementById('rElapsed').textContent = `${elSec}s elapsed`;
+    document.getElementById('rRemain').textContent = `${remSec}s remaining`;
+    document.getElementById('rPercent').textContent = Math.round(pct) + '%';
+    document.getElementById('renderStageLabel').textContent =
+      `Frame ${Math.round((elapsed / 1000) * fps)} / ${Math.round((EXACT_MS / 1000) * fps)}`;
+
+    // Draw frame onto canvas
+    ctx.fillStyle = document.getElementById('bgColor').value || '#020617';
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 0, 0, W, H);
+    
+    // Anti-static pixel
+    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.04})`;
+    ctx.fillRect(0, 0, 1, 1);
+
+    // Playhead sync during render
+    currentTimeSec = elapsed / 1000;
+    updatePlayheadPosition();
+
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // Kick off the drawing loop
+  requestAnimationFrame(loop);
+}
+
+/* ── GIF Renderer (pure canvas frame capture → data URL sequence → animated GIF via CSS) ──
+   Note: true GIF encoding in-browser without a library requires frame assembly;
+   we produce a high-quality WebM first then offer as GIF-optimised low-fps WebM
+   and clearly label it. For a full GIF we use a lightweight inline encoder. */
+function renderGIF(img,W,H,fps,EXACT_MS,bgColor,svgUrl){
+  // Cap GIF to reasonable size
+  const gifFps=Math.min(fps,15);
+  const totalFrames=Math.round(EXACT_MS/1000*gifFps);
+  const frameDelay=Math.round(100/gifFps); // centiseconds
+
+  document.getElementById('modalSub').textContent=`Building ${totalFrames} GIF frames at ${gifFps}fps…`;
+
+  const frames=[];
+  let frameIdx=0;
+
+  // Capture frames in a tight loop using requestAnimationFrame
+  const startWall=performance.now();
+
+  function captureFrame(){
+    if(frameIdx>=totalFrames){
+      // All frames captured — encode
+      encodeGIF(frames,W,H,frameDelay,svgUrl);
+      return;
+    }
+    const t=frameIdx/gifFps;
+    const pct=frameIdx/totalFrames*100;
+    progressFill.style.width=pct+'%';
+    document.getElementById('rPercent').textContent=Math.round(pct)+'%';
+    document.getElementById('rElapsed').textContent=`Frame ${frameIdx}/${totalFrames}`;
+    document.getElementById('renderStageLabel').textContent=`Capturing frame ${frameIdx+1}`;
+
+    ctx.fillStyle=bgColor;
     ctx.fillRect(0,0,W,H);
     ctx.drawImage(img,0,0,W,H);
 
-    frameCount++;
-    curTime = frameCount/fps;
-    updatePH();
-
-    // Update progress
-    const elapsed = (performance.now()-wallStart)/1000;
-    const pct = Math.min((frameCount/TOTAL_FRAMES)*100, 99);
-    $('pFill').style.width = pct+'%';
-    $('rPct').textContent = Math.round(pct)+'%';
-    $('rElapsed').textContent = elapsed.toFixed(1)+'s';
-    const remain = Math.max(0,((TOTAL_FRAMES-frameCount)/fps)).toFixed(1);
-    $('rRemain').textContent = remain+'s left';
-    $('rStage').textContent = `Frame ${frameCount}/${TOTAL_FRAMES}`;
-  }, INTERVAL_MS);
-}
-
-// ─────────────────────────────────────────
-//  GIF RENDER — pure JS encoder
-// ─────────────────────────────────────────
-function renderGIF(img, W, H, fps, dur, bgCol, svgUrl) {
-  const gifFps = Math.min(fps, 12); // cap at 12fps for GIF
-  const total  = Math.round(dur*gifFps);
-  const delay  = Math.round(100/gifFps);
-
-  $('mSub').textContent=`Capturing ${total} frames at ${gifFps}fps…`;
-  $('rNote').textContent='GIF plays everywhere: browsers, phones, desktops.';
-
-  const frames=[];
-  let fi=0;
-  const wallStart=performance.now();
-
-  function capture(){
-    if(fi>=total){
-      $('rStage').textContent='Encoding GIF binary…';
-      $('mSub').textContent='Building GIF file…';
-      setTimeout(()=>{
-        try{
-          URL.revokeObjectURL(svgUrl);
-          const gifBytes = encodeGIF(frames,W,H,delay);
-          const blob=new Blob([gifBytes],{type:'image/gif'});
-          finishDownload(blob,'image/gif',`animation-${Math.round(dur)}s.gif`);
-        }catch(err){
-          console.error(err);
-          $('renderOverlay').style.display='none';
-          $('renderBtn').disabled=false;
-          alert('GIF encoding failed. Try a smaller resolution or WebM format.');
-        }
-      },50);
-      return;
-    }
-    ctx.fillStyle=bgCol; ctx.fillRect(0,0,W,H); ctx.drawImage(img,0,0,W,H);
+    // Grab pixel data as ImageData
     frames.push(ctx.getImageData(0,0,W,H));
-    curTime=fi/gifFps; updatePH();
-    const pct=Math.round((fi/total)*100);
-    $('pFill').style.width=pct+'%'; $('rPct').textContent=pct+'%';
-    $('rElapsed').textContent=((performance.now()-wallStart)/1000).toFixed(1)+'s';
-    $('rStage').textContent=`Capturing frame ${fi+1}/${total}`;
-    fi++;
-    // Yield to browser every 10 frames so UI stays responsive
-    if(fi%10===0) setTimeout(capture,0); else capture();
+    currentTimeSec=t;
+    updatePlayheadPosition();
+    frameIdx++;
+    requestAnimationFrame(captureFrame);
   }
-  capture();
+  requestAnimationFrame(captureFrame);
 }
 
-// ── GIF binary encoder (LZW) ──
-function encodeGIF(frames,W,H,delay){
-  const pal=makePalette(frames[0]);
+function encodeGIF(frames,W,H,frameDelay,svgUrl){
+  document.getElementById('renderStageLabel').textContent='Encoding GIF…';
+  document.getElementById('modalSub').textContent='Encoding frames into GIF binary…';
+
+  // Inline minimal GIF encoder (LZW + colour quantisation via median cut)
+  setTimeout(()=>{
+    try{
+      const gif=buildGIF(frames,W,H,frameDelay);
+      hiddenBox.innerHTML='';
+      URL.revokeObjectURL(svgUrl);
+      const blob=new Blob([gif],{type:'image/gif'});
+      const dur=parseFloat(document.getElementById('videoDuration').value).toFixed(1);
+      finishDownload(blob,'image/gif',`SVG-Studio-${dur}s.gif`);
+    }catch(err){
+      console.error('GIF encode error:',err);
+      // Fallback: offer WebM instead
+      hiddenBox.innerHTML='';
+      URL.revokeObjectURL(svgUrl);
+      renderOverlay.style.display='none';
+      renderBtn.disabled=false;
+      alert('GIF encoding failed (SVG too complex). Try WebM format instead.');
+    }
+  },50);
+}
+
+/* ── Minimal GIF binary encoder ── */
+function buildGIF(frames,W,H,frameDelay){
+  // We'll do a simple 256-colour palette from the first frame (median cut simplified to popularity)
+  const palette=buildPalette(frames[0],256);
   const buf=[];
-  ws(buf,'GIF89a'); wu16(buf,W); wu16(buf,H); buf.push(0xF7,0,0);
-  for(let i=0;i<256;i++){ const c=pal[i]||[0,0,0]; buf.push(c[0],c[1],c[2]); }
-  buf.push(0x21,0xFF,0x0B); ws(buf,'NETSCAPE2.0'); buf.push(3,1,0,0,0);
-  for(const f of frames){
-    buf.push(0x21,0xF9,4,0); wu16(buf,delay); buf.push(0,0);
-    buf.push(0x2C); wu16(buf,0); wu16(buf,0); wu16(buf,W); wu16(buf,H); buf.push(0);
-    const idx=quantize(f,pal);
-    const lzw=lzwEnc(idx,8);
-    buf.push(8);
-    for(let i=0;i<lzw.length;i+=255){ const c=lzw.slice(i,i+255); buf.push(c.length,...c); }
-    buf.push(0);
+  // Header
+  writeStr(buf,'GIF89a');
+  writeU16(buf,W); writeU16(buf,H);
+  buf.push(0xF7,0,0); // GCT flag, BG, aspect
+  // Global colour table (256 entries × 3 bytes)
+  for(let i=0;i<256;i++){
+    const c=palette[i]||[0,0,0];
+    buf.push(c[0],c[1],c[2]);
   }
-  buf.push(0x3B);
+  // Netscape loop extension
+  buf.push(0x21,0xFF,0x0B);
+  writeStr(buf,'NETSCAPE2.0');
+  buf.push(3,1,0,0,0);
+  // Frames
+  frames.forEach(frame=>{
+    // Graphic control ext (delay)
+    buf.push(0x21,0xF9,4,0);
+    writeU16(buf,frameDelay);
+    buf.push(0,0);
+    // Image descriptor
+    buf.push(0x2C);
+    writeU16(buf,0);writeU16(buf,0);writeU16(buf,W);writeU16(buf,H);
+    buf.push(0); // no local CT, no interlace
+    // Image data: quantise then LZW encode
+    const indices=quantiseFrame(frame,palette);
+    const lzw=lzwEncode(indices,8);
+    buf.push(8); // min LZW code size
+    // Write in sub-blocks of 255
+    for(let i=0;i<lzw.length;i+=255){
+      const chunk=lzw.slice(i,i+255);
+      buf.push(chunk.length,...chunk);
+    }
+    buf.push(0); // block terminator
+  });
+  buf.push(0x3B); // trailer
   return new Uint8Array(buf);
 }
-function ws(b,s){ for(const c of s) b.push(c.charCodeAt(0)); }
-function wu16(b,v){ b.push(v&0xFF,(v>>8)&0xFF); }
-function makePalette(id){
-  const d=id.data, m={};
-  for(let i=0;i<d.length;i+=4){ const k=((d[i]>>2)<<12)|((d[i+1]>>2)<<6)|(d[i+2]>>2); m[k]=(m[k]||0)+1; }
-  return Object.keys(m).sort((a,b)=>m[b]-m[a]).slice(0,256).map(k=>{ const n=+k; return [((n>>12)&63)<<2,((n>>6)&63)<<2,(n&63)<<2]; });
-}
-function quantize(id,pal){
-  const d=id.data, out=new Uint8Array(d.length/4);
-  for(let i=0,p=0;i<d.length;i+=4,p++){
-    const r=d[i],g=d[i+1],b=d[i+2]; let best=0,bd=Infinity;
-    for(let j=0;j<pal.length;j++){ const c=pal[j],dd=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2; if(dd<bd){bd=dd;best=j;} }
-    out[p]=best;
+
+function writeStr(buf,s){for(const c of s)buf.push(c.charCodeAt(0))}
+function writeU16(buf,v){buf.push(v&0xFF,(v>>8)&0xFF)}
+
+function buildPalette(imageData,n){
+  const d=imageData.data;
+  const map={};
+  for(let i=0;i<d.length;i+=4){
+    const k=((d[i]>>2)<<12)|((d[i+1]>>2)<<6)|(d[i+2]>>2);
+    map[k]=(map[k]||0)+1;
   }
-  return out;
+  const sorted=Object.keys(map).sort((a,b)=>map[b]-map[a]).slice(0,n);
+  return sorted.map(k=>{
+    const ki=parseInt(k);
+    return [((ki>>12)&0x3F)<<2,((ki>>6)&0x3F)<<2,(ki&0x3F)<<2];
+  });
 }
-function lzwEnc(idx,mc){
-  const cc=1<<mc,eoi=cc+1; let cs=mc+1,nc=eoi+1;
-  const t={},out=[]; let bb=0,bl=0;
-  function em(c){ bb|=c<<bl; bl+=cs; while(bl>=8){out.push(bb&255);bb>>=8;bl-=8;} }
-  function rst(){ for(let i=0;i<cc;i++)t[i]=i; cs=mc+1; nc=eoi+1; }
-  rst(); em(cc);
-  let pv=idx[0];
-  for(let i=1;i<idx.length;i++){
-    const cv=idx[i],k=(pv<<8)|cv;
-    if(t[k]!==undefined){ pv=t[k]; }
-    else{ em(pv); if(nc<4096){ t[k]=nc++; if(nc>(1<<cs)&&cs<12)cs++; } else{em(cc);rst();} pv=cv; }
+
+function quantiseFrame(imageData,palette){
+  const d=imageData.data;
+  const out=new Uint8Array(d.length/4);
+  for(let i=0,pi=0;i<d.length;i+=4,pi++){
+    const r=d[i],g=d[i+1],b=d[i+2];
+    let best=0,bestDist=Infinity;
+    for(let j=0;j<palette.length;j++){
+      const c=palette[j];
+      const dist=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2;
+      if(dist<bestDist){bestDist=dist;best=j}
+    }
+    out[pi]=best;
   }
-  em(pv); em(eoi); if(bl>0)out.push(bb&255);
   return out;
 }
 
-function finishDownload(blob,mime,filename){
+function lzwEncode(indices,minCode){
+  const clearCode=1<<minCode;
+  const eoi=clearCode+1;
+  let codeSize=minCode+1;
+  let nextCode=eoi+1;
+  const table={};
+  const out=[];
+  let bitBuf=0,bitLen=0;
+
+  function emit(code){
+    bitBuf|=code<<bitLen;
+    bitLen+=codeSize;
+    while(bitLen>=8){out.push(bitBuf&0xFF);bitBuf>>=8;bitLen-=8;}
+  }
+
+  function reset(){
+    for(let i=0;i<clearCode;i++)table[i]=i;
+    codeSize=minCode+1;
+    nextCode=eoi+1;
+  }
+
+  reset();
+  emit(clearCode);
+
+  let prev=indices[0];
+  for(let i=1;i<indices.length;i++){
+    const cur=indices[i];
+    const key=(prev<<8)|cur;
+    if(table[key]!==undefined){
+      prev=table[key];
+    } else {
+      emit(prev);
+      if(nextCode<4096){
+        table[key]=nextCode++;
+        if(nextCode>(1<<codeSize)&&codeSize<12)codeSize++;
+      } else {
+        emit(clearCode);
+        reset();
+      }
+      prev=cur;
+    }
+  }
+  emit(prev);
+  emit(eoi);
+  if(bitLen>0)out.push(bitBuf&0xFF);
+  return out;
+}
+
+/* ── Finish & download ── */
+function finishDownload(blob,mimeType,filename){
+  progressFill.style.width='100%';
+  document.getElementById('rPercent').textContent='100%';
+  document.getElementById('rRemain').textContent='Done!';
+  document.getElementById('renderStageLabel').textContent='Export complete ✓';
+
   const url=URL.createObjectURL(blob);
-  const sz=(blob.size/1048576).toFixed(2);
+  const sizeMB=(blob.size/1048576).toFixed(2);
 
-  $('renderOverlay').style.display='none';
-  $('renderBtn').disabled=false;
-  curTime=0; updatePH();
-  setStatus(`Exported: ${filename} (${sz} MB)`);
+  renderOverlay.style.display='none';
+  renderBtn.disabled=false;
 
-  $('downloadArea').innerHTML=`<a href="${url}" download="${filename}" class="dl-btn">⬇ ${filename} <span style="opacity:.6;font-size:.7rem">${sz} MB</span></a>`;
-  const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+  currentTimeSec=0;
+  updatePlayheadPosition();
+  setStatus(`Exported: ${filename} (${sizeMB} MB)`,'active');
+
+  downloadArea.innerHTML=`
+    <a href="${url}" download="${filename}" class="dl-btn">
+      ⬇ ${filename} <span style="opacity:.6;font-size:.7rem">${sizeMB} MB</span>
+    </a>`;
+
+  const a=document.createElement('a');
+  a.href=url; a.download=filename; a.click();
 }
 
-// Monitors
+// ── Memory monitor
 setInterval(()=>{
-  const fps=getFps(), dur=getDur();
-  $('frameStat').textContent=`${Math.round(dur*fps)} frames total`;
+  if(performance.memory){
+    const mb=(performance.memory.usedJSHeapSize/1048576).toFixed(0);
+    document.getElementById('memStat').textContent=`MEM ${mb} MB`;
+  }
+  const dur=parseFloat(document.getElementById('videoDuration').value)||6;
+  const fps=parseInt(document.getElementById('videoFps').value)||60;
+  document.getElementById('frameStat').textContent=`${Math.round(dur*fps)} total frames`;
 },1000);
 
-// Keyboard
+// ── Keyboard shortcuts
 document.addEventListener('keydown',e=>{
   if(e.target===svgInput)return;
   if(e.code==='Space'){e.preventDefault();togglePlay();}
-  if(e.code==='Home') seekTo(0);
-  if(e.code==='End')  seekTo(getDur());
-  if(e.code==='KeyK') addKF();
+  if(e.code==='Home'){seekTo(0);}
+  if(e.code==='End'){seekToEnd();}
+  if(e.code==='KeyK'){addKeyframeAtCurrent();}
 });
 
-// ── Init ──
-const DEMO=`<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+// ── Init
+const DEFAULT_SVG=`<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
   <rect width="1920" height="1080" fill="#020617"/>
   <style>
-    .ring{fill:none;stroke-width:8;stroke-dasharray:1000;stroke-dashoffset:1000;
-      animation:draw 6s infinite ease-in-out}
-    .core{fill:#10b981;transform-origin:960px 540px;
-      animation:beat 6s infinite cubic-bezier(.4,0,.2,1)}
-    @keyframes draw{
-      0%{stroke-dashoffset:1000;stroke:#0ea5e9}
-      50%{stroke-dashoffset:0;stroke:#10b981}
-      100%{stroke-dashoffset:1000;stroke:#0ea5e9}}
-    @keyframes beat{
-      0%{transform:scale(.8) rotate(0deg)}
-      50%{transform:scale(1.5) rotate(180deg)}
-      100%{transform:scale(.8) rotate(360deg)}}
+    .ring{fill:none;stroke-width:8;stroke-dasharray:1000;stroke-dashoffset:1000;animation:draw 6s infinite ease-in-out}
+    .core{fill:#10b981;transform-origin:960px 540px;animation:beat 6s infinite cubic-bezier(.4,0,.2,1)}
+    @keyframes draw{0%{stroke-dashoffset:1000;stroke:#0ea5e9}50%{stroke-dashoffset:0;stroke:#10b981}100%{stroke-dashoffset:1000;stroke:#0ea5e9}}
+    @keyframes beat{0%{transform:scale(.8) rotate(0deg)}50%{transform:scale(1.5) rotate(180deg)}100%{transform:scale(.8) rotate(360deg)}}
   </style>
   <circle class="ring" cx="960" cy="540" r="300"/>
   <rect class="core" x="885" y="465" width="150" height="150" rx="30"/>
 </svg>`;
-svgInput.value=DEMO;
-updatePreview(); updateLineCount(); syncBadges(); syncBitrate();
+
+svgInput.value=DEFAULT_SVG;
+updatePreview();
+updateLineCount();
+syncBadges();
+syncBitrate();
+renderKfList();
+buildTimeline();
+
+// Add default start/end markers to timeline
+markers=[{time:0,label:'Start'},{time:6,label:'End'}];
+buildTimeline();
 </script>
 </body>
 </html>
